@@ -21,6 +21,7 @@ import android.graphics.Matrix;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ViewParent;
 import android.widget.ImageView;
@@ -103,6 +104,22 @@ class ScaleDragHelper implements ScaleDragGestureDetector.OnScaleDragGestureList
         }
     }
 
+    private void requestParentIntercept(boolean disallow, @NonNull String reason) {
+        requestDisallowInterceptTouchEvent(imageZoomer.getImageView(), disallow);
+        Log.d(
+                "MojitoLongPress",
+                "Zoomer parentIntercept disallow=" + disallow
+                        + " reason=" + reason
+                        + " allowEdge=" + imageZoomer.isAllowParentInterceptOnEdge()
+                        + " scaling=" + scaleDragGestureDetector.isScaling()
+                        + " dragging=" + scaleDragGestureDetector.isDragging()
+                        + " horEdge=" + getScrollEdgeName(horScrollEdge)
+                        + " verEdge=" + getScrollEdgeName(verScrollEdge)
+                        + " zoom=" + SketchUtils.formatFloat(getZoomScale(), 2)
+                        + " base=" + SketchUtils.formatFloat(getDefaultZoomScale(), 2)
+        );
+    }
+
     void reset() {
         resetBaseMatrix();
         resetSupportMatrix();
@@ -119,7 +136,7 @@ class ScaleDragHelper implements ScaleDragGestureDetector.OnScaleDragGestureList
                 if (SLog.isLoggable(SLog.LEVEL_DEBUG | SLog.TYPE_ZOOM)) {
 
                 }
-                requestDisallowInterceptTouchEvent(imageZoomer.getImageView(), true);
+                requestParentIntercept(true, "locationRunner");
                 return true;
             }
             locationRunner = null;
@@ -152,7 +169,7 @@ class ScaleDragHelper implements ScaleDragGestureDetector.OnScaleDragGestureList
         if (SLog.isLoggable(SLog.LEVEL_DEBUG | SLog.TYPE_ZOOM)) {
             SLog.d(NAME, "parent intercept on down. disallow=%s base=%s zoom=%s", disallow, baseScale, zoomScale);
         }
-        requestDisallowInterceptTouchEvent(imageZoomer.getImageView(), disallow);
+        requestParentIntercept(disallow, "actionDown");
 
         // 取消快速滚动
         cancelFling();
@@ -182,7 +199,7 @@ class ScaleDragHelper implements ScaleDragGestureDetector.OnScaleDragGestureList
                 SLog.d(NAME, "disallow parent intercept touch event. onDrag. allowParentInterceptOnEdge=%s, scaling=%s, tempDisallowParentInterceptTouchEvent=%s",
                         imageZoomer.isAllowParentInterceptOnEdge(), scaleDragGestureDetector.isScaling(), disallowParentInterceptTouchEvent);
             }
-            requestDisallowInterceptTouchEvent(imageZoomer.getImageView(), true);
+            requestParentIntercept(true, "onDrag-force");
             return;
         }
 
@@ -194,13 +211,13 @@ class ScaleDragHelper implements ScaleDragGestureDetector.OnScaleDragGestureList
                 SLog.d(NAME, "allow parent intercept touch event. onDrag. scrollEdge=%s-%s",
                         getScrollEdgeName(horScrollEdge), getScrollEdgeName(verScrollEdge));
             }
-            requestDisallowInterceptTouchEvent(imageZoomer.getImageView(), false);
+            requestParentIntercept(false, "onDrag-allowEdge");
         } else {
             if (SLog.isLoggable(SLog.LEVEL_DEBUG | SLog.TYPE_ZOOM)) {
                 SLog.d(NAME, "disallow parent intercept touch event. onDrag. scrollEdge=%s-%s",
                         getScrollEdgeName(horScrollEdge), getScrollEdgeName(verScrollEdge));
             }
-            requestDisallowInterceptTouchEvent(imageZoomer.getImageView(), true);
+            requestParentIntercept(true, "onDrag-disallowEdge");
         }
     }
 
@@ -265,6 +282,7 @@ class ScaleDragHelper implements ScaleDragGestureDetector.OnScaleDragGestureList
         }
 
         zooming = true;
+        requestParentIntercept(true, "scaleBegin");
         return true;
     }
 
@@ -281,6 +299,7 @@ class ScaleDragHelper implements ScaleDragGestureDetector.OnScaleDragGestureList
             zooming = false;
             imageZoomer.onMatrixChanged();
         }
+        requestParentIntercept(false, "scaleEnd");
     }
 
     @Override

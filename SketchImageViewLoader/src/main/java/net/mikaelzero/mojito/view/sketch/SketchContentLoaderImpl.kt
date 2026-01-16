@@ -222,6 +222,7 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
         }
         val updateParentIntercept = { disallow: Boolean ->
             sketchImageView.parent?.requestDisallowInterceptTouchEvent(disallow)
+            Log.d("MojitoLongPress", "SketchView parentIntercept disallow=$disallow")
         }
 
         sketchImageView.zoomer?.setOnViewLongPressListener { view, x, y ->
