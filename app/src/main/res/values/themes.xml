@@ -12,13 +12,27 @@
     </style>
 
     <style name="ThemeOverlay.MaterialAlertDialog.Rounded" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="materialAlertDialogStyle">@style/MaterialAlertDialog.Rounded</item>
         <item name="alertDialogStyle">@style/MaterialAlertDialog.Rounded</item>
+        <item name="materialAlertDialogListItemStyle">@style/MaterialAlertDialog.ListItem</item>
         <item name="colorSurface">@color/color_surface</item>
         <item name="colorOnSurface">@color/color_on_surface</item>
     </style>
 
     <style name="MaterialAlertDialog.Rounded" parent="MaterialAlertDialog.Material3">
         <item name="shapeAppearance">@style/ShapeAppearance.MaterialAlertDialog.Rounded</item>
+        <item name="backgroundInsetStart">24dp</item>
+        <item name="backgroundInsetEnd">24dp</item>
+        <item name="backgroundInsetTop">24dp</item>
+        <item name="backgroundInsetBottom">24dp</item>
+        <item name="android:background">@drawable/material_dialog_rounded</item>
+    </style>
+
+    <style name="MaterialAlertDialog.ListItem" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:paddingStart">24dp</item>
+        <item name="android:paddingEnd">24dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
     </style>
 
     <style name="ShapeAppearance.MaterialAlertDialog.Rounded" parent="">

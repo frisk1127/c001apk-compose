@@ -47,8 +47,6 @@ object ImageShowUtil {
             else it.http2https
         }
         Mojito.start(imageView.context) {
-            cookie(cookie)
-            userAgent(userAgent)
             urls(thumbnailList, originList)
             position(position)
             progressLoader {
@@ -125,8 +123,6 @@ object ImageShowUtil {
         val thumbnailList = urlList.map { "${it.http2https}$SUFFIX_THUMBNAIL" }
         val originList = urlList.map { it.http2https }
         Mojito.start(context) {
-            cookie(cookie)
-            userAgent(userAgent)
             urls(thumbnailList, originList)
             when (CookieUtil.imageQuality) {
                 0 -> if (NetWorkUtil.isWifiConnected())
@@ -197,8 +193,6 @@ object ImageShowUtil {
                     }
                 })
             },
-            cookie = cookie,
-            userAgent = userAgent,
         )
     }
 
@@ -208,8 +202,9 @@ object ImageShowUtil {
         urlList: List<String>?,
         userAgent: String?,
     ) {
+        Log.d("MojitoLongPress", "showSaveImgDialog url=$url listSize=${urlList?.size ?: 0}")
         val items = arrayOf("保存图片", "保存全部图片", "图片分享", "复制图片地址")
-        MaterialAlertDialogBuilder(context).apply {
+        MaterialAlertDialogBuilder(context, R.style.ThemeOverlay_MaterialAlertDialog_Rounded).apply {
             setItems(items) { _: DialogInterface?, position: Int ->
                 when (position) {
                     0 -> CoroutineScope(Dispatchers.IO).launch {
