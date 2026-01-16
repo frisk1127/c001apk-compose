@@ -195,7 +195,7 @@ fun CollectionScreen(
                                         overflow = TextOverflow.Ellipsis,
                                     )
                                     Text(
-                                        text = "${response.followNum}人关注",
+                                        text = response.followNum.toString() + "人关注",
                                         color = MaterialTheme.colorScheme.outline,
                                         style = MaterialTheme.typography.bodyMedium,
                                         maxLines = 1,

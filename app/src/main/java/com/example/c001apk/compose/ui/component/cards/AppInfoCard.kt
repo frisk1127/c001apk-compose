@@ -83,7 +83,7 @@ fun AppInfoCard(
         )
 
         Text(
-            text = data?.apksize?.let { "大小: ${data.apksize}" } ?: EMPTY_STRING,
+            text = data?.apksize?.let { "大小: " + data.apksize } ?: EMPTY_STRING,
             style = MaterialTheme.typography.bodySmall.copy(fontSize = 14.sp),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

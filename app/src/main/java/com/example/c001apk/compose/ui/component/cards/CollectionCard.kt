@@ -89,7 +89,7 @@ fun CollectionCard(
         )
 
         Text(
-            text = "${data.followNum}人关注",
+            text = data.followNum.toString() + "人关注",
             modifier = Modifier
                 .padding(start = 10.dp)
                 .constrainAs(follow) {
@@ -102,7 +102,7 @@ fun CollectionCard(
         )
 
         Text(
-            text = "${data.itemNum}个内容",
+            text = data.itemNum.toString() + "个内容",
             modifier = Modifier
                 .padding(start = 10.dp)
                 .constrainAs(size) {

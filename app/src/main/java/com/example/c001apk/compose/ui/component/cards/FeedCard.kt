@@ -231,7 +231,7 @@ fun FeedBottomInfo(
         Text(
             modifier = Modifier.weight(1f),
             text = if (isFeedContent) {
-                if (ip.isNotEmpty()) "发布于 $ip"
+                if (ip.isNotEmpty()) "发布于 " + ip
                 else EMPTY_STRING
             } else fromToday(dateline),
             style = MaterialTheme.typography.bodySmall.copy(fontSize = 14.sp),

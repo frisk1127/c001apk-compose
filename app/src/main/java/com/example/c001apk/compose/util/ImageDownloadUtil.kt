@@ -50,8 +50,8 @@ object ImageDownloadUtil {
                 if (!isShare && isEnd) {
                     withContext(Dispatchers.Main) {
                         context.makeToast(
-                            if (result) "Image saved successfully"
-                            else "Failed to save image"
+                            if (result) "保存图片成功"
+                            else "保存图片失败"
                         )
                     }
                 }
@@ -64,8 +64,7 @@ object ImageDownloadUtil {
                 }
                 if (!result) {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(context, "Failed to download image", Toast.LENGTH_SHORT)
-                            .show()
+                        Toast.makeText(context, "保存图片失败", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -89,8 +88,8 @@ object ImageDownloadUtil {
                         if (!isShare && isEnd) {
                             withContext(Dispatchers.Main) {
                                 context.makeToast(
-                                    if (result) "Image saved successfully"
-                                    else "Failed to save image"
+                                    if (result) "保存图片成功"
+                                    else "保存图片失败"
                                 )
                             }
                         }
@@ -104,7 +103,7 @@ object ImageDownloadUtil {
                     }
                 },
                 onError = {
-                    Toast.makeText(context, "Failed to download image", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "保存图片失败", Toast.LENGTH_SHORT).show()
                 }
             )
             .build()

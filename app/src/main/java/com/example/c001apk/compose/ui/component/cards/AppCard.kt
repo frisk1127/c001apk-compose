@@ -121,10 +121,11 @@ fun AppCard(
         Text(
             text = when (appCardType) {
                 AppCardType.APP -> "${data.commentnum}讨论"
-                AppCardType.PRODUCT, AppCardType.TOPIC -> "${data.hotNumTxt}热度"
-                AppCardType.USER -> "${data.follow}关注"
-                AppCardType.CONTACTS -> "${data.userInfo?.follow ?: data.fUserInfo?.follow}关注"
-                AppCardType.RECENT -> "${data.followNum}关注"
+                AppCardType.PRODUCT, AppCardType.TOPIC -> data.hotNumTxt + "热度"
+                AppCardType.USER -> data.follow.toString() + "关注"
+                AppCardType.CONTACTS -> (data.userInfo?.follow
+                    ?: data.fUserInfo?.follow).toString() + "关注"
+                AppCardType.RECENT -> data.followNum.toString() + "关注"
             },
             modifier = Modifier
                 .padding(start = 10.dp, top = 5.dp)

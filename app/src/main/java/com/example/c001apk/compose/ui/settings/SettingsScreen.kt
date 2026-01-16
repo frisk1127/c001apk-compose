@@ -505,7 +505,7 @@ fun CleanCacheDialog(
             }
         },
         text = {
-            Text(text = "当前缓存大小: $cacheSize")
+            Text(text = "当前缓存大小: " + cacheSize)
         },
         title = {
             Text(

@@ -213,7 +213,7 @@ fun UserInfoCard(
                 }
         ) {
             Text(
-                text = "${data.feed?.id ?: 0}动态",
+                text = (data.feed?.id ?: 0).toString() + "动态",
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -221,7 +221,7 @@ fun UserInfoCard(
 
             Text(
                 modifier = Modifier.padding(start = 10.dp),
-                text = "${data.beLikeNum}赞",
+                text = data.beLikeNum.toString() + "赞",
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -233,7 +233,7 @@ fun UserInfoCard(
                     .noRippleClickable {
                         onViewFFFList(data.uid.orEmpty(), FFFListType.USER_FOLLOW.name)
                     },
-                text = "${data.follow}关注",
+                text = data.follow.toString() + "关注",
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis

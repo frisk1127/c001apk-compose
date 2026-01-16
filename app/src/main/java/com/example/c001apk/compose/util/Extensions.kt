@@ -83,7 +83,7 @@ fun Context.copyText(text: String?, showToast: Boolean = true) {
         val clipboardManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         ClipData.newPlainText("copy text", it)?.let { clipboardManager.setPrimaryClip(it) }
         if (showToast)
-            makeToast("已复制: $it")
+            makeToast("已复制: " + it)
     }
 }
 
