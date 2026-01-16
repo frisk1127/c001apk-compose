@@ -194,7 +194,13 @@ class ScaleDragHelper implements ScaleDragGestureDetector.OnScaleDragGestureList
         supportMatrix.postTranslate(dx, dy);
         checkAndApplyMatrix();
 
-        if (!imageZoomer.isAllowParentInterceptOnEdge() || scaleDragGestureDetector.isScaling() || disallowParentInterceptTouchEvent) {
+        float baseScale = getDefaultZoomScale();
+        float zoomScale = getZoomScale();
+        boolean isZoomed = zoomScale - baseScale > 0.02f;
+        boolean forceDisallow = !imageZoomer.isAllowParentInterceptOnEdge()
+                || scaleDragGestureDetector.isScaling()
+                || (disallowParentInterceptTouchEvent && isZoomed);
+        if (forceDisallow) {
             if (SLog.isLoggable(SLog.LEVEL_DEBUG | SLog.TYPE_ZOOM)) {
                 SLog.d(NAME, "disallow parent intercept touch event. onDrag. allowParentInterceptOnEdge=%s, scaling=%s, tempDisallowParentInterceptTouchEvent=%s",
                         imageZoomer.isAllowParentInterceptOnEdge(), scaleDragGestureDetector.isScaling(), disallowParentInterceptTouchEvent);
