@@ -1,17 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.C001apkCompose" parent="Theme.Material3.DayNight.NoActionBar" />
+    <style name="Theme.C001apkCompose" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorSurface">@color/color_surface</item>
+        <item name="colorOnSurface">@color/color_on_surface</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.MaterialAlertDialog.Rounded</item>
+    </style>
 
     <style name="radius12">
         <item name="cornerSize">12dp</item>
     </style>
 
-    <style name="ThemeOverlay.MaterialAlertDialog.Rounded" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+    <style name="ThemeOverlay.MaterialAlertDialog.Rounded" parent="ThemeOverlay.Material3.MaterialAlertDialog">
         <item name="alertDialogStyle">@style/MaterialAlertDialog.Rounded</item>
+        <item name="colorSurface">@color/color_surface</item>
+        <item name="colorOnSurface">@color/color_on_surface</item>
     </style>
 
-    <style name="MaterialAlertDialog.Rounded" parent="MaterialAlertDialog.MaterialComponents">
+    <style name="MaterialAlertDialog.Rounded" parent="MaterialAlertDialog.Material3">
         <item name="shapeAppearance">@style/ShapeAppearance.MaterialAlertDialog.Rounded</item>
     </style>
 
@@ -28,6 +34,9 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:windowContentOverlay">@null</item>
+        <item name="colorSurface">@color/color_surface</item>
+        <item name="colorOnSurface">@color/color_on_surface</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.MaterialAlertDialog.Rounded</item>
     </style>
 
 </resources>

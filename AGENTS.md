@@ -31,6 +31,9 @@
 ## 配置与安全
 签名信息使用 `local.properties`（如 `KEYSTORE_PATH`、`KEYSTORE_PASSWORD` 等），不要提交 keystore 到仓库。
 
+## Git 管理（高优先级）
+从现在开始所有改动都需要提交到 git；提交信息使用中文，避免中英文混杂。
+
 ## 当前问题与改动记录（高优先级）
 
 ### 目标问题

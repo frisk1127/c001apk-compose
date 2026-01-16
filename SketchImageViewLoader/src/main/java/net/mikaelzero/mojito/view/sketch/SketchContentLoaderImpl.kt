@@ -3,7 +3,10 @@ package net.mikaelzero.mojito.view.sketch
 import android.content.Context
 import android.graphics.Rect
 import android.graphics.RectF
+import android.util.Log
+import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.lifecycle.LifecycleObserver
@@ -16,6 +19,7 @@ import net.mikaelzero.mojito.tools.ScreenUtils
 import net.mikaelzero.mojito.view.sketch.core.SketchImageView
 import net.mikaelzero.mojito.view.sketch.core.decode.ImageSizeCalculator
 import kotlin.math.abs
+import kotlin.math.max
 
 
 /**
@@ -53,6 +57,10 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
     override fun init(context: Context, originUrl: String, targetUrl: String?, onMojitoViewCallback: OnMojitoViewCallback?) {
         frameLayout = FrameLayout(context)
         sketchImageView = SketchImageView(context)
+        sketchImageView.layoutParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.MATCH_PARENT
+        )
         sketchImageView.isZoomEnabled = true
         sketchImageView.options.isDecodeGifImage = true
         frameLayout.addView(sketchImageView)
@@ -63,14 +71,22 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
     }
 
     override fun dispatchTouchEvent(isDrag: Boolean, isActionUp: Boolean, isDown: Boolean, isHorizontal: Boolean): Boolean {
+        Log.d(
+            "MojitoLongPress",
+            "SketchContentLoader dispatchTouch isDrag=$isDrag isActionUp=$isActionUp isDown=$isDown isHorizontal=$isHorizontal " +
+                "longHeight=$isLongHeightImage longWidth=$isLongWidthImage"
+        )
         return when {
             isLongHeightImage -> {
                 when {
                     isDrag -> {
+                        Log.d("MojitoLongPress", "SketchContentLoader longHeight return=false (drag)")
                         return false
                     }
                     isActionUp -> {
-                        return !isDrag
+                        val result = !isDrag
+                        Log.d("MojitoLongPress", "SketchContentLoader longHeight return=$result (actionUp)")
+                        return result
                     }
                     else -> {
                         val rectF = Rect()
@@ -90,7 +106,9 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
                         val isBottom = (sketchImageView.zoomer!!.zoomScale == sketchImageView.zoomer!!.fillZoomScale
                                 && !isDown
                                 && screenHeight == drawRect.bottom.toInt())
-                        return isTop || isCenter || isScale || isBottom
+                        val result = isTop || isCenter || isScale || isBottom
+                        Log.d("MojitoLongPress", "SketchContentLoader longHeight return=$result (move)")
+                        return result
                     }
                 }
             }
@@ -112,11 +130,23 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
                         return isHorizontal || isScale
                     }
                 }
+                Log.d("MojitoLongPress", "SketchContentLoader longWidth return=$result")
                 result
             }
             else -> {
-                (sketchImageView.zoomer!!.zoomScale > sketchImageView.zoomer!!.fullZoomScale)
-                        && sketchImageView.zoomer!!.zoomScale - sketchImageView.zoomer!!.fullZoomScale > 0.01f
+                val zoomer = sketchImageView.zoomer
+                if (zoomer == null) {
+                    Log.d("MojitoLongPress", "SketchContentLoader normal return=false (no zoomer)")
+                    return false
+                }
+                val baseScale = max(zoomer.fullZoomScale, zoomer.fillZoomScale)
+                val delta = zoomer.zoomScale - baseScale
+                val result = delta > 0.05f
+                Log.d(
+                    "MojitoLongPress",
+                    "SketchContentLoader normal return=$result zoom=${zoomer.zoomScale} full=${zoomer.fullZoomScale} fill=${zoomer.fillZoomScale}"
+                )
+                result
             }
         }
     }
@@ -179,8 +209,75 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
     }
 
     override fun onLongTapCallback(onLongTapCallback: OnLongTapCallback) {
+        val longPressTimeout = ViewConfiguration.getLongPressTimeout().toLong()
+        val cancelSlop = ViewConfiguration.get(sketchImageView.context).scaledTouchSlop * 12
+        var downX = 0f
+        var downY = 0f
+        var manualFired = false
+        val manualRunnable = Runnable {
+            if (manualFired) return@Runnable
+            manualFired = true
+            Log.d("MojitoLongPress", "manual long-press (sketch view)")
+            onLongTapCallback.onLongTap(sketchImageView, downX, downY)
+        }
+        val updateParentIntercept = { disallow: Boolean ->
+            sketchImageView.parent?.requestDisallowInterceptTouchEvent(disallow)
+        }
+
         sketchImageView.zoomer?.setOnViewLongPressListener { view, x, y ->
+            manualFired = true
+            view.removeCallbacks(manualRunnable)
+            Log.d("MojitoLongPress", "zoomer long-press x=$x y=$y")
             onLongTapCallback.onLongTap(view, x, y)
+        }
+        // Fallback when ImageZoomer isn't working yet (e.g. static images or jittery touch).
+        sketchImageView.setOnTouchListener { view, event ->
+            val zoomer = sketchImageView.zoomer
+            val baseScale = if (zoomer == null) 1f else max(zoomer.fullZoomScale, zoomer.fillZoomScale)
+            val isZoomed = zoomer != null && zoomer.zoomScale - baseScale > 0.02f
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    if (event.pointerCount > 1) {
+                        manualFired = true
+                        view.removeCallbacks(manualRunnable)
+                        updateParentIntercept(true)
+                        return@setOnTouchListener false
+                    }
+                    manualFired = false
+                    downX = event.x
+                    downY = event.y
+                    Log.d("MojitoLongPress", "SketchView touch down " + formatEvent(event))
+                    updateParentIntercept(isZoomed)
+                    view.removeCallbacks(manualRunnable)
+                    view.postDelayed(manualRunnable, longPressTimeout)
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    if (event.pointerCount > 1) {
+                        manualFired = true
+                        view.removeCallbacks(manualRunnable)
+                        updateParentIntercept(true)
+                        return@setOnTouchListener false
+                    }
+                    val dx = kotlin.math.abs(event.x - downX)
+                    val dy = kotlin.math.abs(event.y - downY)
+                    if (dx > cancelSlop || dy > cancelSlop) {
+                        view.removeCallbacks(manualRunnable)
+                    }
+                    updateParentIntercept(isZoomed)
+                }
+                MotionEvent.ACTION_POINTER_DOWN -> {
+                    manualFired = true
+                    view.removeCallbacks(manualRunnable)
+                    updateParentIntercept(true)
+                }
+                MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    manualFired = true
+                    Log.d("MojitoLongPress", "SketchView touch up/cancel " + formatEvent(event))
+                    updateParentIntercept(false)
+                    view.removeCallbacks(manualRunnable)
+                }
+            }
+            false
         }
     }
 
@@ -188,4 +285,12 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
 
     }
 
+    private fun formatEvent(event: MotionEvent): String {
+        val toolType = if (event.pointerCount > 0) event.getToolType(0) else -1
+        return "action=${event.actionMasked} " +
+            "source=0x${Integer.toHexString(event.source)} " +
+            "toolType=$toolType " +
+            "buttonState=0x${Integer.toHexString(event.buttonState)} " +
+            "pointers=${event.pointerCount}"
+    }
 }

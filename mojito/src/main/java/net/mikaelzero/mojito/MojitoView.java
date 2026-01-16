@@ -104,6 +104,14 @@ public class MojitoView extends FrameLayout {
         addView(LayoutInflater.from(getContext()).inflate(R.layout.layout_content, null), 0);
         contentLayout = findViewById(R.id.contentLayout);
         backgroundView = findViewById(R.id.backgroundView);
+        contentLayout.setOnTouchListener((v, event) -> {
+            int action = event.getActionMasked();
+            if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_MOVE) {
+                Log.d("MojitoLongPress", "contentLayout touch " + formatEvent(event)
+                        + " raw=" + event.getRawX() + "," + event.getRawY());
+            }
+            return false;
+        });
         backgroundView.setAlpha(mAlpha);
         imageWrapper = new MarginViewWrapper(contentLayout);
     }
@@ -512,6 +520,7 @@ public class MojitoView extends FrameLayout {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent event) {
+        Log.d("MojitoLongPress", "MojitoView dispatch " + formatEvent(event));
         int y = (int) event.getY();
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_POINTER_DOWN:
@@ -526,9 +535,14 @@ public class MojitoView extends FrameLayout {
                 mDownY = event.getY();
                 mTranslateX = 0;
                 mMoveDownTranslateY = 0;
+                mYDistanceTraveled = 0;
                 //need event when touch black background
-                if (!isTouchPointInContentLayout(contentLayout, event)) {
+                boolean inContent = isTouchPointInContentLayout(contentLayout, event);
+                Log.d("MojitoLongPress", "MojitoView down inContent=" + inContent + " " + formatEvent(event)
+                        + " raw=" + event.getRawX() + "," + event.getRawY());
+                if (!inContent) {
                     mLastY = y;
+                    Log.d("MojitoLongPress", "MojitoView down outside content");
                     return true;
                 }
                 break;
@@ -543,23 +557,27 @@ public class MojitoView extends FrameLayout {
                 float moveY = event.getY();
                 mTranslateX = moveX - mDownX;
                 mMoveDownTranslateY = moveY - mDownY;
-                mYDistanceTraveled += Math.abs(mMoveDownTranslateY);
-
-                // if touch slop too short,un need event
-                if (Math.abs(mYDistanceTraveled) < touchSlop && (Math.abs(mTranslateX) >= Math.abs(mYDistanceTraveled) && !isDrag)) {
-                    mYDistanceTraveled = 0;
-                    if (isTouchPointInContentLayout(contentLayout, event)) {
+                mYDistanceTraveled = Math.abs(mMoveDownTranslateY) + mYDistanceTraveled;
+                if (Math.abs(mYDistanceTraveled) >= touchSlop
+                        || Math.abs(mTranslateX) < Math.abs(mYDistanceTraveled)
+                        || isDrag) {
+                    if (contentLoader.dispatchTouchEvent(
+                            isDrag,
+                            false,
+                            mMoveDownTranslateY < 0,
+                            Math.abs(mTranslateX) > Math.abs(mMoveDownTranslateY)
+                    )) {
+                        //if is long image,top or bottom or minScale, need handle event
+                        //if image scale<1(origin scale) , need handle event
+                        setViewPagerLocking(false);
+                        Log.d("MojitoLongPress", "MojitoView move consumed by contentLoader");
                         break;
                     }
-                    break;
+                    handleMove(y);
+                } else {
+                    mYDistanceTraveled = 0;
+                    isTouchPointInContentLayout(contentLayout, event);
                 }
-                if (contentLoader.dispatchTouchEvent(isDrag, false, mMoveDownTranslateY < 0, Math.abs(mTranslateX) > Math.abs(mMoveDownTranslateY))) {
-                    //if is long image,top or bottom or minScale, need handle event
-                    //if image scale<1(origin scale) , need handle event
-                    setViewPagerLocking(false);
-                    break;
-                }
-                handleMove(y);
                 break;
             case MotionEvent.ACTION_POINTER_UP:
                 setViewPagerLocking(false);
@@ -573,15 +591,21 @@ public class MojitoView extends FrameLayout {
                     break;
                 }
                 isMultiFinger = false;
-                if (contentLoader.dispatchTouchEvent(isDrag, true, mMoveDownTranslateY > 0, Math.abs(mTranslateX) > Math.abs(mMoveDownTranslateY))) {
+                if (contentLoader.dispatchTouchEvent(
+                        isDrag,
+                        true,
+                        mMoveDownTranslateY > 0,
+                        Math.abs(mTranslateX) > Math.abs(mMoveDownTranslateY)
+                )) {
                     //if is long image,top or bottom or minScale, need handle event
                     //if image scale<1(origin scale) , need handle event
                     setViewPagerLocking(false);
+                    Log.d("MojitoLongPress", "MojitoView up consumed by contentLoader");
                     break;
                 }
                 //如果滑动距离不足,则不需要事件
                 //if touch slop too short,un need event
-                if (Math.abs(mYDistanceTraveled) < touchSlop || (Math.abs(mYDistanceTraveled) > Math.abs(mYDistanceTraveled) && !isDrag)) {
+                if (Math.abs(mYDistanceTraveled) < touchSlop) {
                     if (isTouchPointInContentLayout(contentLayout, event)) {
                         break;
                     }
@@ -617,22 +641,30 @@ public class MojitoView extends FrameLayout {
     //不消费该事件会导致事件交还给上级
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        Log.d("MojitoLongPress", "MojitoView onTouch " + formatEvent(event));
+        // Let View handle long-press detection for fallback listeners, then consume.
+        super.onTouchEvent(event);
         return true;
     }
 
     private boolean isTouchPointInContentLayout(View view, MotionEvent event) {
-        float x = event.getX();
-        float y = event.getY();
+        float x = event.getRawX();
+        float y = event.getRawY();
         if (view == null) {
             return false;
         }
         int[] location = new int[2];
-        view.getLocationInWindow(location);
+        view.getLocationOnScreen(location);
         int left = location[0];
         int top = location[1];
         int right = left + view.getMeasuredWidth();
         int bottom = top + view.getMeasuredHeight();
-        return y >= top && y <= bottom && x >= left && x <= right;
+        boolean inside = y >= top && y <= bottom && x >= left && x <= right;
+        if (!inside) {
+            Log.d("MojitoLongPress", "touch outside content raw=" + x + "," + y
+                    + " rect=" + left + "," + top + "," + right + "," + bottom);
+        }
+        return inside;
     }
 
     public void setContentLoader(ContentLoader view, String originUrl, String targetUrl) {
@@ -662,6 +694,15 @@ public class MojitoView extends FrameLayout {
         imageTopOfAnimatorEnd = imageWrapper.getMarginTop();
         imageWidthOfAnimatorEnd = imageWrapper.getWidth();
         imageHeightOfAnimatorEnd = imageWrapper.getHeight();
+    }
+
+    private static String formatEvent(MotionEvent event) {
+        int toolType = event.getPointerCount() > 0 ? event.getToolType(0) : -1;
+        return "action=" + event.getActionMasked()
+                + " source=0x" + Integer.toHexString(event.getSource())
+                + " toolType=" + toolType
+                + " buttonState=0x" + Integer.toHexString(event.getButtonState())
+                + " pointers=" + event.getPointerCount();
     }
 
     private OnMojitoViewCallback onMojitoViewCallback;

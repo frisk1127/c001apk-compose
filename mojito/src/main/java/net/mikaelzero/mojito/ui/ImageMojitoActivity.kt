@@ -1,16 +1,21 @@
 package net.mikaelzero.mojito.ui
 
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
+import android.os.SystemClock
+import android.util.Log
 import android.view.KeyEvent
 import android.view.Window
+import android.window.OnBackInvokedCallback
+import android.window.OnBackInvokedDispatcher
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.ViewPager
 import com.gyf.immersionbar.ImmersionBar
+import net.mikaelzero.mojito.MojitoView
 import net.mikaelzero.mojito.Mojito
 import net.mikaelzero.mojito.bean.ActivityConfig
 import net.mikaelzero.mojito.bean.FragmentConfig
@@ -36,6 +41,8 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
     lateinit var activityConfig: ActivityConfig
     private lateinit var imageViewPagerAdapter: FragmentPagerAdapter
     val fragmentMap = hashMapOf<Int, ImageMojitoFragment?>()
+    private var backInvokedCallback: OnBackInvokedCallback? = null
+    private var backHandled = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -47,7 +54,6 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
         }
         binding = ActivityImageBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        WindowInsetsControllerCompat(window, binding.root).hide(WindowInsetsCompat.Type.statusBars())
 
         binding.userCustomLayout.removeAllViews()
         activityCoverLoader?.apply {
@@ -128,6 +134,28 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
         }
         binding.viewPager.adapter = imageViewPagerAdapter
         binding.viewPager.setCurrentItem(currentPosition, false)
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (backHandled) {
+                    return
+                }
+                backHandled = true
+                backToMin()
+            }
+        })
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            backInvokedCallback = OnBackInvokedCallback {
+                if (backHandled) {
+                    return@OnBackInvokedCallback
+                }
+                backHandled = true
+                backToMin()
+            }
+            onBackInvokedDispatcher.registerOnBackInvokedCallback(
+                OnBackInvokedDispatcher.PRIORITY_DEFAULT,
+                backInvokedCallback!!
+            )
+        }
 
         binding.viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
             override fun onPageScrollStateChanged(state: Int) {
@@ -192,6 +220,7 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
         var multiContentLoader: MultiContentLoader? = null
         var iIndicator: IIndicator? = null
         var activityCoverLoader: ActivityCoverLoader? = null
+        var lastGlobalLongPressTime: Long = 0L
         var onMojitoListener: OnMojitoListener? = null
     }
 
@@ -205,6 +234,13 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
 
     override fun onDestroy() {
         super.onDestroy()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            backInvokedCallback?.let { onBackInvokedDispatcher.unregisterOnBackInvokedCallback(it) }
+            backInvokedCallback = null
+        }
+        if (isFinishing && onMojitoListener != null) {
+            onMojitoListener?.onMojitoViewFinish(binding.viewPager.currentItem)
+        }
 
         progressLoader = null
         fragmentCoverLoader = null
@@ -214,6 +250,33 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
         onMojitoListener = null
         viewParams = null
 
+    }
+
+    fun tryDispatchLongPress(x: Float, y: Float): Boolean {
+        val fragment = getCurrentFragment() as? ImageMojitoFragment ?: return false
+        val originUrl = fragment.fragmentConfig.originUrl ?: ""
+        val targetUrl = fragment.fragmentConfig.targetUrl ?: ""
+        if (originUrl.contains(".gif", true) || targetUrl.contains(".gif", true)) {
+            return false
+        }
+        val now = SystemClock.uptimeMillis()
+        if (now - lastGlobalLongPressTime < 500L) {
+            return false
+        }
+        val mojitoView = fragment.view?.findViewById<MojitoView>(net.mikaelzero.mojito.R.id.mojitoView)
+        if (mojitoView?.isDrag == true) {
+            return false
+        }
+        lastGlobalLongPressTime = now
+        Log.d("MojitoLongPress", "Activity viewPager long-press fire pos=${fragment.fragmentConfig.position}")
+        onMojitoListener?.onLongClick(
+            this@ImageMojitoActivity,
+            fragment.view ?: binding.viewPager,
+            x,
+            y,
+            fragment.fragmentConfig.position
+        )
+        return true
     }
 
 }
