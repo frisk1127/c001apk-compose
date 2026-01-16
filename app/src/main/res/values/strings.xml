@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">c001apk-compose</string>
-    <string name="home">Home</string>
-    <string name="message">Message</string>
-    <string name="settings">Settings</string>
-    <string name="about_source_code"><![CDATA[View source code at %1$s]]></string>
+    <string name="app_name">c001apk</string>
+    <string name="home">首页</string>
+    <string name="message">消息</string>
+    <string name="settings">设置</string>
+    <string name="about_source_code"><![CDATA[查看源码 : %1$s]]></string>
 </resources>
