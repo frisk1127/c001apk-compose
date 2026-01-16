@@ -91,6 +91,7 @@ public class NoScrollViewPager extends ViewPager {
 
     public void setLocked(boolean isLocked) {
         this.isLocked = isLocked;
+        Log.d("MojitoLongPress", "ViewPager setLocked=" + isLocked);
     }
 
     public boolean isLocked() {

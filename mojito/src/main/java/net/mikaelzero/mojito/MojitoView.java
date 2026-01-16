@@ -677,6 +677,7 @@ public class MojitoView extends FrameLayout {
         if (onMojitoViewCallback != null) {
             onMojitoViewCallback.onLock(lock);
         }
+        Log.d("MojitoLongPress", "MojitoView setViewPagerLocking=" + lock);
     }
 
     private void changeContentViewToFullscreen() {
