@@ -3,7 +3,9 @@ package com.example.c001apk.compose
 import android.app.Application
 import coil.Coil
 import coil.ImageLoader
+import com.example.c001apk.compose.util.CookieUtil.materialYou
 import com.example.c001apk.compose.util.dp
+import com.google.android.material.color.DynamicColors
 import dagger.hilt.android.HiltAndroidApp
 import me.zhanghai.android.appiconloader.coil.AppIconFetcher
 import me.zhanghai.android.appiconloader.coil.AppIconKeyer
@@ -23,6 +25,9 @@ class C001Application : Application() {
         super.onCreate()
 
         c001Application = this
+        if (materialYou) {
+            DynamicColors.applyToActivitiesIfAvailable(this)
+        }
 
         Coil.setImageLoader(
             ImageLoader.Builder(this)
