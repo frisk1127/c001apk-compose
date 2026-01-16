@@ -144,11 +144,15 @@ class ScaleDragHelper implements ScaleDragGestureDetector.OnScaleDragGestureList
         tempLastScaleFocusX = 0;
         tempLastScaleFocusY = 0;
 
-        // 上来就禁止父View拦截事件
+        float baseScale = getDefaultZoomScale();
+        float zoomScale = getZoomScale();
+        boolean isZoomed = zoomScale - baseScale > 0.02f;
+        boolean disallow = !imageZoomer.isAllowParentInterceptOnEdge() || isZoomed;
+        // 未缩放时允许父 ViewPager 拦截，避免左右滑动失效
         if (SLog.isLoggable(SLog.LEVEL_DEBUG | SLog.TYPE_ZOOM)) {
-            SLog.d(NAME, "disallow parent intercept touch event. action down");
+            SLog.d(NAME, "parent intercept on down. disallow=%s base=%s zoom=%s", disallow, baseScale, zoomScale);
         }
-        requestDisallowInterceptTouchEvent(imageZoomer.getImageView(), true);
+        requestDisallowInterceptTouchEvent(imageZoomer.getImageView(), disallow);
 
         // 取消快速滚动
         cancelFling();
