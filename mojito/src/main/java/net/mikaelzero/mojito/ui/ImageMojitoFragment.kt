@@ -197,6 +197,16 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
             forwarded.recycle()
             handled
         }
+        binding.loadingLayout.setOnTouchListener { _, event ->
+            Log.d(
+                "MojitoLongPress",
+                "loadingLayout touch action=${event.actionMasked} forwardToMojito=true"
+            )
+            val forwarded = MotionEvent.obtain(event)
+            val handled = binding.mojitoView.dispatchTouchEvent(forwarded)
+            forwarded.recycle()
+            handled
+        }
 
         loadImage()
     }
