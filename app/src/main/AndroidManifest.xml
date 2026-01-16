@@ -23,6 +23,11 @@
         android:theme="@style/Theme.C001apkCompose"
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
+        <activity
+            android:name="net.mikaelzero.mojito.ui.ImageMojitoActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:theme="@style/AppThemeTranslucent"
+            tools:replace="android:theme" />
 
         <activity
             android:name=".ui.feed.reply.ReplyActivity"
