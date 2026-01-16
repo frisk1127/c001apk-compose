@@ -210,7 +210,9 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
 
     override fun onLongTapCallback(onLongTapCallback: OnLongTapCallback) {
         val longPressTimeout = ViewConfiguration.getLongPressTimeout().toLong()
-        val cancelSlop = ViewConfiguration.get(sketchImageView.context).scaledTouchSlop * 12
+        val viewConfig = ViewConfiguration.get(sketchImageView.context)
+        val cancelSlop = viewConfig.scaledTouchSlop * 12
+        val interceptSlop = viewConfig.scaledTouchSlop * 2
         var downX = 0f
         var downY = 0f
         var manualFired = false
@@ -248,7 +250,8 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
                     downX = event.x
                     downY = event.y
                     Log.d("MojitoLongPress", "SketchView touch down " + formatEvent(event))
-                    updateParentIntercept(isZoomed)
+                    // Keep initial DOWN in child so double-tap can be detected.
+                    updateParentIntercept(true)
                     view.removeCallbacks(manualRunnable)
                     view.postDelayed(manualRunnable, longPressTimeout)
                 }
@@ -264,7 +267,12 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
                     if (dx > cancelSlop || dy > cancelSlop) {
                         view.removeCallbacks(manualRunnable)
                     }
-                    updateParentIntercept(isZoomed)
+                    val horizontalSwipe = dx > interceptSlop && dx > dy
+                    if (!isZoomed && horizontalSwipe) {
+                        updateParentIntercept(false)
+                    } else {
+                        updateParentIntercept(true)
+                    }
                 }
                 MotionEvent.ACTION_POINTER_DOWN -> {
                     manualFired = true
