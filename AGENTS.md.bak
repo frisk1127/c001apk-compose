@@ -1,0 +1,35 @@
+# Repository Guidelines
+
+## 项目结构与模块组织
+这是一个 Android/Compose 工程，根目录包含 `settings.gradle.kts`、`build.gradle.kts`、`gradle/` 与 `gradlew`。当前只保留 `:app` 模块，源码与资源位于 `app/src/main/`。Mojito 相关能力通过 JitPack Maven 依赖引入（见 `app/build.gradle.kts`），不再使用本地子模块。
+
+## 构建、测试与开发命令
+使用 Gradle Wrapper（在仓库根目录执行）：
+- `.\gradlew assembleDebug` 生成 debug APK
+- `.\gradlew assembleRelease` 生成 release APK
+- `.\gradlew test` 运行 JVM 单元测试
+- `.\gradlew connectedAndroidTest` 运行仪器测试（需设备/模拟器）
+
+## 环境与配置
+- 需 JDK 11+（项目使用 AGP 8.x），建议 JDK 17/21。可临时设置 `JAVA_HOME` 后再运行 Gradle。
+- 需要 Android SDK 路径：在 `local.properties` 中配置 `sdk.dir=C:\\Users\\Frisk1127\\AppData\\Local\\Android\\Sdk`（按本机路径调整）。
+
+## 依赖与兼容性说明
+Mojito 来自 JitPack（示例版本 `1.8.7`）：
+- `com.github.MikaelZero.mojito:mojito:1.8.7`
+- `com.github.MikaelZero.mojito:SketchImageViewLoader:1.8.7`
+- `com.github.MikaelZero.mojito:coilimageloader:1.8.7`
+
+Sketch 依赖坐标有历史变化，根目录 `build.gradle.kts` 使用依赖替换将
+`me.panpf:sketch-gif:2.7.1` 映射为 `io.github.panpf.sketch:sketch-gif:2.7.1`，避免解析失败。
+
+## 编码风格与命名
+- Kotlin/Java 使用 4 空格缩进
+- 类名 UpperCamelCase，方法/变量 lowerCamelCase
+- 资源名与 id 使用 `lowercase_with_underscores`
+
+## 测试指南
+将单元测试放在 `app/src/test/`，仪器测试放在 `app/src/androidTest/`。测试类以 `*Test` 命名，并保持与被测类的包结构一致。
+
+## 配置与安全
+签名信息使用 `local.properties`（如 `KEYSTORE_PATH`、`KEYSTORE_PASSWORD` 等），不要提交 keystore 到仓库。
