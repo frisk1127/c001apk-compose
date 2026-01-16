@@ -65,10 +65,6 @@ public class NoScrollViewPager extends ViewPager {
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         if (!isLocked) {
             try {
-                if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) {
-                    Log.d("MojitoLongPress", "ViewPager intercept result=false (down pass-through) " + formatEvent(ev));
-                    return false;
-                }
                 boolean result = super.onInterceptTouchEvent(ev);
                 Log.d("MojitoLongPress", "ViewPager intercept result=" + result + " " + formatEvent(ev));
                 return result;
