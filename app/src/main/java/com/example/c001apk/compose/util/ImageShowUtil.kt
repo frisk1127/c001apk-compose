@@ -47,8 +47,6 @@ object ImageShowUtil {
             else it.http2https
         }
         Mojito.start(imageView.context) {
-            cookie(cookie)
-            userAgent(userAgent)
             urls(thumbnailList, originList)
             position(position)
             progressLoader {
@@ -125,8 +123,6 @@ object ImageShowUtil {
         val thumbnailList = urlList.map { "${it.http2https}$SUFFIX_THUMBNAIL" }
         val originList = urlList.map { it.http2https }
         Mojito.start(context) {
-            cookie(cookie)
-            userAgent(userAgent)
             urls(thumbnailList, originList)
             when (CookieUtil.imageQuality) {
                 0 -> if (NetWorkUtil.isWifiConnected())
@@ -197,8 +193,6 @@ object ImageShowUtil {
                     }
                 })
             },
-            cookie = cookie,
-            userAgent = userAgent,
         )
     }
 
