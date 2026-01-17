@@ -164,7 +164,7 @@ fun TopicScreen(
                                         && viewModel.tabList?.getOrNull(pagerState.currentPage)?.title == "讨论"
                                     ) {
                                         DropdownMenuItem(
-                                            text = { Text("Sort") },
+                                            text = { Text(stringResource(id = R.string.menu_sort)) },
                                             onClick = {
                                                 dropdownMenuExpanded = false
                                                 sortMenuExpanded = true
@@ -200,8 +200,11 @@ fun TopicScreen(
                                     DropdownMenuItem(
                                         text = {
                                             Text(
-                                                if (viewModel.isBlocked) "UnBlock"
-                                                else "拉黑"
+                                                if (viewModel.isBlocked) {
+                                                    stringResource(id = R.string.menu_unblock)
+                                                } else {
+                                                    "拉黑"
+                                                }
                                             )
                                         },
                                         onClick = {

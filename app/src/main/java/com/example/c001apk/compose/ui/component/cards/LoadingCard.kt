@@ -14,8 +14,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.c001apk.compose.R
 import com.example.c001apk.compose.logic.state.FooterState
 import com.example.c001apk.compose.logic.state.LoadingState
 import com.example.c001apk.compose.logic.state.State
@@ -39,11 +41,11 @@ fun LoadingCard(
 ) {
 
     val type: Pair<Type, String?> = when (state) {
-        FooterState.End -> Pair(Type.TEXT, "END")
+        FooterState.End -> Pair(Type.TEXT, stringResource(id = R.string.loading_end))
         is FooterState.Error -> Pair(Type.TEXT, state.errMsg)
         FooterState.Loading -> Pair(Type.INDICATOR, null)
         FooterState.Success -> Pair(Type.NONE, null)
-        LoadingState.Empty -> Pair(Type.TEXT, "EMPTY")
+        LoadingState.Empty -> Pair(Type.TEXT, stringResource(id = R.string.loading_empty))
         is LoadingState.Error -> Pair(Type.TEXT, state.errMsg)
         LoadingState.Loading -> Pair(Type.INDICATOR, null)
         is LoadingState.Success<*> -> Pair(Type.NONE, null)
@@ -67,7 +69,7 @@ fun LoadingCard(
                 modifier = Modifier
                     .padding(16.dp)
                     .align(Alignment.Center),
-                text = type.second ?: "EMPTY",
+                text = type.second ?: stringResource(id = R.string.loading_empty),
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.outline,
             )

@@ -703,12 +703,12 @@ fun FeedHeader(
                             }
                         )
                     }
-                    if (data.uid == CookieUtil.uid) {
-                        DropdownMenuItem(
-                            text = { Text("Delete") },
-                            onClick = {
-                                dropdownMenuExpanded = false
-                                onDelete?.let { it(data.id.orEmpty(), LikeType.FEED, null) }
+                        if (data.uid == CookieUtil.uid) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(id = R.string.menu_delete)) },
+                                onClick = {
+                                    dropdownMenuExpanded = false
+                                    onDelete?.let { it(data.id.orEmpty(), LikeType.FEED, null) }
                             }
                         )
                     }

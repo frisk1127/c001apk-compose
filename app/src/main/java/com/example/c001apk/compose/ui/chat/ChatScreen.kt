@@ -203,7 +203,7 @@ fun ChatScreen(
                             expanded = dropdownMenuExpanded,
                             onDismissRequest = { dropdownMenuExpanded = false }) {
                             listOf(
-                                "Check",
+                                stringResource(id = R.string.menu_check),
                                 "拉黑",
                                 stringResource(id = R.string.menu_report)
                             ).forEachIndexed { index, menu ->

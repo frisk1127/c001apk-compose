@@ -294,7 +294,15 @@ fun FeedScreen(
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text(if (viewModel.isBlocked) "UnBlock" else "拉黑") },
+                                    text = {
+                                        Text(
+                                            if (viewModel.isBlocked) {
+                                                stringResource(id = R.string.menu_unblock)
+                                            } else {
+                                                "拉黑"
+                                            }
+                                        )
+                                    },
                                     onClick = {
                                         dropdownMenuExpanded = false
                                         viewModel.blockUser()

@@ -474,7 +474,7 @@ fun FeedReplyCard(
                     }
                     if (data.uid == CookieUtil.uid) {
                         DropdownMenuItem(
-                            text = { Text("Delete") },
+                            text = { Text(stringResource(id = R.string.menu_delete)) },
                             onClick = {
                                 dropdownMenuExpanded = false
                                 onDelete?.let {
@@ -621,7 +621,7 @@ fun ReplyRows(
                     }
                     if (reply.uid == CookieUtil.uid) {
                         DropdownMenuItem(
-                            text = { Text("Delete") },
+                            text = { Text(stringResource(id = R.string.menu_delete)) },
                             onClick = {
                                 dropdownMenuExpanded = -1
                                 onDelete?.let { it(reply.id.orEmpty(), LikeType.REPLY) }

@@ -232,7 +232,7 @@ fun HistoryHeader(
                     )
                 }
                 DropdownMenuItem(
-                    text = { Text("Delete") },
+                    text = { Text(stringResource(id = R.string.menu_delete)) },
                     onClick = {
                         dropdownMenuExpanded = false
                         onDelete(data.id)
