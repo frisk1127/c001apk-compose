@@ -25,13 +25,11 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.core.app.ActivityOptionsCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.HapticFeedbackConstantsCompat
 import androidx.core.view.ViewCompat
@@ -110,8 +108,8 @@ class ReplyActivity : AppCompatActivity(),
     private val color by lazy { SurfaceColors.SURFACE_1.getColor(this) }
     private val recentList = ArrayList<List<Pair<String, Int>>>()
     private val list = listOf(recentList, emojiList, coolBList)
-    private lateinit var pickMultipleMedia: ActivityResultLauncher<PickVisualMediaRequest>
     private lateinit var pickContent: ActivityResultLauncher<String>
+    private lateinit var pickDocument: ActivityResultLauncher<Array<String>>
     private var uriList: MutableList<Uri> = ArrayList()
     private var imageList = ArrayList<OSSUploadPrepareModel>()
     private var typeList = ArrayList<String>()
@@ -238,16 +236,16 @@ class ReplyActivity : AppCompatActivity(),
             binding.imageLayout.isVisible = uriList.isNotEmpty()
         }
 
-        pickMultipleMedia =
-            registerForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(9)) { uris ->
-                handlePickedUris(uris)
-            }
-
         pickContent =
             registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
                 uri?.let {
                     handlePickedUris(listOf(it))
                 }
+            }
+
+        pickDocument =
+            registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+                handlePickedUris(uris)
             }
     }
 
@@ -732,14 +730,8 @@ class ReplyActivity : AppCompatActivity(),
 
     private fun launchPick() {
         (binding.main as? SmoothInputLayout)?.closeKeyboard(false)
-        val options = ActivityOptionsCompat.makeCustomAnimation(
-            this, R.anim.anim_bottom_sheet_slide_up, R.anim.anim_bottom_sheet_slide_down
-        )
         try {
-            pickMultipleMedia.launch(
-                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
-                options
-            )
+            pickContent.launch("image/*")
         } catch (e: ActivityNotFoundException) {
             makeToast("Activity Not Found")
             e.printStackTrace()
@@ -749,7 +741,7 @@ class ReplyActivity : AppCompatActivity(),
     private fun launchDocumentPick() {
         (binding.main as? SmoothInputLayout)?.closeKeyboard(false)
         try {
-            pickContent.launch("image/*")
+            pickDocument.launch(arrayOf("image/*"))
         } catch (e: ActivityNotFoundException) {
             makeToast("Activity Not Found")
             e.printStackTrace()

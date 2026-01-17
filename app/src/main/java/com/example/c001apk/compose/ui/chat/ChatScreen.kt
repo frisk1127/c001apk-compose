@@ -1,7 +1,6 @@
 package com.example.c001apk.compose.ui.chat
 
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -75,7 +74,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -178,15 +176,15 @@ fun ChatScreen(
         clearFocus = true
     }
 
-    val pickVisualMedia =
-        rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+    val pickContent =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
             uri?.let { uri1 ->
                 handlePickedImage(uri1)
             }
         }
 
-    val pickContent =
-        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+    val pickDocument =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             uri?.let { uri1 ->
                 handlePickedImage(uri1)
             }
@@ -344,19 +342,11 @@ fun ChatScreen(
                     .windowInsetsPadding(windowInsets.only(WindowInsetsSides.Start + WindowInsetsSides.Bottom)),
                 onPickImage = {
                     onClearFocus()
-                    val options = ActivityOptionsCompat.makeCustomAnimation(
-                        context,
-                        R.anim.anim_bottom_sheet_slide_up,
-                        R.anim.anim_bottom_sheet_slide_down
-                    )
-                    pickVisualMedia.launch(
-                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
-                        options
-                    )
+                    pickContent.launch("image/*")
                 },
                 onPickOtherImage = {
                     onClearFocus()
-                    pickContent.launch("image/*")
+                    pickDocument.launch(arrayOf("image/*"))
                 },
                 onSendMessage = {
                     viewModel.onSendMessage(uid, it, EMPTY_STRING)
