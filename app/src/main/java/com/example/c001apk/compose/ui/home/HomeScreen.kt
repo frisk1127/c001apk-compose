@@ -59,6 +59,18 @@ enum class TabType {
     FOLLOW, APP, FEED, HOT, TOPIC, PRODUCT, COOLPIC
 }
 
+private fun tabTitle(type: TabType): String {
+    return when (type) {
+        TabType.FOLLOW -> "关注"
+        TabType.APP -> "应用"
+        TabType.FEED -> "动态"
+        TabType.HOT -> "热榜"
+        TabType.TOPIC -> "话题"
+        TabType.PRODUCT -> "数码"
+        TabType.COOLPIC -> "酷图"
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -149,7 +161,7 @@ fun HomeScreen(
                                 }
                                 scope.launch { pagerState.animateScrollToPage(index) }
                             },
-                            text = { Text(text = tab.name) }
+                            text = { Text(text = tabTitle(tab)) }
                         )
                     }
                 }
