@@ -111,7 +111,12 @@ fun WebViewScreen(
                             expanded = dropdownMenuExpanded,
                             onDismissRequest = { dropdownMenuExpanded = false }
                         ) {
-                            listOf("Refresh", "复制", "Open in Browser", "Clean Caches")
+                            listOf(
+                                stringResource(id = R.string.menu_refresh),
+                                "复制",
+                                stringResource(id = R.string.menu_open_in_browser),
+                                stringResource(id = R.string.menu_clean_caches)
+                            )
                                 .forEachIndexed { index, menu ->
                                     DropdownMenuItem(
                                         text = { Text(menu) },

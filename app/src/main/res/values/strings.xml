@@ -62,4 +62,8 @@
     <string name="menu_check">查看</string>
     <string name="loading_empty">这里是空的→_→</string>
     <string name="loading_end">到底了Σ( ￣□￣||)</string>
+    <string name="menu_refresh">刷新</string>
+    <string name="menu_open_in_browser">在浏览器打开</string>
+    <string name="menu_clean_caches">清理缓存</string>
+    <string name="menu_reset">重置</string>
 </resources>

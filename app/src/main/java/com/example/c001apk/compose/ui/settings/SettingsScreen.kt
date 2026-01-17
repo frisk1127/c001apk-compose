@@ -657,7 +657,7 @@ fun SliderDialog(
                     onDismiss()
                     setData(1.0f)
                 }) {
-                Text(text = "Reset")
+                Text(text = stringResource(id = R.string.menu_reset))
             }
         },
         confirmButton = {
