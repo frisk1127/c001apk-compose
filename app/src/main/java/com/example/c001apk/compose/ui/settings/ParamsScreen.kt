@@ -15,7 +15,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.c001apk.compose.R
 import com.example.c001apk.compose.constant.Constants
 import com.example.c001apk.compose.logic.providable.LocalUserPreferences
 import com.example.c001apk.compose.ui.component.BackButton
@@ -43,7 +45,7 @@ fun ParamsScreen(
                 navigationIcon = {
                     BackButton { onBackClick() }
                 },
-                title = { Text(text = "Params") },
+                title = { Text(text = stringResource(id = R.string.params_title)) },
             )
         }
     ) { paddingValues ->
@@ -55,7 +57,7 @@ fun ParamsScreen(
         ) {
 
             ParamsItem(
-                title = "Version Name",
+                title = stringResource(id = R.string.params_version_name),
                 data = prefs.versionName.ifEmpty { null }
             ) {
                 viewModel.setVersionName(it)
@@ -65,14 +67,14 @@ fun ParamsScreen(
             }
 
             ParamsItem(
-                title = "Api Version",
+                title = stringResource(id = R.string.params_api_version),
                 data = prefs.apiVersion.ifEmpty { null }
             ) {
                 viewModel.setApiVersion(it)
             }
 
             ParamsItem(
-                title = "Version Code",
+                title = stringResource(id = R.string.params_version_code),
                 data = prefs.versionCode.ifEmpty { null }
             ) {
                 viewModel.setVersionCode(it)
@@ -82,7 +84,7 @@ fun ParamsScreen(
             }
 
             ParamsItem(
-                title = "Manufacturer",
+                title = stringResource(id = R.string.params_manufacturer),
                 data = prefs.manufacturer.ifEmpty { null }
             ) {
                 viewModel.setManufacturer(it)
@@ -92,7 +94,7 @@ fun ParamsScreen(
             }
 
             ParamsItem(
-                title = "Brand",
+                title = stringResource(id = R.string.params_brand),
                 data = prefs.brand.ifEmpty { null }
             ) {
                 viewModel.setBrand(it)
@@ -105,7 +107,7 @@ fun ParamsScreen(
             }
 
             ParamsItem(
-                title = "Model",
+                title = stringResource(id = R.string.params_model),
                 data = prefs.model.ifEmpty { null }
             ) {
                 viewModel.setModel(it)
@@ -118,7 +120,7 @@ fun ParamsScreen(
             }
 
             ParamsItem(
-                title = "BuildNumber",
+                title = stringResource(id = R.string.params_build_number),
                 data = prefs.buildNumber.ifEmpty { null }
             ) {
                 viewModel.setBuildNumber(it)
@@ -131,14 +133,14 @@ fun ParamsScreen(
             }
 
             ParamsItem(
-                title = "SDK INT",
+                title = stringResource(id = R.string.params_sdk_int),
                 data = prefs.sdkInt.ifEmpty { null }
             ) {
                 viewModel.setSdkInt(it)
             }
 
             ParamsItem(
-                title = "Android Version",
+                title = stringResource(id = R.string.params_android_version),
                 data = prefs.androidVersion.ifEmpty { null }
             ) {
                 viewModel.setAndroidVersion(it)
@@ -148,17 +150,17 @@ fun ParamsScreen(
             }
 
             ParamsItem(
-                title = "User Agent",
+                title = stringResource(id = R.string.params_user_agent),
                 data = prefs.userAgent.ifEmpty { null }
             )
 
             ParamsItem(
-                title = "X-App-Device",
+                title = stringResource(id = R.string.params_x_app_device),
                 data = prefs.xAppDevice.ifEmpty { null }
             )
 
             BasicListItem(
-                headlineText = "Regenerate Params"
+                headlineText = stringResource(id = R.string.params_regenerate)
             ) {
                 viewModel.regenerateParams()
             }

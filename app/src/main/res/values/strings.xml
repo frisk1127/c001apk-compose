@@ -35,4 +35,17 @@
     <string name="palette_style_content">内容</string>
     <string name="menu_feedback">反馈</string>
     <string name="menu_about">关于</string>
+    <string name="params_title">参数</string>
+    <string name="params_version_name">版本名</string>
+    <string name="params_api_version">API 版本</string>
+    <string name="params_version_code">版本号</string>
+    <string name="params_manufacturer">厂商</string>
+    <string name="params_brand">品牌</string>
+    <string name="params_model">型号</string>
+    <string name="params_build_number">构建号</string>
+    <string name="params_sdk_int">SDK 级别</string>
+    <string name="params_android_version">Android 版本</string>
+    <string name="params_user_agent">用户代理</string>
+    <string name="params_x_app_device">设备标识</string>
+    <string name="params_regenerate">重新生成参数</string>
 </resources>
