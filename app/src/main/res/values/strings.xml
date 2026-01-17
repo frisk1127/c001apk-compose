@@ -48,4 +48,7 @@
     <string name="params_user_agent">用户代理</string>
     <string name="params_x_app_device">设备标识</string>
     <string name="params_regenerate">重新生成参数</string>
+    <string name="search_hint">搜索</string>
+    <string name="search_hint_in">搜索 %1$s</string>
+    <string name="search_clear_history_confirm">确定清除全部搜索历史？</string>
 </resources>

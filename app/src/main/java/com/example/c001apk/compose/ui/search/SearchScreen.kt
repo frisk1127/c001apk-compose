@@ -57,7 +57,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.c001apk.compose.constant.Constants.EMPTY_STRING
+import com.example.c001apk.compose.R
 import com.example.c001apk.compose.ui.component.BackButton
 import com.example.c001apk.compose.ui.component.cards.SearchHistoryCard
 
@@ -119,8 +119,13 @@ fun SearchScreen(
                         onValueChange = { textInput = it },
                         textStyle = textStyle.copy(fontSize = 18.sp),
                         placeholder = {
+                            val hint = if (!title.isNullOrEmpty()) {
+                                stringResource(id = R.string.search_hint_in, title)
+                            } else {
+                                stringResource(id = R.string.search_hint)
+                            }
                             Text(
-                                text = "Search${if (!title.isNullOrEmpty()) " in $title" else EMPTY_STRING}",
+                                text = hint,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -255,7 +260,10 @@ fun SearchScreen(
                     }
                 },
                 title = {
-                    Text(text = "确定清除全部搜索历史？", modifier = Modifier.fillMaxWidth())
+                    Text(
+                        text = stringResource(id = R.string.search_clear_history_confirm),
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             )
         }
