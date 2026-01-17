@@ -111,7 +111,7 @@ class ReplyActivity : AppCompatActivity(),
     private val recentList = ArrayList<List<Pair<String, Int>>>()
     private val list = listOf(recentList, emojiList, coolBList)
     private lateinit var pickMultipleMedia: ActivityResultLauncher<PickVisualMediaRequest>
-    private lateinit var pickDocument: ActivityResultLauncher<Array<String>>
+    private lateinit var pickContent: ActivityResultLauncher<String>
     private var uriList: MutableList<Uri> = ArrayList()
     private var imageList = ArrayList<OSSUploadPrepareModel>()
     private var typeList = ArrayList<String>()
@@ -243,9 +243,11 @@ class ReplyActivity : AppCompatActivity(),
                 handlePickedUris(uris)
             }
 
-        pickDocument =
-            registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
-                handlePickedUris(uris)
+        pickContent =
+            registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+                uri?.let {
+                    handlePickedUris(listOf(it))
+                }
             }
     }
 
@@ -747,7 +749,7 @@ class ReplyActivity : AppCompatActivity(),
     private fun launchDocumentPick() {
         (binding.main as? SmoothInputLayout)?.closeKeyboard(false)
         try {
-            pickDocument.launch(arrayOf("image/*"))
+            pickContent.launch("image/*")
         } catch (e: ActivityNotFoundException) {
             makeToast("Activity Not Found")
             e.printStackTrace()

@@ -185,8 +185,8 @@ fun ChatScreen(
             }
         }
 
-    val pickDocument =
-        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+    val pickContent =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
             uri?.let { uri1 ->
                 handlePickedImage(uri1)
             }
@@ -356,7 +356,7 @@ fun ChatScreen(
                 },
                 onPickOtherImage = {
                     onClearFocus()
-                    pickDocument.launch(arrayOf("image/*"))
+                    pickContent.launch("image/*")
                 },
                 onSendMessage = {
                     viewModel.onSendMessage(uid, it, EMPTY_STRING)
