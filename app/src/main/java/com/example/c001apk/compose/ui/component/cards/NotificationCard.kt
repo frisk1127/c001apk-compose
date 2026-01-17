@@ -24,11 +24,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import com.example.c001apk.compose.R
 import com.example.c001apk.compose.logic.model.HomeFeedResponse
 import com.example.c001apk.compose.ui.component.CoilLoader
 import com.example.c001apk.compose.ui.component.LinkText
@@ -167,7 +169,7 @@ fun NotificationCard(
                     dropdownMenuExpanded = false
                 },
             ) {
-                listOf("拉黑", "Report").forEachIndexed { index, menu ->
+                listOf("拉黑", stringResource(id = R.string.menu_report)).forEachIndexed { index, menu ->
                     DropdownMenuItem(
                         text = { Text(menu) },
                         onClick = {

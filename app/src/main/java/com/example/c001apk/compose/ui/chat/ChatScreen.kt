@@ -69,6 +69,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -201,7 +202,11 @@ fun ChatScreen(
                         DropdownMenu(
                             expanded = dropdownMenuExpanded,
                             onDismissRequest = { dropdownMenuExpanded = false }) {
-                            listOf("Check", "拉黑", "Report").forEachIndexed { index, menu ->
+                            listOf(
+                                "Check",
+                                "拉黑",
+                                stringResource(id = R.string.menu_report)
+                            ).forEachIndexed { index, menu ->
                                 DropdownMenuItem(
                                     text = { Text(text = menu) },
                                     onClick = {

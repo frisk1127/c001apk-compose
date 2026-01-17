@@ -34,11 +34,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import com.example.c001apk.compose.R
 import com.example.c001apk.compose.constant.Constants.EMPTY_STRING
 import com.example.c001apk.compose.logic.model.HomeFeedResponse
 import com.example.c001apk.compose.ui.base.LikeType
@@ -463,7 +465,7 @@ fun FeedReplyCard(
                     }
                     if (isLogin) {
                         DropdownMenuItem(
-                            text = { Text("Report") },
+                            text = { Text(stringResource(id = R.string.menu_report)) },
                             onClick = {
                                 dropdownMenuExpanded = false
                                 onReport?.let { it(data.id.orEmpty(), ReportType.REPLY) }
@@ -610,7 +612,7 @@ fun ReplyRows(
                     }
                     if (isLogin) {
                         DropdownMenuItem(
-                            text = { Text("Report") },
+                            text = { Text(stringResource(id = R.string.menu_report)) },
                             onClick = {
                                 dropdownMenuExpanded = -1
                                 onReport?.let { it(reply.id.orEmpty(), ReportType.REPLY) }

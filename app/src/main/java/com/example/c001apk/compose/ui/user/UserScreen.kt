@@ -48,6 +48,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.c001apk.compose.R
 import com.example.c001apk.compose.constant.Constants.EMPTY_STRING
 import com.example.c001apk.compose.logic.state.LoadingState
 import com.example.c001apk.compose.ui.component.BackButton
@@ -136,7 +137,7 @@ fun UserScreen(
                                     expanded = dropdownMenuExpanded,
                                     onDismissRequest = { dropdownMenuExpanded = false }
                                 ) {
-                                    listOf("复制", "分享", "User Info")
+                                    listOf("复制", "分享", "用户信息")
                                         .forEachIndexed { index, menu ->
                                             DropdownMenuItem(
                                                 text = { Text(menu) },
@@ -169,7 +170,7 @@ fun UserScreen(
                                     )
                                     if (isLogin) {
                                         DropdownMenuItem(
-                                            text = { Text("Report") },
+                                            text = { Text(stringResource(id = R.string.menu_report)) },
                                             onClick = {
                                                 dropdownMenuExpanded = false
                                                 onReport(uid, ReportType.USER)

@@ -54,6 +54,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityOptionsCompat
@@ -180,8 +181,11 @@ fun TopicScreen(
                                         DropdownMenuItem(
                                             text = {
                                                 Text(
-                                                    if (viewModel.isFollowed) "UnFollow"
-                                                    else "Follow"
+                                                    if (viewModel.isFollowed) {
+                                                        stringResource(id = R.string.menu_unfollow)
+                                                    } else {
+                                                        stringResource(id = R.string.menu_follow)
+                                                    }
                                                 )
                                             },
                                             onClick = {

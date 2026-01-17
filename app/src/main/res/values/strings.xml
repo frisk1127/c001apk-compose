@@ -53,4 +53,7 @@
     <string name="search_clear_history_confirm">确定清除全部搜索历史？</string>
     <string name="update_title">更新</string>
     <string name="update_title_with_count">更新：%1$d</string>
+    <string name="menu_follow">关注</string>
+    <string name="menu_unfollow">取消关注</string>
+    <string name="menu_report">举报</string>
 </resources>

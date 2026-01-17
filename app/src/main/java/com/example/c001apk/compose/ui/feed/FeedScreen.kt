@@ -58,6 +58,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityOptionsCompat
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -301,7 +302,7 @@ fun FeedScreen(
                                 )
                                 if (isLogin) {
                                     DropdownMenuItem(
-                                        text = { Text("Report") },
+                                        text = { Text(stringResource(id = R.string.menu_report)) },
                                         onClick = {
                                             dropdownMenuExpanded = false
                                             onReport(id, ReportType.FEED)
