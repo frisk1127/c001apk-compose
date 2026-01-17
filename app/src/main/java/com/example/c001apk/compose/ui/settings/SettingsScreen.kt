@@ -136,7 +136,7 @@ fun SettingsScreen(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text(text = "Settings") },
+                title = { Text(text = "设置") },
                 actions = {
                     Box(Modifier.wrapContentSize(Alignment.TopEnd)) {
                         IconButton(onClick = { dropdownMenuExpanded = true }) {

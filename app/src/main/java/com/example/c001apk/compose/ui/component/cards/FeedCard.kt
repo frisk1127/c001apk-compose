@@ -677,7 +677,7 @@ fun FeedHeader(
                         dropdownMenuExpanded = false
                     },
                 ) {
-                    listOf("Copy", "Block").forEachIndexed { index, menu ->
+                    listOf("复制", "拉黑").forEachIndexed { index, menu ->
                         DropdownMenuItem(
                             text = { Text(menu) },
                             onClick = {

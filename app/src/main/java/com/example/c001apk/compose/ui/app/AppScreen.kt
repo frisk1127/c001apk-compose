@@ -173,7 +173,7 @@ fun AppScreen(
                                         text = {
                                             Text(
                                                 if (viewModel.isBlocked) "UnBlock"
-                                                else "Block"
+                                                else "拉黑"
                                             )
                                         },
                                         onClick = {

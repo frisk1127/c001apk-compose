@@ -442,7 +442,7 @@ fun FeedReplyCard(
                         dropdownMenuExpanded = false
                     },
                 ) {
-                    listOf("Block", "Show Reply").forEachIndexed { index, menu ->
+                    listOf("拉黑", "显示回复").forEachIndexed { index, menu ->
                         DropdownMenuItem(
                             text = { Text(menu) },
                             onClick = {
@@ -590,9 +590,9 @@ fun ReplyRows(
                     onDismissRequest = { dropdownMenuExpanded = -1 }
                 ) {
                     listOf(
-                        "Copy",
-                        "Block",
-                        "Show Reply"
+                        "复制",
+                        "拉黑",
+                        "显示回复"
                     ).forEachIndexed { index, menu ->
                         DropdownMenuItem(
                             text = { Text(menu) },

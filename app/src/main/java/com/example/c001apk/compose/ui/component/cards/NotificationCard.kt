@@ -167,7 +167,7 @@ fun NotificationCard(
                     dropdownMenuExpanded = false
                 },
             ) {
-                listOf("Block", "Report").forEachIndexed { index, menu ->
+                listOf("拉黑", "Report").forEachIndexed { index, menu ->
                     DropdownMenuItem(
                         text = { Text(menu) },
                         onClick = {

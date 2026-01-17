@@ -88,7 +88,7 @@ fun Context.copyText(text: String?, showToast: Boolean = true) {
 }
 
 fun Context.shareText(text: String) {
-    val title = "Share"
+    val title = "分享"
     try {
         val intent = Intent(Intent.ACTION_SEND)
         intent.type = "text/plain"

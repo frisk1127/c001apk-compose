@@ -267,7 +267,7 @@ fun FeedScreen(
                                 expanded = dropdownMenuExpanded,
                                 onDismissRequest = { dropdownMenuExpanded = false }
                             ) {
-                                listOf("Copy", "Share")
+                                listOf("复制", "分享")
                                     .forEachIndexed { index, menu ->
                                         DropdownMenuItem(
                                             text = { Text(menu) },
@@ -286,14 +286,14 @@ fun FeedScreen(
                                         )
                                     }
                                 DropdownMenuItem(
-                                    text = { Text(if (viewModel.isFav) "UnFav" else "Fav") },
+                                    text = { Text(if (viewModel.isFav) "取消收藏" else "收藏") },
                                     onClick = {
                                         dropdownMenuExpanded = false
                                         viewModel.onFav()
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text(if (viewModel.isBlocked) "UnBlock" else "Block") },
+                                    text = { Text(if (viewModel.isBlocked) "UnBlock" else "拉黑") },
                                     onClick = {
                                         dropdownMenuExpanded = false
                                         viewModel.blockUser()

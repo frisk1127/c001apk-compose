@@ -136,7 +136,7 @@ fun UserScreen(
                                     expanded = dropdownMenuExpanded,
                                     onDismissRequest = { dropdownMenuExpanded = false }
                                 ) {
-                                    listOf("Copy", "Share", "User Info")
+                                    listOf("复制", "分享", "User Info")
                                         .forEachIndexed { index, menu ->
                                             DropdownMenuItem(
                                                 text = { Text(menu) },
@@ -159,7 +159,7 @@ fun UserScreen(
                                     DropdownMenuItem(
                                         text = {
                                             Text(
-                                                if (viewModel.isBlocked) "UnBlock" else "Block"
+                                                if (viewModel.isBlocked) "UnBlock" else "拉黑"
                                             )
                                         },
                                         onClick = {

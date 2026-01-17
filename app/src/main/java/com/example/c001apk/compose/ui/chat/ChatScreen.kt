@@ -201,7 +201,7 @@ fun ChatScreen(
                         DropdownMenu(
                             expanded = dropdownMenuExpanded,
                             onDismissRequest = { dropdownMenuExpanded = false }) {
-                            listOf("Check", "Block", "Report").forEachIndexed { index, menu ->
+                            listOf("Check", "拉黑", "Report").forEachIndexed { index, menu ->
                                 DropdownMenuItem(
                                     text = { Text(text = menu) },
                                     onClick = {
