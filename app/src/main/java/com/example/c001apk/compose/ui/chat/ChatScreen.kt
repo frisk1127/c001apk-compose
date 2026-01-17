@@ -135,6 +135,36 @@ fun ChatScreen(
     var clearFocus by remember { mutableStateOf(false) }
     val windowInsets = WindowInsets.navigationBars
 
+    fun handlePickedImage(uri: android.net.Uri) {
+        try {
+            val result = getImageDimensionsAndMD5(context.contentResolver, uri)
+            val md5Byte = result.second
+            val md5 = md5Byte?.toHex() ?: ""
+            val width = result.first?.first ?: 0
+            val height = result.first?.second ?: 0
+            val type = result.first?.third ?: ""
+
+            viewModel.uriList = listOf(uri)
+            viewModel.md5List = listOf(md5Byte)
+            viewModel.typeList = listOf(type)
+            val list = listOf(
+                OSSUploadPrepareModel(
+                    name = "${
+                        UUID.randomUUID().toString().replace("-", "")
+                    }.${if (type.startsWith("image/")) type.substring(6) else type}",
+                    resolution = "${width}x${height}",
+                    md5 = md5,
+                )
+            )
+            viewModel.onPostOSSUploadPrepare(uid, list)
+        } catch (e: Exception) {
+            e.message?.let {
+                context.makeToast(it)
+            }
+            e.printStackTrace()
+        }
+    }
+
     LaunchedEffect(key1 = viewModel.scroll) {
         if (viewModel.scroll) {
             clearText = true
@@ -151,33 +181,14 @@ fun ChatScreen(
     val pickVisualMedia =
         rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
             uri?.let { uri1 ->
-                try {
-                    val result = getImageDimensionsAndMD5(context.contentResolver, uri1)
-                    val md5Byte = result.second
-                    val md5 = md5Byte?.toHex() ?: ""
-                    val width = result.first?.first ?: 0
-                    val height = result.first?.second ?: 0
-                    val type = result.first?.third ?: ""
+                handlePickedImage(uri1)
+            }
+        }
 
-                    viewModel.uriList = listOf(uri)
-                    viewModel.md5List = listOf(md5Byte)
-                    viewModel.typeList = listOf(type)
-                    val list = listOf(
-                        OSSUploadPrepareModel(
-                            name = "${
-                                UUID.randomUUID().toString().replace("-", "")
-                            }.${if (type.startsWith("image/")) type.substring(6) else type}",
-                            resolution = "${width}x${height}",
-                            md5 = md5,
-                        )
-                    )
-                    viewModel.onPostOSSUploadPrepare(uid, list)
-                } catch (e: Exception) {
-                    e.message?.let {
-                        context.makeToast(it)
-                    }
-                    e.printStackTrace()
-                }
+    val pickDocument =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            uri?.let { uri1 ->
+                handlePickedImage(uri1)
             }
         }
 
@@ -343,6 +354,10 @@ fun ChatScreen(
                         options
                     )
                 },
+                onPickOtherImage = {
+                    onClearFocus()
+                    pickDocument.launch(arrayOf("image/*"))
+                },
                 onSendMessage = {
                     viewModel.onSendMessage(uid, it, EMPTY_STRING)
                 },
@@ -448,6 +463,7 @@ fun ChatBottom(
     modifier: Modifier = Modifier,
     viewModel: ChatViewModel,
     onPickImage: () -> Unit,
+    onPickOtherImage: () -> Unit,
     onSendMessage: (String) -> Unit,
     clearText: Boolean,
     resetClear: () -> Unit,
@@ -504,26 +520,54 @@ fun ChatBottom(
                     showEmojiPanel = false
                 },
             )
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clickable {
-                        if (!shouldShowSendBtn)
-                            onPickImage()
-                        else
+            if (!shouldShowSendBtn) {
+                Row {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clickable {
+                                onPickImage()
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            imageVector = Icons.Outlined.AddPhotoAlternate,
+                            contentDescription = null,
+                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurfaceVariant)
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clickable {
+                                onPickOtherImage()
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = androidx.compose.ui.res.painterResource(
+                                id = R.drawable.outline_note_alt_24
+                            ),
+                            contentDescription = null,
+                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurfaceVariant)
+                        )
+                    }
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clickable {
                             onSendMessage(textInput)
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    imageVector =
-                    if (!shouldShowSendBtn)
-                        Icons.Outlined.AddPhotoAlternate
-                    else
-                        Icons.AutoMirrored.Default.Send,
-                    contentDescription = null,
-                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurfaceVariant)
-                )
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        imageVector = Icons.AutoMirrored.Default.Send,
+                        contentDescription = null,
+                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurfaceVariant)
+                    )
+                }
             }
         }
         if (showEmojiPanel) {

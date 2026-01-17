@@ -111,6 +111,7 @@ class ReplyActivity : AppCompatActivity(),
     private val recentList = ArrayList<List<Pair<String, Int>>>()
     private val list = listOf(recentList, emojiList, coolBList)
     private lateinit var pickMultipleMedia: ActivityResultLauncher<PickVisualMediaRequest>
+    private lateinit var pickDocument: ActivityResultLauncher<Array<String>>
     private var uriList: MutableList<Uri> = ArrayList()
     private var imageList = ArrayList<OSSUploadPrepareModel>()
     private var typeList = ArrayList<String>()
@@ -167,75 +168,84 @@ class ReplyActivity : AppCompatActivity(),
 
 
     private fun initPhotoPick() {
+        fun handlePickedUris(uris: List<Uri>) {
+            if (uris.isNotEmpty()) {
+                runCatching {
+                    uris.forEach { uri ->
+                        if (uriList.size == 9) {
+                            Toast.makeText(this, "最多选择9张图片", Toast.LENGTH_SHORT).show()
+                            return@runCatching
+                        }
+
+                        val result = getImageDimensionsAndMD5(contentResolver, uri)
+                        val md5Byte = result.second
+                        val md5 = md5Byte?.toHex() ?: ""
+                        val width = result.first?.first ?: 0
+                        val height = result.first?.second ?: 0
+                        val type = result.first?.third ?: ""
+
+                        typeList.add(type)
+                        md5List.add(md5Byte)
+                        imageList.add(
+                            OSSUploadPrepareModel(
+                                name = "${
+                                    UUID.randomUUID().toString().replace("-", "")
+                                }.${if (type.startsWith("image/")) type.substring(6) else type}",
+                                resolution = "${width}x${height}",
+                                md5 = md5,
+                            )
+                        )
+                        uriList.add(uri)
+
+                        val imageView = ImageView(this).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                (65.dp * width.toFloat() / height.toFloat()).toInt(), 65.dp
+                            ).apply {
+                                setMargins(5.dp, 0, 0, 0)
+                            }
+                            setOnClickListener {
+                                with(binding.imageLayout.indexOfChild(this)) {
+                                    binding.imageLayout.removeViewAt(this)
+                                    uriList.removeAt(this)
+                                    typeList.removeAt(this)
+                                    md5List.removeAt(this)
+                                    imageList.removeAt(this)
+                                    binding.imageLayout.isVisible = uriList.isNotEmpty()
+                                }
+                            }
+                        }
+                        //Glide.with(this).load(uri).into(imageView)
+                        imageView.load(uri) {
+                            crossfade(true)
+                        }
+                        binding.imageLayout.addView(imageView)
+                    }
+                }.onFailure {
+                    MaterialAlertDialogBuilder(this)
+                        .setTitle("获取图片信息失败")
+                        .setMessage(it.message)
+                        .setPositiveButton(android.R.string.ok, null)
+                        .setNegativeButton("Log") { _, _ ->
+                            MaterialAlertDialogBuilder(this)
+                                .setTitle("Log")
+                                .setMessage(it.stackTraceToString())
+                                .setPositiveButton(android.R.string.ok, null)
+                                .show()
+                        }
+                        .show()
+                }
+            }
+            binding.imageLayout.isVisible = uriList.isNotEmpty()
+        }
+
         pickMultipleMedia =
             registerForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(9)) { uris ->
-                if (uris.isNotEmpty()) {
-                    runCatching {
-                        uris.forEach { uri ->
-                            if (uriList.size == 9) {
-                                Toast.makeText(this, "最多选择9张图片", Toast.LENGTH_SHORT).show()
-                                return@registerForActivityResult
-                            }
+                handlePickedUris(uris)
+            }
 
-                            val result = getImageDimensionsAndMD5(contentResolver, uri)
-                            val md5Byte = result.second
-                            val md5 = md5Byte?.toHex() ?: ""
-                            val width = result.first?.first ?: 0
-                            val height = result.first?.second ?: 0
-                            val type = result.first?.third ?: ""
-
-                            typeList.add(type)
-                            md5List.add(md5Byte)
-                            imageList.add(
-                                OSSUploadPrepareModel(
-                                    name = "${
-                                        UUID.randomUUID().toString().replace("-", "")
-                                    }.${if (type.startsWith("image/")) type.substring(6) else type}",
-                                    resolution = "${width}x${height}",
-                                    md5 = md5,
-                                )
-                            )
-                            uriList.add(uri)
-
-                            val imageView = ImageView(this).apply {
-                                layoutParams = LinearLayout.LayoutParams(
-                                    (65.dp * width.toFloat() / height.toFloat()).toInt(), 65.dp
-                                ).apply {
-                                    setMargins(5.dp, 0, 0, 0)
-                                }
-                                setOnClickListener {
-                                    with(binding.imageLayout.indexOfChild(this)) {
-                                        binding.imageLayout.removeViewAt(this)
-                                        uriList.removeAt(this)
-                                        typeList.removeAt(this)
-                                        md5List.removeAt(this)
-                                        imageList.removeAt(this)
-                                        binding.imageLayout.isVisible = uriList.isNotEmpty()
-                                    }
-                                }
-                            }
-                            //Glide.with(this).load(uri).into(imageView)
-                            imageView.load(uri) {
-                                crossfade(true)
-                            }
-                            binding.imageLayout.addView(imageView)
-                        }
-                    }.onFailure {
-                        MaterialAlertDialogBuilder(this)
-                            .setTitle("获取图片信息失败")
-                            .setMessage(it.message)
-                            .setPositiveButton(android.R.string.ok, null)
-                            .setNegativeButton("Log") { _, _ ->
-                                MaterialAlertDialogBuilder(this)
-                                    .setTitle("Log")
-                                    .setMessage(it.stackTraceToString())
-                                    .setPositiveButton(android.R.string.ok, null)
-                                    .show()
-                            }
-                            .show()
-                    }
-                }
-                binding.imageLayout.isVisible = uriList.isNotEmpty()
+        pickDocument =
+            registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+                handlePickedUris(uris)
             }
     }
 
@@ -243,6 +253,7 @@ class ReplyActivity : AppCompatActivity(),
     private fun initView() {
         binding.emojiBtn?.setOnClickListener(this)
         binding.imageBtn.setOnClickListener(this)
+        binding.otherImageBtn.setOnClickListener(this)
         binding.atBtn.setOnClickListener(this)
         binding.tagBtn.setOnClickListener(this)
         binding.keyboardBtn?.setOnClickListener(this)
@@ -617,6 +628,11 @@ class ReplyActivity : AppCompatActivity(),
                 launchPick()
             }
 
+            R.id.otherImageBtn -> {
+                ViewCompat.performHapticFeedback(view, HapticFeedbackConstantsCompat.CONFIRM)
+                launchDocumentPick()
+            }
+
             R.id.keyboardBtn -> {
                 ViewCompat.performHapticFeedback(view, HapticFeedbackConstantsCompat.CONFIRM)
                 with(binding.main as? SmoothInputLayout) {
@@ -722,6 +738,16 @@ class ReplyActivity : AppCompatActivity(),
                 PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
                 options
             )
+        } catch (e: ActivityNotFoundException) {
+            makeToast("Activity Not Found")
+            e.printStackTrace()
+        }
+    }
+
+    private fun launchDocumentPick() {
+        (binding.main as? SmoothInputLayout)?.closeKeyboard(false)
+        try {
+            pickDocument.launch(arrayOf("image/*"))
         } catch (e: ActivityNotFoundException) {
             makeToast("Activity Not Found")
             e.printStackTrace()
