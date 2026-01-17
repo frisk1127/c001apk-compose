@@ -207,15 +207,15 @@ fun SettingsScreen(
                 isEnable = !prefs.materialYou,
                 leadingImageVector = Icons.Outlined.FormatColorFill,
                 headlineText = "主题颜色",
-                value = prefs.themeType.name,
+                value = prefs.themeType,
                 selections = ThemeType.entries.toMutableList()
                     .also { it.remove(ThemeType.UNRECOGNIZED) }.map {
-                        SelectionItem(it.name, it.name)
+                        SelectionItem(stringResource(id = themeTypeLabelRes(it)), it)
                     },
-                onValueChanged = { index, _ ->
-                    if (index == 19)
+                onValueChanged = { _, value ->
+                    if (value == ThemeType.Custom)
                         showThemeTypeDialog = true
-                    viewModel.setThemeType(ThemeType.forNumber(index))
+                    viewModel.setThemeType(value)
                 }
             )
             StateDropdownListItem(
@@ -224,7 +224,7 @@ fun SettingsScreen(
                 headlineText = "调色版风格",
                 value = prefs.paletteStyle,
                 selections = PaletteStyle.entries.mapIndexed { index, label ->
-                    SelectionItem(label.name, index)
+                    SelectionItem(stringResource(id = paletteStyleLabelRes(label)), index)
                 },
                 onValueChanged = { index, _ ->
                     viewModel.setPaletteStyle(index)
@@ -406,7 +406,7 @@ fun SettingsScreen(
                     hint = "6650A4",
                     maxLength = 6,
                     data = prefs.seedColor,
-                    title = "Custom Theme Color",
+                    title = "自定义主题颜色",
                     onDismiss = {
                         showThemeTypeDialog = false
                     },
@@ -419,7 +419,7 @@ fun SettingsScreen(
             showSZLMIDDialog -> {
                 EditTextDialog(
                     data = prefs.szlmId,
-                    title = "SZLM ID",
+                    title = "数字联盟 ID",
                     onDismiss = {
                         showSZLMIDDialog = false
                     },
@@ -435,8 +435,8 @@ fun SettingsScreen(
             showFontScaleDialog -> {
                 SliderDialog(
                     data = prefs.fontScale,
-                    title = "Font Scale",
-                    hint = "Font Size",
+                    title = "内容缩放",
+                    hint = "比例",
                     onDismiss = {
                         showFontScaleDialog = false
                     },
@@ -449,8 +449,8 @@ fun SettingsScreen(
             showContentScaleDialog -> {
                 SliderDialog(
                     data = prefs.contentScale,
-                    title = "Content Scale",
-                    hint = "Content Size",
+                    title = "内容缩放",
+                    hint = "比例",
                     onDismiss = {
                         showContentScaleDialog = false
                     },
@@ -747,4 +747,40 @@ fun AboutDialog(onDismiss: () -> Unit) {
             }
         }
     }
+}
+
+private fun themeTypeLabelRes(themeType: ThemeType): Int = when (themeType) {
+    ThemeType.Default -> R.string.theme_type_default
+    ThemeType.Red -> R.string.theme_type_red
+    ThemeType.Pink -> R.string.theme_type_pink
+    ThemeType.Purple -> R.string.theme_type_purple
+    ThemeType.Indigo -> R.string.theme_type_indigo
+    ThemeType.Blue -> R.string.theme_type_blue
+    ThemeType.LightBlue -> R.string.theme_type_light_blue
+    ThemeType.Cyan -> R.string.theme_type_cyan
+    ThemeType.Teal -> R.string.theme_type_teal
+    ThemeType.Green -> R.string.theme_type_green
+    ThemeType.LightGreen -> R.string.theme_type_light_green
+    ThemeType.Lime -> R.string.theme_type_lime
+    ThemeType.Yellow -> R.string.theme_type_yellow
+    ThemeType.Amber -> R.string.theme_type_amber
+    ThemeType.Orange -> R.string.theme_type_orange
+    ThemeType.DeepOrange -> R.string.theme_type_deep_orange
+    ThemeType.Brown -> R.string.theme_type_brown
+    ThemeType.BlueGrey -> R.string.theme_type_blue_grey
+    ThemeType.Sakura -> R.string.theme_type_sakura
+    ThemeType.Custom -> R.string.theme_type_custom
+    ThemeType.UNRECOGNIZED -> R.string.theme_type_default
+}
+
+private fun paletteStyleLabelRes(style: PaletteStyle): Int = when (style) {
+    PaletteStyle.TonalSpot -> R.string.palette_style_tonal_spot
+    PaletteStyle.Neutral -> R.string.palette_style_neutral
+    PaletteStyle.Vibrant -> R.string.palette_style_vibrant
+    PaletteStyle.Expressive -> R.string.palette_style_expressive
+    PaletteStyle.Rainbow -> R.string.palette_style_rainbow
+    PaletteStyle.FruitSalad -> R.string.palette_style_fruit_salad
+    PaletteStyle.Monochrome -> R.string.palette_style_monochrome
+    PaletteStyle.Fidelity -> R.string.palette_style_fidelity
+    PaletteStyle.Content -> R.string.palette_style_content
 }
