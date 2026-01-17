@@ -150,7 +150,10 @@ fun SettingsScreen(
                             expanded = dropdownMenuExpanded,
                             onDismissRequest = { dropdownMenuExpanded = false }
                         ) {
-                            listOf("Feedback", "About").forEachIndexed { index, menu ->
+                            listOf(
+                                stringResource(id = R.string.menu_feedback),
+                                stringResource(id = R.string.menu_about)
+                            ).forEachIndexed { index, menu ->
                                 DropdownMenuItem(
                                     text = { Text(menu) },
                                     onClick = {

@@ -33,4 +33,6 @@
     <string name="palette_style_monochrome">单色</string>
     <string name="palette_style_fidelity">忠实</string>
     <string name="palette_style_content">内容</string>
+    <string name="menu_feedback">反馈</string>
+    <string name="menu_about">关于</string>
 </resources>
