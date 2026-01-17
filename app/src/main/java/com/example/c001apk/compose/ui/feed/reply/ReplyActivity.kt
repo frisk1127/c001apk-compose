@@ -253,7 +253,7 @@ class ReplyActivity : AppCompatActivity(),
     private fun initView() {
         binding.emojiBtn?.setOnClickListener(this)
         binding.imageBtn.setOnClickListener(this)
-        binding.otherImageBtn.setOnClickListener(this)
+        binding.otherImageBtn?.setOnClickListener(this)
         binding.atBtn.setOnClickListener(this)
         binding.tagBtn.setOnClickListener(this)
         binding.keyboardBtn?.setOnClickListener(this)
