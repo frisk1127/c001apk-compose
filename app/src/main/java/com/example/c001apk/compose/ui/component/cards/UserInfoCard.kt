@@ -33,6 +33,7 @@ import com.example.c001apk.compose.ui.ffflist.FFFListType
 import com.example.c001apk.compose.util.CookieUtil
 import com.example.c001apk.compose.util.DateUtils.fromToday
 import com.example.c001apk.compose.util.copyText
+import com.example.c001apk.compose.util.makeToast
 import com.example.c001apk.compose.util.noRippleClickable
 
 /**
@@ -287,6 +288,8 @@ fun UserInfoCard(
             onClick = {
                 if (CookieUtil.isLogin) {
                     onPMUser(data.uid.orEmpty(), data.username.orEmpty())
+                } else {
+                    context.makeToast("请先登录")
                 }
             },
             modifier = Modifier
