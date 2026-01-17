@@ -106,6 +106,15 @@
                     app:layout_constraintTop_toTopOf="@id/checkBox" />
 
                 <ImageView
+                    android:id="@+id/otherImageBtn"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="?attr/actionBarItemBackground"
+                    android:padding="8dp"
+                    android:src="@drawable/outline_note_alt_24" />
+
+                <ImageView
                     android:id="@+id/atBtn"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
