@@ -419,7 +419,7 @@ class ReplyActivity : AppCompatActivity(),
         binding.title.text = if (type == "createFeed") "发布动态"
         else "回复"
         if (type != "createFeed" && !username.isNullOrEmpty())
-            binding.editText.hint = "回复: $username"
+            binding.editText.hint = "回复: " + username
         binding.publish.isClickable = false
         title?.let {
             binding.editText.editableText.append("#${title}# ")

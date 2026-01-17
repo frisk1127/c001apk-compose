@@ -371,7 +371,11 @@ fun FeedMessage(
         val reply = data.replyRows?.getOrNull(0)
         val replyPic = when (reply?.pic) {
             EMPTY_STRING -> EMPTY_STRING
-            else -> """ <a class=\"feed-forward-pic\" href=${reply?.pic}>查看图片(${reply?.picArr?.size})</a>"""
+            else -> " <a class=\"feed-forward-pic\" href=" +
+                    reply?.pic +
+                    ">查看图片(" +
+                    reply?.picArr?.size +
+                    ")</a>"
         }
         LinkText(
             text = """<a class="feed-link-uname" href="/u/${reply?.uid}">${reply?.username}</a>: ${reply?.message}$replyPic""",

@@ -157,7 +157,12 @@ fun FeedReplyCard(
             else if (isLikeReply) "赞了你的${data.infoHtml}"
             else if (!isFeedReply) {
                 if (data.ruid == "0") data.message.orEmpty()
-                else """回复<a class="feed-link-uname" href="/u/${data.ruid}">${data.rusername}</a>: ${data.message}"""
+                else "回复<a class=\"feed-link-uname\" href=\"/u/" +
+                        data.ruid +
+                        "\">" +
+                        data.rusername +
+                        "</a>: " +
+                        data.message
             } else data.message.orEmpty(),
             modifier = Modifier
                 .padding(
