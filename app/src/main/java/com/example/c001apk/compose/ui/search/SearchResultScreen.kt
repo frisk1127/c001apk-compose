@@ -71,6 +71,45 @@ enum class SearchOrderType {
     DATELINE, HOT, REPLY
 }
 
+private fun searchTypeTitle(type: SearchType): String {
+    return when (type) {
+        SearchType.FEED -> "动态"
+        SearchType.APP -> "应用"
+        SearchType.GAME -> "游戏"
+        SearchType.PRODUCT -> "数码"
+        SearchType.USER -> "用户"
+        SearchType.TOPIC -> "话题"
+    }
+}
+
+private fun searchFeedTitle(type: SearchFeedType): String {
+    return when (type) {
+        SearchFeedType.ALL -> "全部"
+        SearchFeedType.FEED -> "动态"
+        SearchFeedType.ARTICLE -> "文章"
+        SearchFeedType.COOLPIC -> "酷图"
+        SearchFeedType.COMMENT -> "评论"
+        SearchFeedType.RATING -> "评分"
+        SearchFeedType.ANSWER -> "回答"
+        SearchFeedType.QUESTION -> "问题"
+        SearchFeedType.VOTE -> "投票"
+    }
+}
+
+private fun searchOrderTitle(type: SearchOrderType): String {
+    return when (type) {
+        SearchOrderType.DATELINE -> "时间"
+        SearchOrderType.HOT -> "热度"
+        SearchOrderType.REPLY -> "回复"
+    }
+}
+
+private fun pageTypeTitle(pageType: String?): String? {
+    if (pageType.isNullOrEmpty()) return pageType
+    val match = SearchType.entries.firstOrNull { it.name.equals(pageType, ignoreCase = true) }
+    return match?.let { searchTypeTitle(it) } ?: pageType
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchResultScreen(
@@ -126,7 +165,7 @@ fun SearchResultScreen(
                         )
                         if (!title.isNullOrEmpty()) {
                             Text(
-                                text = "$pageType: $title",
+                                text = "${pageTypeTitle(pageType)}: $title",
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 14.sp),
@@ -151,7 +190,7 @@ fun SearchResultScreen(
                                 expanded = dropdownMenuExpanded,
                                 onDismissRequest = { dropdownMenuExpanded = false }
                             ) {
-                                listOf("Type", "Order")
+                                listOf("类型", "排序")
                                     .forEachIndexed { index, menu ->
                                         DropdownMenuItem(
                                             text = { Text(menu) },
@@ -193,7 +232,7 @@ fun SearchResultScreen(
                                             }
                                         )
                                         Text(
-                                            text = feed.name,
+                                            text = searchFeedTitle(feed),
                                             style = MaterialTheme.typography.bodyMedium,
                                             modifier = Modifier
                                                 .fillMaxWidth()
@@ -223,7 +262,7 @@ fun SearchResultScreen(
                                             }
                                         )
                                         Text(
-                                            text = order.name,
+                                            text = searchOrderTitle(order),
                                             style = MaterialTheme.typography.bodyMedium,
                                             modifier = Modifier
                                                 .fillMaxWidth()
@@ -274,7 +313,7 @@ fun SearchResultScreen(
                                 }
                                 scope.launch { pagerState.animateScrollToPage(index) }
                             },
-                            text = { Text(text = tab.name) }
+                            text = { Text(text = searchTypeTitle(tab)) }
                         )
                     }
                 }
