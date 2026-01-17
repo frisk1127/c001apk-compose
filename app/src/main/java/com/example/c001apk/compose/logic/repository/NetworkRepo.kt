@@ -113,7 +113,7 @@ class NetworkRepo @Inject constructor(
         Result.success(appResponse.headers()["Location"])
     }
 
-    suspend fun getAppsUpdate(pkgs: String) = flowList {
+    suspend fun getAppsUpdate(pkgs: String) = flowUpdateList {
         val multipartBody = MultipartBody.Part.createFormData("pkgs", pkgs)
         apiService.getAppsUpdate(multipartBody).await()
     }
@@ -346,6 +346,20 @@ class NetworkRepo @Inject constructor(
                 LoadingState.Empty
             } else {
                 LoadingState.Error(LOADING_FAILED)
+            }
+        } catch (e: Exception) {
+            LoadingState.Error(e.message ?: "unknown error")
+        }
+        emit(result)
+    }.flowOn(Dispatchers.IO)
+
+    private fun flowUpdateList(block: suspend () -> List<HomeFeedResponse.Data>) = flow {
+        val result = try {
+            val response = block()
+            if (response.isNotEmpty()) {
+                LoadingState.Success(response)
+            } else {
+                LoadingState.Empty
             }
         } catch (e: Exception) {
             LoadingState.Error(e.message ?: "unknown error")
