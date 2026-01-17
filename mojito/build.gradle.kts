@@ -1,7 +1,8 @@
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
-import org.jetbrains.kotlin.gradle.dsl.KotlinJvmOptions
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     id("com.android.library")
@@ -55,15 +56,11 @@ inline fun <reified T : BaseExtension> Project.setupBaseModule(crossinline block
             sourceCompatibility = JavaVersion.VERSION_17
             targetCompatibility = JavaVersion.VERSION_17
         }
-        kotlinOptions {
-            jvmTarget = "17"
-        }
         (this as T).block()
     }
-}
-
-fun BaseExtension.kotlinOptions(block: KotlinJvmOptions.() -> Unit) {
-    (this as ExtensionAware).extensions.configure("kotlinOptions", block)
+    tasks.withType<KotlinCompile>().configureEach {
+        compilerOptions.jvmTarget.set(JvmTarget.JVM_17)
+    }
 }
 
 
@@ -71,6 +68,7 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.recyclerview)
+    implementation(libs.google.android.material)
     implementation(libs.kotlin.stdlib)
     implementation(libs.immersionbar)
     implementation(libs.androidx.exifinterface)

@@ -23,4 +23,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "c001apk-compose"
-include(":app", ":mojito", ":SketchImageViewLoader", ":coilimageLoader")
+include(":app", ":mojito", ":SketchImageViewLoader")

@@ -195,5 +195,7 @@ dependencies {
 
     implementation(project(":mojito"))
     implementation(project(":SketchImageViewLoader"))
-    implementation(project(":coilimageLoader"))
+    implementation("com.github.MikaelZero.mojito:coilimageloader:1.8.7") {
+        exclude(group = "com.github.MikaelZero.mojito", module = "mojito")
+    }
 }

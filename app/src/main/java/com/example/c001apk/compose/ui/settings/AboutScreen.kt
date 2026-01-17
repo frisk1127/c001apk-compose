@@ -54,7 +54,7 @@ fun AboutScreen(
                 navigationIcon = {
                     BackButton { onBackClick() }
                 },
-                title = { Text(text = "About") },
+                title = { Text(text = "关于") },
             )
         }
     ) { paddingValues ->
@@ -89,19 +89,19 @@ fun AboutScreen(
             ) { }
             BasicListItem(
                 leadingImageVector = Icons.Default.ErrorOutline,
-                headlineText = "Version",
+                headlineText = "版本",
                 supportingText = "${BuildConfig.VERSION_NAME}(${BuildConfig.VERSION_CODE})"
             ) { }
             BasicListItem(
                 leadingImageVector = Icons.Outlined.Code,
-                headlineText = "Source Code",
+                headlineText = "项目源码",
                 supportingText = URL_SOURCE_CODE
             ) {
                 context.openInBrowser(URL_SOURCE_CODE)
             }
             BasicListItem(
                 leadingImageVector = Icons.Outlined.Source,
-                headlineText = "Open Source License"
+                headlineText = "开源许可证"
             ) {
                 onLicenseClick()
             }

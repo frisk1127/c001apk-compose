@@ -202,8 +202,8 @@ fun BlackListScreen(
                         placeholder = {
                             Text(
                                 text = when (type) {
-                                    BlackListType.USER.name -> "uid"
-                                    BlackListType.TOPIC.name -> "topic"
+                                    BlackListType.USER.name -> "UID"
+                                    BlackListType.TOPIC.name -> "话题"
                                     else -> EMPTY_STRING
                                 },
                                 maxLines = 1,
