@@ -21,8 +21,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.c001apk.compose.R
 import com.example.c001apk.compose.constant.Constants.EMPTY_STRING
 import com.example.c001apk.compose.logic.model.UpdateCheckItem
 import com.example.c001apk.compose.logic.state.LoadingState
@@ -76,7 +78,14 @@ fun AppUpdateScreen(
                 navigationIcon = {
                     BackButton { onBackClick() }
                 },
-                title = { Text(text = "Update${if (count == 0) EMPTY_STRING else ": $count"}") },
+                title = {
+                    val title = if (count == 0) {
+                        stringResource(id = R.string.update_title)
+                    } else {
+                        stringResource(id = R.string.update_title_with_count, count)
+                    }
+                    Text(text = title)
+                },
             )
         }
     ) { paddingValues ->

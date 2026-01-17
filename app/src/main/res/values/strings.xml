@@ -51,4 +51,6 @@
     <string name="search_hint">搜索</string>
     <string name="search_hint_in">搜索 %1$s</string>
     <string name="search_clear_history_confirm">确定清除全部搜索历史？</string>
+    <string name="update_title">更新</string>
+    <string name="update_title_with_count">更新：%1$d</string>
 </resources>
