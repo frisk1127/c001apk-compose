@@ -30,7 +30,7 @@ jobs:
         KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
       run: |
-        cat > local.properties << 'EOF'
+        cat > local.properties << EOF
         KEYSTORE_PATH=release-frisk.keystore
         KEYSTORE_PASSWORD=${KEYSTORE_PASSWORD}
         KEY_ALIAS=${KEY_ALIAS}
