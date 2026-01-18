@@ -130,6 +130,8 @@ class ReplyActivity : AppCompatActivity(),
             WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE or
                 WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
         )
+        binding.main.isFocusable = false
+        binding.main.isFocusableInTouchMode = false
 
         viewModel.type = type
         viewModel.rid = rid
@@ -184,7 +186,12 @@ class ReplyActivity : AppCompatActivity(),
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus && pendingShowKeyboard) {
             pendingShowKeyboard = false
-            binding.editText.post { showInput() }
+            binding.editText.post {
+                binding.editText.requestFocus()
+                binding.editText.requestFocusFromTouch()
+                imm.showSoftInput(binding.editText, InputMethodManager.SHOW_FORCED)
+                imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
+            }
         }
     }
 
