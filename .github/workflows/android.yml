@@ -1,11 +1,7 @@
-name: Android CI
+name: Release
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
   build:
@@ -27,7 +23,7 @@ jobs:
       env:
         KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
       run: |
-        printf '%s' "$KEYSTORE_BASE64" | base64 -d > release-frisk.keystore
+        printf '%s' "$KEYSTORE_BASE64" | base64 -d > app/release-frisk.keystore
     - name: Write local.properties for signing
       env:
         KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -35,7 +31,7 @@ jobs:
         KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
       run: |
         cat > local.properties << 'EOF'
-        KEYSTORE_PATH=release-frisk.keystore
+        KEYSTORE_PATH=app/release-frisk.keystore
         KEYSTORE_PASSWORD=${KEYSTORE_PASSWORD}
         KEY_ALIAS=${KEY_ALIAS}
         KEY_PASSWORD=${KEY_PASSWORD}
