@@ -150,8 +150,8 @@ class ReplyActivity : AppCompatActivity(),
         ViewCompat.setOnApplyWindowInsetsListener(binding.main) { _, insets ->
             val imeInset = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
             val sysInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
-            val useImeInset = !(isEmojiPanelVisible || isEmojiPanelRequested)
-            val bottomInset = if (useImeInset) max(imeInset, sysInset) else sysInset
+            val isImeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
+            val bottomInset = if (isImeVisible) max(imeInset, sysInset) else sysInset
             binding.inputLayout.updatePadding(bottom = baseInputPaddingBottom + bottomInset)
             insets
         }
