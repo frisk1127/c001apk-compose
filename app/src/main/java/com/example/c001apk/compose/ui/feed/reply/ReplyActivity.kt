@@ -33,6 +33,8 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.HapticFeedbackConstantsCompat
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -186,12 +188,7 @@ class ReplyActivity : AppCompatActivity(),
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus && pendingShowKeyboard) {
             pendingShowKeyboard = false
-            binding.editText.post {
-                binding.editText.requestFocus()
-                binding.editText.requestFocusFromTouch()
-                imm.showSoftInput(binding.editText, InputMethodManager.SHOW_FORCED)
-                imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
-            }
+            binding.editText.post { showInput() }
         }
     }
 
@@ -634,6 +631,8 @@ class ReplyActivity : AppCompatActivity(),
                 it.requestFocus()
                 it.requestFocusFromTouch()
                 imm.showSoftInput(it, InputMethodManager.SHOW_IMPLICIT)
+                WindowInsetsControllerCompat(window, it)
+                    .show(WindowInsetsCompat.Type.ime())
             }
     }
 
