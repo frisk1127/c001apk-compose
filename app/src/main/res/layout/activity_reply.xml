@@ -15,7 +15,8 @@
         android:id="@+id/out"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_weight="1"
+        android:background="#66000000" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/inputLayout"

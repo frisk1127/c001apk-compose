@@ -33,7 +33,7 @@
             android:name=".ui.feed.reply.ReplyActivity"
             android:exported="false"
             android:launchMode="singleTop"
-            android:theme="@style/AppThemeTranslucent"
+            android:theme="@style/Theme.C001apkCompose"
             android:windowSoftInputMode="adjustResize|stateVisible" />
 
         <activity
