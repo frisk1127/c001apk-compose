@@ -128,6 +128,7 @@ class ReplyActivity : AppCompatActivity(),
         binding = ActivityReplyBinding.inflate(layoutInflater)
         setContentView(binding.root)
         window.clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
+        window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
         window.setSoftInputMode(
             WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE or
                 WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
@@ -180,7 +181,7 @@ class ReplyActivity : AppCompatActivity(),
         super.onPostResume()
         if (pendingShowKeyboard) {
             pendingShowKeyboard = false
-            binding.editText.post { showInput() }
+            binding.editText.postDelayed({ showInput() }, 200)
         }
     }
 
@@ -188,7 +189,7 @@ class ReplyActivity : AppCompatActivity(),
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus && pendingShowKeyboard) {
             pendingShowKeyboard = false
-            binding.editText.post { showInput() }
+            binding.editText.postDelayed({ showInput() }, 200)
         }
     }
 
@@ -574,6 +575,8 @@ class ReplyActivity : AppCompatActivity(),
 
     private fun initEditText() {
         binding.editText.apply {
+            isFocusable = true
+            isFocusableInTouchMode = true
             highlightColor = ColorUtils.setAlphaComponent(
                 MaterialColors.getColor(
                     this@ReplyActivity,
