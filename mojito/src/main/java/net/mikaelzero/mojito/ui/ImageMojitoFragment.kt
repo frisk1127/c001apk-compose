@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
-import android.util.Log
 import android.view.GestureDetector
 import android.view.LayoutInflater
 import android.view.View
@@ -20,7 +19,6 @@ import net.mikaelzero.mojito.Mojito.Companion.imageLoader
 import net.mikaelzero.mojito.Mojito.Companion.imageViewFactory
 import net.mikaelzero.mojito.Mojito.Companion.mojitoConfig
 import net.mikaelzero.mojito.MojitoView
-import net.mikaelzero.mojito.BuildConfig
 import net.mikaelzero.mojito.bean.FragmentConfig
 import net.mikaelzero.mojito.databinding.FragmentImageBinding
 import net.mikaelzero.mojito.interfaces.IMojitoFragment
@@ -187,16 +185,7 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
             if (targetView != null && targetView.visibility == View.VISIBLE &&
                 isPointInsideView(targetView, event)
             ) {
-                if (BuildConfig.DEBUG) {
-                    Log.d(
-                        "MojitoTarget",
-                        "cover touch action=${event.actionMasked} x=${event.x} y=${event.y}"
-                    )
-                }
                 if (event.actionMasked == MotionEvent.ACTION_UP) {
-                    if (BuildConfig.DEBUG) {
-                        Log.d("MojitoTarget", "cover performClick")
-                    }
                     targetView.performClick()
                 }
                 return@setOnTouchListener true
@@ -318,12 +307,6 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
         } else {
             !fragmentConfig.autoLoadTarget
         }
-        if (BuildConfig.DEBUG) {
-            Log.d(
-                "MojitoTarget",
-                "replaceImageUrl url=$url force=$forceLoadTarget onlyCache=$onlyRetrieveFromCache"
-            )
-        }
         mImageLoader?.loadImage(
             showView.hashCode(),
             Uri.parse(url),
@@ -338,9 +321,6 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
                 }
 
                 override fun onFail(error: Exception?) {
-                    if (BuildConfig.DEBUG) {
-                        Log.d("MojitoTarget", "replaceImageUrl fail error=${error?.message}")
-                    }
                     loadImageFail(onlyRetrieveFromCache)
                 }
 
@@ -348,12 +328,6 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
                     mainHandler.post {
                         if (isDetached || context == null) {
                             return@post
-                        }
-                        if (BuildConfig.DEBUG) {
-                            Log.d(
-                                "MojitoTarget",
-                                "replaceImageUrl success size=${image.length()} path=${image.absolutePath}"
-                            )
                         }
                         handleImageOnSuccess(image)
                     }
@@ -431,12 +405,6 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
     }
 
     override fun loadTargetUrl() {
-        if (BuildConfig.DEBUG) {
-            Log.d(
-                "MojitoTarget",
-                "loadTargetUrl targetUrl=${fragmentConfig.targetUrl} autoLoadTarget=${fragmentConfig.autoLoadTarget}"
-            )
-        }
         if (fragmentConfig.targetUrl == null) {
             fragmentCoverLoader?.imageCacheHandle(isCache = false, hasTargetUrl = false)
         } else {

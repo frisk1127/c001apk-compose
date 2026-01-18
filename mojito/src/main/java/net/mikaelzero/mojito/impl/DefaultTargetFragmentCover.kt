@@ -10,7 +10,6 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import com.gyf.immersionbar.ImmersionBar
 import net.mikaelzero.mojito.R
-import net.mikaelzero.mojito.BuildConfig
 import net.mikaelzero.mojito.interfaces.IMojitoFragment
 import net.mikaelzero.mojito.loader.FragmentCoverLoader
 import net.mikaelzero.mojito.tools.Utils
@@ -39,9 +38,6 @@ class DefaultTargetFragmentCover(val topMargin: Float = 0f) : FragmentCoverLoade
         indexLp.topMargin = originTopMargin
         view?.layoutParams = indexLp
         seeTargetImageTv?.setOnClickListener {
-            if (BuildConfig.DEBUG) {
-                android.util.Log.d("MojitoTarget", "seeTargetImageTv onClick")
-            }
             iMojitoFragment.loadTargetUrl()
         }
         view?.visibility = View.GONE
