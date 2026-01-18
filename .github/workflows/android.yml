@@ -25,6 +25,9 @@ jobs:
         with:
           gradle-home-cache-cleanup: true
 
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
       - name: Build with Gradle
         run: |
           echo 'org.gradle.parallel=true' >> gradle.properties
