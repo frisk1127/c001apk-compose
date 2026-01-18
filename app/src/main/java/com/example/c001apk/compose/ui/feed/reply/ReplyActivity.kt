@@ -95,8 +95,7 @@ import kotlin.math.max
 
 @AndroidEntryPoint
 class ReplyActivity : AppCompatActivity(),
-    View.OnClickListener, OnTouchListener, SmoothInputLayout.OnVisibilityChangeListener,
-    SmoothInputLayout.OnKeyboardChangeListener {
+    View.OnClickListener, OnTouchListener {
 
     private lateinit var binding: ActivityReplyBinding
     private val viewModel by viewModels<ReplyViewModel>()
@@ -304,18 +303,16 @@ class ReplyActivity : AppCompatActivity(),
 
     @SuppressLint("ClickableViewAccessibility")
     private fun initView() {
-        binding.emojiBtn?.setOnClickListener(this)
         binding.imageBtn.setOnClickListener(this)
         binding.otherImageBtn?.setOnClickListener(this)
         binding.atBtn.setOnClickListener(this)
         binding.tagBtn.setOnClickListener(this)
-        binding.keyboardBtn?.setOnClickListener(this)
         binding.checkBox.setOnClickListener(this)
         binding.publish.setOnClickListener(this)
         binding.editText.setOnTouchListener(this)
         binding.out.setOnTouchListener(this)
-        (binding.main as? SmoothInputLayout)?.setOnVisibilityChangeListener(this)
-        (binding.main as? SmoothInputLayout)?.setOnKeyboardChangeListener(this)
+        (binding.main as? SmoothInputLayout)?.setOnVisibilityChangeListener(null)
+        (binding.main as? SmoothInputLayout)?.setOnKeyboardChangeListener(null)
         val radius = listOf(16.dp.toFloat(), 16.dp.toFloat(), 0f, 0f)
         val radiusBg = GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
@@ -728,28 +725,6 @@ class ReplyActivity : AppCompatActivity(),
                 launchDocumentPick()
             }
 
-            R.id.keyboardBtn -> {
-                ViewCompat.performHapticFeedback(view, HapticFeedbackConstantsCompat.CONFIRM)
-                with(binding.main as? SmoothInputLayout) {
-                    if (binding.emojiLayout.isVisible) {
-                        this?.closeEmojiPanel()
-                    } else if (this?.isKeyBoardOpen == true) {
-                        closeKeyboard(false)
-                    } else {
-                        showInput()
-                    }
-                }
-            }
-
-            R.id.emojiBtn -> {
-                ViewCompat.performHapticFeedback(view, HapticFeedbackConstantsCompat.CONFIRM)
-                if (binding.emojiBtn?.isSelected == true) {
-                    showInput()
-                } else {
-                    showEmoji()
-                }
-            }
-
             R.id.checkBox ->
                 ViewCompat.performHapticFeedback(view, HapticFeedbackConstantsCompat.CONFIRM)
 
@@ -853,29 +828,6 @@ class ReplyActivity : AppCompatActivity(),
         return false
     }
 
-    override fun onVisibilityChange(visibility: Int) { // 0->visible, 8->gone
-        isEmojiPanelVisible = visibility == VISIBLE
-        if (!isEmojiPanelVisible) {
-            isEmojiPanelRequested = false
-        }
-        ViewCompat.requestApplyInsets(binding.main)
-        binding.emojiBtn?.isSelected = visibility == VISIBLE
-        binding.emojiBtn?.setImageResource(
-            if (visibility == VISIBLE) R.drawable.outline_keyboard_show_24
-            else R.drawable.outline_emoji_emotions_24
-        )
-        if (binding.emojiBtn?.isSelected == true)
-            binding.keyboardBtn?.setImageResource(R.drawable.outline_keyboard_hide_24)
-        if (binding.emojiBtn?.isSelected == false && (binding.main as? SmoothInputLayout)?.isKeyBoardOpen == false)
-            binding.keyboardBtn?.setImageResource(R.drawable.outline_keyboard_show_24)
-    }
-
-    override fun onKeyboardChanged(open: Boolean) {
-        binding.keyboardBtn?.setImageResource(
-            if (open || binding.emojiBtn?.isSelected == true) R.drawable.outline_keyboard_hide_24
-            else R.drawable.outline_keyboard_show_24
-        )
-    }
 
     override fun finish() {
         super.finish()
