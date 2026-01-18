@@ -9,6 +9,8 @@ import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.Gravity
 import android.view.KeyEvent
@@ -36,6 +38,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
+import androidx.core.view.updatePadding
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -69,6 +72,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
+import kotlin.math.max
 
 
 /*
@@ -120,6 +124,14 @@ class ReplyActivity : AppCompatActivity(),
     private lateinit var atTopicResultLauncher: ActivityResultLauncher<Intent>
     private var isFromAt = false
     private var pendingShowKeyboard = true
+    private val imeRetryHandler = Handler(Looper.getMainLooper())
+    private var imeRetryCount = 0
+    private val maxImeRetry = 8
+    private val imeRetryDelayMs = 120L
+    private val imeRetryRunnable = Runnable { retryShowIme() }
+    private var isEmojiPanelVisible = false
+    private var isEmojiPanelRequested = false
+    private var baseInputPaddingBottom = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         if (materialYou)
@@ -135,6 +147,16 @@ class ReplyActivity : AppCompatActivity(),
         )
         binding.main.isFocusable = false
         binding.main.isFocusableInTouchMode = false
+        baseInputPaddingBottom = binding.inputLayout.paddingBottom
+        ViewCompat.setOnApplyWindowInsetsListener(binding.main) { _, insets ->
+            val imeInset = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+            val sysInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
+            val useImeInset = !(isEmojiPanelVisible || isEmojiPanelRequested)
+            val bottomInset = if (useImeInset) max(imeInset, sysInset) else sysInset
+            binding.inputLayout.updatePadding(bottom = baseInputPaddingBottom + bottomInset)
+            insets
+        }
+        ViewCompat.requestApplyInsets(binding.main)
 
         viewModel.type = type
         viewModel.rid = rid
@@ -182,6 +204,7 @@ class ReplyActivity : AppCompatActivity(),
         if (pendingShowKeyboard) {
             pendingShowKeyboard = false
             binding.editText.postDelayed({ showInput() }, 200)
+            startImeRetry()
         }
     }
 
@@ -190,6 +213,7 @@ class ReplyActivity : AppCompatActivity(),
         if (hasFocus && pendingShowKeyboard) {
             pendingShowKeyboard = false
             binding.editText.postDelayed({ showInput() }, 200)
+            startImeRetry()
         }
     }
 
@@ -618,6 +642,7 @@ class ReplyActivity : AppCompatActivity(),
         super.onDestroy()
         closeDialog()
         countDownTimer.cancel()
+        imeRetryHandler.removeCallbacks(imeRetryRunnable)
     }
 
     override fun onAttachedToWindow() {
@@ -627,6 +652,7 @@ class ReplyActivity : AppCompatActivity(),
     }
 
     private fun showInput() {
+        isEmojiPanelRequested = false
         if (binding.main is SmoothInputLayout)
             (binding.main as? SmoothInputLayout)?.showKeyboard()
         else
@@ -636,11 +662,47 @@ class ReplyActivity : AppCompatActivity(),
                 imm.showSoftInput(it, InputMethodManager.SHOW_IMPLICIT)
                 WindowInsetsControllerCompat(window, it)
                     .show(WindowInsetsCompat.Type.ime())
+                ViewCompat.getWindowInsetsController(it)
+                    ?.show(WindowInsetsCompat.Type.ime())
             }
+        ViewCompat.requestApplyInsets(binding.main)
+    }
+
+    private fun startImeRetry() {
+        imeRetryCount = 0
+        imeRetryHandler.removeCallbacks(imeRetryRunnable)
+        imeRetryHandler.postDelayed(imeRetryRunnable, imeRetryDelayMs)
+    }
+
+    private fun retryShowIme() {
+        val isImeVisible = ViewCompat.getRootWindowInsets(binding.editText)
+            ?.isVisible(WindowInsetsCompat.Type.ime()) == true
+        if (isImeVisible) {
+            imeRetryHandler.removeCallbacks(imeRetryRunnable)
+            return
+        }
+        showInput()
+        if (imeRetryCount++ >= maxImeRetry) {
+            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
+            imeRetryHandler.removeCallbacks(imeRetryRunnable)
+            return
+        }
+        imeRetryHandler.postDelayed(imeRetryRunnable, imeRetryDelayMs)
     }
 
     private fun showEmoji() {
+        isEmojiPanelRequested = true
+        hideImeForEmoji()
         (binding.main as? SmoothInputLayout)?.showEmojiPanel(true)
+        ViewCompat.requestApplyInsets(binding.main)
+    }
+
+    private fun hideImeForEmoji() {
+        imm.hideSoftInputFromWindow(binding.editText.windowToken, 0)
+        WindowInsetsControllerCompat(window, binding.editText)
+            .hide(WindowInsetsCompat.Type.ime())
+        ViewCompat.getWindowInsetsController(binding.editText)
+            ?.hide(WindowInsetsCompat.Type.ime())
     }
 
     @SuppressLint("InflateParams")
@@ -792,6 +854,11 @@ class ReplyActivity : AppCompatActivity(),
     }
 
     override fun onVisibilityChange(visibility: Int) { // 0->visible, 8->gone
+        isEmojiPanelVisible = visibility == VISIBLE
+        if (!isEmojiPanelVisible) {
+            isEmojiPanelRequested = false
+        }
+        ViewCompat.requestApplyInsets(binding.main)
         binding.emojiBtn?.isSelected = visibility == VISIBLE
         binding.emojiBtn?.setImageResource(
             if (visibility == VISIBLE) R.drawable.outline_keyboard_show_24
