@@ -125,6 +125,10 @@ class ReplyActivity : AppCompatActivity(),
         super.onCreate(savedInstanceState)
         binding = ActivityReplyBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        window.setSoftInputMode(
+            WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE or
+                WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+        )
 
         viewModel.type = type
         viewModel.rid = rid
@@ -161,9 +165,17 @@ class ReplyActivity : AppCompatActivity(),
         super.onResume()
         if (pendingShowKeyboard) {
             lifecycleScope.launch(Dispatchers.Main) {
-                delay(150)
+                delay(120)
                 showInput()
             }
+        }
+    }
+
+    override fun onPostResume() {
+        super.onPostResume()
+        if (pendingShowKeyboard) {
+            pendingShowKeyboard = false
+            binding.editText.post { showInput() }
         }
     }
 

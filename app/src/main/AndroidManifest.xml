@@ -34,7 +34,7 @@
             android:exported="false"
             android:launchMode="singleTop"
             android:theme="@style/AppThemeTranslucent"
-            android:windowSoftInputMode="adjustResize" />
+            android:windowSoftInputMode="adjustResize|stateVisible" />
 
         <activity
             android:name=".ui.main.MainActivity"
