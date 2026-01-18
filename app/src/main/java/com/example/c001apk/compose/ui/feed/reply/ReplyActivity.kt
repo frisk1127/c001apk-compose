@@ -117,6 +117,7 @@ class ReplyActivity : AppCompatActivity(),
     private var dialog: AlertDialog? = null
     private lateinit var atTopicResultLauncher: ActivityResultLauncher<Intent>
     private var isFromAt = false
+    private var pendingShowKeyboard = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         if (materialYou)
@@ -158,9 +159,19 @@ class ReplyActivity : AppCompatActivity(),
 
     override fun onResume() {
         super.onResume()
-        lifecycleScope.launch(Dispatchers.Main) {
-            delay(150)
-            showInput()
+        if (pendingShowKeyboard) {
+            lifecycleScope.launch(Dispatchers.Main) {
+                delay(150)
+                showInput()
+            }
+        }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus && pendingShowKeyboard) {
+            pendingShowKeyboard = false
+            binding.editText.post { showInput() }
         }
     }
 
