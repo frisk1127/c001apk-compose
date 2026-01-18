@@ -2,7 +2,6 @@ package net.mikaelzero.mojito.tools;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ViewConfiguration;
 
@@ -65,29 +64,22 @@ public class NoScrollViewPager extends ViewPager {
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         if (!isLocked) {
             try {
-                boolean result = super.onInterceptTouchEvent(ev);
-                Log.d("MojitoLongPress", "ViewPager intercept result=" + result + " " + formatEvent(ev));
-                return result;
+                return super.onInterceptTouchEvent(ev);
             } catch (IllegalArgumentException ex) {
                 ex.printStackTrace();
-                Log.d("MojitoLongPress", "ViewPager intercept exception");
                 return false;
             }
         }
-        Log.d("MojitoLongPress", "ViewPager intercept locked " + formatEvent(ev));
         return false;
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        boolean result = !isLocked && super.onTouchEvent(event);
-        Log.d("MojitoLongPress", "ViewPager touch result=" + result + " locked=" + isLocked + " " + formatEvent(event));
-        return result;
+        return !isLocked && super.onTouchEvent(event);
     }
 
     public void setLocked(boolean isLocked) {
         this.isLocked = isLocked;
-        Log.d("MojitoLongPress", "ViewPager setLocked=" + isLocked);
     }
 
     public boolean isLocked() {
@@ -97,10 +89,7 @@ public class NoScrollViewPager extends ViewPager {
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
         handleLongPressEvent(ev);
-        boolean handled = super.dispatchTouchEvent(ev);
-        Log.d("MojitoLongPress", "ViewPager dispatch locked=" + isLocked
-                + " handled=" + handled + " childCount=" + getChildCount() + " " + formatEvent(ev));
-        return handled;
+        return super.dispatchTouchEvent(ev);
     }
 
     private void handleLongPressEvent(MotionEvent ev) {
@@ -138,12 +127,4 @@ public class NoScrollViewPager extends ViewPager {
         }
     }
 
-    private static String formatEvent(MotionEvent event) {
-        int toolType = event.getPointerCount() > 0 ? event.getToolType(0) : -1;
-        return "action=" + event.getActionMasked()
-                + " source=0x" + Integer.toHexString(event.getSource())
-                + " toolType=" + toolType
-                + " buttonState=0x" + Integer.toHexString(event.getButtonState())
-                + " pointers=" + event.getPointerCount();
-    }
 }

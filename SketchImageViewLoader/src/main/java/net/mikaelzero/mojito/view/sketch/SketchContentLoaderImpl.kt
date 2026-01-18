@@ -3,7 +3,6 @@ package net.mikaelzero.mojito.view.sketch
 import android.content.Context
 import android.graphics.Rect
 import android.graphics.RectF
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
@@ -71,21 +70,14 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
     }
 
     override fun dispatchTouchEvent(isDrag: Boolean, isActionUp: Boolean, isDown: Boolean, isHorizontal: Boolean): Boolean {
-        Log.d(
-            "MojitoLongPress",
-            "SketchContentLoader dispatchTouch isDrag=$isDrag isActionUp=$isActionUp isDown=$isDown isHorizontal=$isHorizontal " +
-                "longHeight=$isLongHeightImage longWidth=$isLongWidthImage"
-        )
         return when {
             isLongHeightImage -> {
                 when {
                     isDrag -> {
-                        Log.d("MojitoLongPress", "SketchContentLoader longHeight return=false (drag)")
                         return false
                     }
                     isActionUp -> {
                         val result = !isDrag
-                        Log.d("MojitoLongPress", "SketchContentLoader longHeight return=$result (actionUp)")
                         return result
                     }
                     else -> {
@@ -107,7 +99,6 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
                                 && !isDown
                                 && screenHeight == drawRect.bottom.toInt())
                         val result = isTop || isCenter || isScale || isBottom
-                        Log.d("MojitoLongPress", "SketchContentLoader longHeight return=$result (move)")
                         return result
                     }
                 }
@@ -130,22 +121,16 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
                         return isHorizontal || isScale
                     }
                 }
-                Log.d("MojitoLongPress", "SketchContentLoader longWidth return=$result")
                 result
             }
             else -> {
                 val zoomer = sketchImageView.zoomer
                 if (zoomer == null) {
-                    Log.d("MojitoLongPress", "SketchContentLoader normal return=false (no zoomer)")
                     return false
                 }
                 val baseScale = max(zoomer.fullZoomScale, zoomer.fillZoomScale)
                 val delta = zoomer.zoomScale - baseScale
                 val result = delta > 0.05f
-                Log.d(
-                    "MojitoLongPress",
-                    "SketchContentLoader normal return=$result zoom=${zoomer.zoomScale} full=${zoomer.fullZoomScale} fill=${zoomer.fillZoomScale}"
-                )
                 result
             }
         }
@@ -219,18 +204,15 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
         val manualRunnable = Runnable {
             if (manualFired) return@Runnable
             manualFired = true
-            Log.d("MojitoLongPress", "manual long-press (sketch view)")
             onLongTapCallback.onLongTap(sketchImageView, downX, downY)
         }
         val updateParentIntercept = { disallow: Boolean ->
             sketchImageView.parent?.requestDisallowInterceptTouchEvent(disallow)
-            Log.d("MojitoLongPress", "SketchView parentIntercept disallow=$disallow")
         }
 
         sketchImageView.zoomer?.setOnViewLongPressListener { view, x, y ->
             manualFired = true
             view.removeCallbacks(manualRunnable)
-            Log.d("MojitoLongPress", "zoomer long-press x=$x y=$y")
             onLongTapCallback.onLongTap(view, x, y)
         }
         // Fallback when ImageZoomer isn't working yet (e.g. static images or jittery touch).
@@ -249,7 +231,6 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
                     manualFired = false
                     downX = event.x
                     downY = event.y
-                    Log.d("MojitoLongPress", "SketchView touch down " + formatEvent(event))
                     // Keep initial DOWN in child so double-tap can be detected.
                     updateParentIntercept(true)
                     view.removeCallbacks(manualRunnable)
@@ -281,7 +262,6 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
                 }
                 MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     manualFired = true
-                    Log.d("MojitoLongPress", "SketchView touch up/cancel " + formatEvent(event))
                     updateParentIntercept(false)
                     view.removeCallbacks(manualRunnable)
                 }
@@ -294,12 +274,4 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
 
     }
 
-    private fun formatEvent(event: MotionEvent): String {
-        val toolType = if (event.pointerCount > 0) event.getToolType(0) else -1
-        return "action=${event.actionMasked} " +
-            "source=0x${Integer.toHexString(event.source)} " +
-            "toolType=$toolType " +
-            "buttonState=0x${Integer.toHexString(event.buttonState)} " +
-            "pointers=${event.pointerCount}"
-    }
 }

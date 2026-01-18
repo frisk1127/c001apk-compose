@@ -20,6 +20,7 @@ import net.mikaelzero.mojito.Mojito.Companion.imageLoader
 import net.mikaelzero.mojito.Mojito.Companion.imageViewFactory
 import net.mikaelzero.mojito.Mojito.Companion.mojitoConfig
 import net.mikaelzero.mojito.MojitoView
+import net.mikaelzero.mojito.BuildConfig
 import net.mikaelzero.mojito.bean.FragmentConfig
 import net.mikaelzero.mojito.databinding.FragmentImageBinding
 import net.mikaelzero.mojito.interfaces.IMojitoFragment
@@ -117,7 +118,6 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
                     }
                     lastLongPressTime = now
                     ImageMojitoActivity.lastGlobalLongPressTime = now
-                    Log.d("MojitoLongPress", "root long-press fallback pos=${fragmentConfig.position}")
                     if (!binding.mojitoView.isDrag) {
                         ImageMojitoActivity.onMojitoListener?.onLongClick(
                             activity,
@@ -149,7 +149,6 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
             override fun onLongTap(view: View, x: Float, y: Float) {
                 lastLongPressTime = SystemClock.uptimeMillis()
                 ImageMojitoActivity.lastGlobalLongPressTime = lastLongPressTime
-                Log.d("MojitoLongPress", "fragment long-tap pos=${fragmentConfig.position} x=$x y=$y")
                 if (!binding.mojitoView.isDrag) {
                     ImageMojitoActivity.onMojitoListener?.onLongClick(
                         activity,
@@ -170,7 +169,6 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
             }
             lastLongPressTime = now
             ImageMojitoActivity.lastGlobalLongPressTime = now
-            Log.d("MojitoLongPress", "mojitoView long-press fallback")
             if (!binding.mojitoView.isDrag) {
                 ImageMojitoActivity.onMojitoListener?.onLongClick(
                     activity,
@@ -184,24 +182,31 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
         }
 
         binding.imageCoverLayout.setOnTouchListener { layoutView, event ->
-            val targetView = layoutView.findViewById<View>(net.mikaelzero.mojito.R.id.seeTargetImageTv)
-            if (targetView != null && targetView.visibility == View.VISIBLE && isPointInsideView(targetView, event)) {
-                return@setOnTouchListener false
+            val targetView =
+                layoutView.findViewById<View>(net.mikaelzero.mojito.R.id.seeTargetImageTv)
+            if (targetView != null && targetView.visibility == View.VISIBLE &&
+                isPointInsideView(targetView, event)
+            ) {
+                if (BuildConfig.DEBUG) {
+                    Log.d(
+                        "MojitoTarget",
+                        "cover touch action=${event.actionMasked} x=${event.x} y=${event.y}"
+                    )
+                }
+                if (event.actionMasked == MotionEvent.ACTION_UP) {
+                    if (BuildConfig.DEBUG) {
+                        Log.d("MojitoTarget", "cover performClick")
+                    }
+                    targetView.performClick()
+                }
+                return@setOnTouchListener true
             }
-            Log.d(
-                "MojitoLongPress",
-                "imageCoverLayout touch action=${event.actionMasked} forwardToMojito=true"
-            )
             val forwarded = MotionEvent.obtain(event)
             val handled = binding.mojitoView.dispatchTouchEvent(forwarded)
             forwarded.recycle()
             handled
         }
         binding.loadingLayout.setOnTouchListener { _, event ->
-            Log.d(
-                "MojitoLongPress",
-                "loadingLayout touch action=${event.actionMasked} forwardToMojito=true"
-            )
             val forwarded = MotionEvent.obtain(event)
             val handled = binding.mojitoView.dispatchTouchEvent(forwarded)
             forwarded.recycle()
@@ -313,6 +318,12 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
         } else {
             !fragmentConfig.autoLoadTarget
         }
+        if (BuildConfig.DEBUG) {
+            Log.d(
+                "MojitoTarget",
+                "replaceImageUrl url=$url force=$forceLoadTarget onlyCache=$onlyRetrieveFromCache"
+            )
+        }
         mImageLoader?.loadImage(
             showView.hashCode(),
             Uri.parse(url),
@@ -327,6 +338,9 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
                 }
 
                 override fun onFail(error: Exception?) {
+                    if (BuildConfig.DEBUG) {
+                        Log.d("MojitoTarget", "replaceImageUrl fail error=${error?.message}")
+                    }
                     loadImageFail(onlyRetrieveFromCache)
                 }
 
@@ -334,6 +348,12 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
                     mainHandler.post {
                         if (isDetached || context == null) {
                             return@post
+                        }
+                        if (BuildConfig.DEBUG) {
+                            Log.d(
+                                "MojitoTarget",
+                                "replaceImageUrl success size=${image.length()} path=${image.absolutePath}"
+                            )
                         }
                         handleImageOnSuccess(image)
                     }
@@ -411,6 +431,12 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
     }
 
     override fun loadTargetUrl() {
+        if (BuildConfig.DEBUG) {
+            Log.d(
+                "MojitoTarget",
+                "loadTargetUrl targetUrl=${fragmentConfig.targetUrl} autoLoadTarget=${fragmentConfig.autoLoadTarget}"
+            )
+        }
         if (fragmentConfig.targetUrl == null) {
             fragmentCoverLoader?.imageCacheHandle(isCache = false, hasTargetUrl = false)
         } else {
@@ -419,15 +445,11 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
     }
 
     private fun isPointInsideView(view: View, event: MotionEvent): Boolean {
-        val location = IntArray(2)
-        view.getLocationOnScreen(location)
-        val left = location[0]
-        val top = location[1]
-        val right = left + view.width
-        val bottom = top + view.height
-        val x = event.rawX.toInt()
-        val y = event.rawY.toInt()
-        return x in left..right && y in top..bottom
+        val rect = android.graphics.Rect()
+        view.getHitRect(rect)
+        val x = event.x.toInt()
+        val y = event.y.toInt()
+        return rect.contains(x, y)
     }
 
     private fun getRealSizeFromFile(image: File): Array<Int> {

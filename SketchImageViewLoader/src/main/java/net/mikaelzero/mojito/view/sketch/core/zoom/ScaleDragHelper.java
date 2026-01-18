@@ -21,7 +21,6 @@ import android.graphics.Matrix;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ViewParent;
 import android.widget.ImageView;
@@ -106,18 +105,6 @@ class ScaleDragHelper implements ScaleDragGestureDetector.OnScaleDragGestureList
 
     private void requestParentIntercept(boolean disallow, @NonNull String reason) {
         requestDisallowInterceptTouchEvent(imageZoomer.getImageView(), disallow);
-        Log.d(
-                "MojitoLongPress",
-                "Zoomer parentIntercept disallow=" + disallow
-                        + " reason=" + reason
-                        + " allowEdge=" + imageZoomer.isAllowParentInterceptOnEdge()
-                        + " scaling=" + scaleDragGestureDetector.isScaling()
-                        + " dragging=" + scaleDragGestureDetector.isDragging()
-                        + " horEdge=" + getScrollEdgeName(horScrollEdge)
-                        + " verEdge=" + getScrollEdgeName(verScrollEdge)
-                        + " zoom=" + SketchUtils.formatFloat(getZoomScale(), 2)
-                        + " base=" + SketchUtils.formatFloat(getDefaultZoomScale(), 2)
-        );
     }
 
     void reset() {

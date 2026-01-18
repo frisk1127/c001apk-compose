@@ -4,14 +4,16 @@ import android.app.Application
 import coil.Coil
 import coil.ImageLoader
 import com.example.c001apk.compose.util.CookieUtil.materialYou
+import com.example.c001apk.compose.util.AddCookiesInterceptor
 import com.example.c001apk.compose.util.dp
 import com.google.android.material.color.DynamicColors
 import dagger.hilt.android.HiltAndroidApp
 import me.zhanghai.android.appiconloader.coil.AppIconFetcher
 import me.zhanghai.android.appiconloader.coil.AppIconKeyer
-import net.mikaelzero.coilimageloader.CoilImageLoader
+import com.example.c001apk.compose.util.MojitoOkHttpImageLoader
 import net.mikaelzero.mojito.Mojito
 import net.mikaelzero.mojito.view.sketch.SketchImageLoadFactory
+import okhttp3.OkHttpClient
 
 /**
  * Created by bggRGjQaUbCoE on 2024/5/29
@@ -32,6 +34,11 @@ class C001Application : Application() {
         Coil.setImageLoader(
             ImageLoader.Builder(this)
                 .crossfade(true)
+                .okHttpClient {
+                    OkHttpClient.Builder()
+                        .addInterceptor(AddCookiesInterceptor)
+                        .build()
+                }
                 .components {
                     add(AppIconKeyer())
                     add(AppIconFetcher.Factory(48.dp, false, this@C001Application))
@@ -40,7 +47,7 @@ class C001Application : Application() {
         )
 
         Mojito.initialize(
-            CoilImageLoader.with(this),
+            MojitoOkHttpImageLoader(this),
             SketchImageLoadFactory()
         )
 

@@ -43,7 +43,7 @@ object ImageShowUtil {
     ) {
         val thumbnailList = urlList.map { it.http2https }
         val originList = urlList.map {
-            if (it.endsWith(SUFFIX_THUMBNAIL)) it.replace(SUFFIX_THUMBNAIL, EMPTY_STRING).http2https
+            if (it.contains(SUFFIX_THUMBNAIL)) it.replace(SUFFIX_THUMBNAIL, EMPTY_STRING).http2https
             else it.http2https
         }
         Mojito.start(imageView.context) {

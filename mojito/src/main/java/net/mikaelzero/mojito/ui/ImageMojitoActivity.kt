@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
-import android.util.Log
 import android.view.KeyEvent
 import android.view.Window
 import android.window.OnBackInvokedCallback
@@ -159,7 +158,6 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
 
         binding.viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
             override fun onPageScrollStateChanged(state: Int) {
-                Log.d("MojitoLongPress", "ViewPager scroll state=$state")
             }
 
             override fun onPageScrolled(
@@ -167,16 +165,11 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
                 positionOffset: Float,
                 positionOffsetPixels: Int
             ) {
-                Log.d(
-                    "MojitoLongPress",
-                    "ViewPager scrolled pos=$position offset=$positionOffset px=$positionOffsetPixels"
-                )
             }
 
             override fun onPageSelected(position: Int) {
                 activityCoverLoader?.pageChange(viewPagerBeans.size, position)
                 onMojitoListener?.onViewPageSelected(position)
-                Log.d("MojitoLongPress", "ViewPager selected pos=$position")
             }
         })
         activityCoverLoader?.pageChange(viewPagerBeans.size, activityConfig.position)
@@ -189,7 +182,6 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
 
     fun setViewPagerLock(isLock: Boolean) {
         binding.viewPager.isLocked = isLock
-        Log.d("MojitoLongPress", "Activity setViewPagerLock=$isLock")
     }
 
     fun finishView() {
@@ -273,7 +265,6 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
             return false
         }
         lastGlobalLongPressTime = now
-        Log.d("MojitoLongPress", "Activity viewPager long-press fire pos=${fragment.fragmentConfig.position}")
         onMojitoListener?.onLongClick(
             this@ImageMojitoActivity,
             fragment.view ?: binding.viewPager,

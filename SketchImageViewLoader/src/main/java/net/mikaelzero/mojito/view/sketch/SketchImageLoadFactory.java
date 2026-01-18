@@ -1,7 +1,6 @@
 package net.mikaelzero.mojito.view.sketch;
 
 import android.net.Uri;
-import android.util.Log;
 import android.view.View;
 
 import net.mikaelzero.mojito.interfaces.ImageViewLoadFactory;
@@ -27,13 +26,11 @@ public class SketchImageLoadFactory implements ImageViewLoadFactory {
                     length = file.length();
                 }
             }
-            Log.d("MojitoLongPress", "loadSillContent uri=" + uri + " size=" + length);
             Sketch.with(view.getContext()).display(path, sketchView).loadingImage((context, imageView, displayOptions) -> {
                 return sketchView.getDrawable(); // 解决缩略图切换到原图显示的时候会闪烁的问题
             }).commit();
             sketchView.post(() -> {
                 if (sketchView.getZoomer() != null) {
-                    Log.d("MojitoLongPress", "post reset zoomer");
                     sketchView.getZoomer().reset("postLoad");
                 }
             });

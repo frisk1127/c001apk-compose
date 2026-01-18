@@ -18,7 +18,6 @@ package net.mikaelzero.mojito.view.sketch.core;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 
 import androidx.annotation.DrawableRes;
@@ -105,17 +104,6 @@ public class SketchImageView extends FunctionPropertyView {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
-            ImageZoomer zoomer = getZoomer();
-            String drawableSize = "null";
-            if (getDrawable() != null) {
-                drawableSize = getDrawable().getIntrinsicWidth() + "x" + getDrawable().getIntrinsicHeight();
-            }
-            Log.d("MojitoLongPress", "SketchImageView down zoomerWorking="
-                    + (zoomer != null && zoomer.isWorking())
-                    + " view=" + getWidth() + "x" + getHeight()
-                    + " drawable=" + drawableSize);
-        }
         return super.onTouchEvent(event);
     }
 }

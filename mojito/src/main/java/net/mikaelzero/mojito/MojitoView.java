@@ -104,14 +104,6 @@ public class MojitoView extends FrameLayout {
         addView(LayoutInflater.from(getContext()).inflate(R.layout.layout_content, null), 0);
         contentLayout = findViewById(R.id.contentLayout);
         backgroundView = findViewById(R.id.backgroundView);
-        contentLayout.setOnTouchListener((v, event) -> {
-            int action = event.getActionMasked();
-            if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_MOVE) {
-                Log.d("MojitoLongPress", "contentLayout touch " + formatEvent(event)
-                        + " raw=" + event.getRawX() + "," + event.getRawY());
-            }
-            return false;
-        });
         backgroundView.setAlpha(mAlpha);
         imageWrapper = new MarginViewWrapper(contentLayout);
     }
@@ -520,7 +512,6 @@ public class MojitoView extends FrameLayout {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent event) {
-        Log.d("MojitoLongPress", "MojitoView dispatch " + formatEvent(event));
         int y = (int) event.getY();
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_POINTER_DOWN:
@@ -538,11 +529,8 @@ public class MojitoView extends FrameLayout {
                 mYDistanceTraveled = 0;
                 //need event when touch black background
                 boolean inContent = isTouchPointInContentLayout(contentLayout, event);
-                Log.d("MojitoLongPress", "MojitoView down inContent=" + inContent + " " + formatEvent(event)
-                        + " raw=" + event.getRawX() + "," + event.getRawY());
                 if (!inContent) {
                     mLastY = y;
-                    Log.d("MojitoLongPress", "MojitoView down outside content");
                     return true;
                 }
                 break;
@@ -570,7 +558,6 @@ public class MojitoView extends FrameLayout {
                         //if is long image,top or bottom or minScale, need handle event
                         //if image scale<1(origin scale) , need handle event
                         setViewPagerLocking(false);
-                        Log.d("MojitoLongPress", "MojitoView move consumed by contentLoader");
                         break;
                     }
                     handleMove(y);
@@ -600,7 +587,6 @@ public class MojitoView extends FrameLayout {
                     //if is long image,top or bottom or minScale, need handle event
                     //if image scale<1(origin scale) , need handle event
                     setViewPagerLocking(false);
-                    Log.d("MojitoLongPress", "MojitoView up consumed by contentLoader");
                     break;
                 }
                 //如果滑动距离不足,则不需要事件
@@ -641,7 +627,6 @@ public class MojitoView extends FrameLayout {
     //不消费该事件会导致事件交还给上级
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        Log.d("MojitoLongPress", "MojitoView onTouch " + formatEvent(event));
         // Let View handle long-press detection for fallback listeners, then consume.
         super.onTouchEvent(event);
         return true;
@@ -660,10 +645,6 @@ public class MojitoView extends FrameLayout {
         int right = left + view.getMeasuredWidth();
         int bottom = top + view.getMeasuredHeight();
         boolean inside = y >= top && y <= bottom && x >= left && x <= right;
-        if (!inside) {
-            Log.d("MojitoLongPress", "touch outside content raw=" + x + "," + y
-                    + " rect=" + left + "," + top + "," + right + "," + bottom);
-        }
         return inside;
     }
 
@@ -677,7 +658,6 @@ public class MojitoView extends FrameLayout {
         if (onMojitoViewCallback != null) {
             onMojitoViewCallback.onLock(lock);
         }
-        Log.d("MojitoLongPress", "MojitoView setViewPagerLocking=" + lock);
     }
 
     private void changeContentViewToFullscreen() {
@@ -695,15 +675,6 @@ public class MojitoView extends FrameLayout {
         imageTopOfAnimatorEnd = imageWrapper.getMarginTop();
         imageWidthOfAnimatorEnd = imageWrapper.getWidth();
         imageHeightOfAnimatorEnd = imageWrapper.getHeight();
-    }
-
-    private static String formatEvent(MotionEvent event) {
-        int toolType = event.getPointerCount() > 0 ? event.getToolType(0) : -1;
-        return "action=" + event.getActionMasked()
-                + " source=0x" + Integer.toHexString(event.getSource())
-                + " toolType=" + toolType
-                + " buttonState=0x" + Integer.toHexString(event.getButtonState())
-                + " pointers=" + event.getPointerCount();
     }
 
     private OnMojitoViewCallback onMojitoViewCallback;

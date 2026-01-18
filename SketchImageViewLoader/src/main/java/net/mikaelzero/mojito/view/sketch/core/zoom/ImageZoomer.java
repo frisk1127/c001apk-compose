@@ -24,7 +24,6 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.view.MotionEvent;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Interpolator;
@@ -107,11 +106,6 @@ public class ImageZoomer {
 
         sizes.resetSizes(imageView);
         boolean working = isWorking();
-        Log.d("MojitoLongPress", "ImageZoomer reset why=" + why
-                + " working=" + working
-                + " view=" + sizes.viewSize
-                + " drawable=" + sizes.drawableSize
-                + " image=" + sizes.imageSize);
         if (!working) {
             return false;
         }
