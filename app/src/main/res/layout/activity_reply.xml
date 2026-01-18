@@ -123,6 +123,15 @@
             app:layout_constraintTop_toBottomOf="@id/line">
 
             <ImageView
+                android:id="@+id/emojiBtn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="?attr/actionBarItemBackground"
+                android:padding="8dp"
+                android:src="@drawable/outline_emoji_emotions_24" />
+
+            <ImageView
                 android:id="@+id/imageBtn"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"

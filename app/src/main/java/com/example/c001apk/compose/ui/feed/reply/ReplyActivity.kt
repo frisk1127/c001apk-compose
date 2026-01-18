@@ -95,7 +95,7 @@ import kotlin.math.max
 
 @AndroidEntryPoint
 class ReplyActivity : AppCompatActivity(),
-    View.OnClickListener, OnTouchListener {
+    View.OnClickListener, OnTouchListener, SmoothInputLayout.OnVisibilityChangeListener {
 
     private lateinit var binding: ActivityReplyBinding
     private val viewModel by viewModels<ReplyViewModel>()
@@ -303,6 +303,7 @@ class ReplyActivity : AppCompatActivity(),
 
     @SuppressLint("ClickableViewAccessibility")
     private fun initView() {
+        binding.emojiBtn?.setOnClickListener(this)
         binding.imageBtn.setOnClickListener(this)
         binding.otherImageBtn?.setOnClickListener(this)
         binding.atBtn.setOnClickListener(this)
@@ -311,7 +312,7 @@ class ReplyActivity : AppCompatActivity(),
         binding.publish.setOnClickListener(this)
         binding.editText.setOnTouchListener(this)
         binding.out.setOnTouchListener(this)
-        (binding.main as? SmoothInputLayout)?.setOnVisibilityChangeListener(null)
+        (binding.main as? SmoothInputLayout)?.setOnVisibilityChangeListener(this)
         (binding.main as? SmoothInputLayout)?.setOnKeyboardChangeListener(null)
         val radius = listOf(16.dp.toFloat(), 16.dp.toFloat(), 0f, 0f)
         val radiusBg = GradientDrawable().apply {
@@ -725,6 +726,11 @@ class ReplyActivity : AppCompatActivity(),
                 launchDocumentPick()
             }
 
+            R.id.emojiBtn -> {
+                ViewCompat.performHapticFeedback(view, HapticFeedbackConstantsCompat.CONFIRM)
+                showEmoji()
+            }
+
             R.id.checkBox ->
                 ViewCompat.performHapticFeedback(view, HapticFeedbackConstantsCompat.CONFIRM)
 
@@ -826,6 +832,14 @@ class ReplyActivity : AppCompatActivity(),
             }
         }
         return false
+    }
+
+    override fun onVisibilityChange(visibility: Int) { // 0->visible, 8->gone
+        isEmojiPanelVisible = visibility == VISIBLE
+        if (!isEmojiPanelVisible) {
+            isEmojiPanelRequested = false
+        }
+        ViewCompat.requestApplyInsets(binding.main)
     }
 
 
