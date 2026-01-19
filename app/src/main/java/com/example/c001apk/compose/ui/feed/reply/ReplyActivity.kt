@@ -131,6 +131,7 @@ class ReplyActivity : AppCompatActivity(),
     private var isEmojiPanelVisible = false
     private var isEmojiPanelRequested = false
     private var baseInputPaddingBottom = 0
+    private var baseRootHeight = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         if (materialYou)
@@ -151,8 +152,12 @@ class ReplyActivity : AppCompatActivity(),
             val imeInset = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
             val sysInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
             val isImeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
-            val isKeyboardOpen = (binding.main as? SmoothInputLayout)?.isKeyBoardOpen == true
-            val useImeInset = isImeVisible && !isKeyboardOpen
+            if (!isImeVisible) {
+                baseRootHeight = binding.main.rootView.height
+            }
+            val isResized =
+                baseRootHeight > 0 && binding.main.rootView.height < baseRootHeight
+            val useImeInset = isImeVisible && !isResized
             val bottomInset = if (useImeInset) max(imeInset, sysInset) else sysInset
             binding.inputLayout.updatePadding(bottom = baseInputPaddingBottom + bottomInset)
             insets
