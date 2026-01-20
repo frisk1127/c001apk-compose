@@ -130,7 +130,7 @@ class ReplyActivity : AppCompatActivity(),
     private val imeRetryRunnable = Runnable { retryShowIme() }
     private var isEmojiPanelVisible = false
     private var isEmojiPanelRequested = false
-    private var baseInputPaddingBottom = 0
+    private var baseRootPaddingBottom = 0
     private var baseContentHeight = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -147,7 +147,7 @@ class ReplyActivity : AppCompatActivity(),
         )
         binding.main.isFocusable = false
         binding.main.isFocusableInTouchMode = false
-        baseInputPaddingBottom = binding.inputLayout.paddingBottom
+        baseRootPaddingBottom = binding.main.paddingBottom
         ViewCompat.setOnApplyWindowInsetsListener(binding.main) { _, insets ->
             val imeInset = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
             val sysInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
@@ -168,7 +168,7 @@ class ReplyActivity : AppCompatActivity(),
                     "smoothOpen=${(binding.main as? SmoothInputLayout)?.isKeyBoardOpen} " +
                     "rootH=$rootHeight contentH=$contentHeight resized=$isResized"
             )
-            binding.inputLayout.updatePadding(bottom = baseInputPaddingBottom + bottomInset)
+            binding.main.updatePadding(bottom = baseRootPaddingBottom + bottomInset)
             insets
         }
         ViewCompat.requestApplyInsets(binding.main)
