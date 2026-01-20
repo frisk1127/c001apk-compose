@@ -1,4 +1,4 @@
-name: Build Without R8
+name: Release Without R8
 
 on:
   workflow_dispatch:
