@@ -29,6 +29,7 @@ import androidx.core.content.res.ResourcesCompat
 import com.example.c001apk.compose.BuildConfig
 import com.example.c001apk.compose.R
 import com.example.c001apk.compose.constant.Constants.URL_SOURCE_CODE
+import com.example.c001apk.compose.constant.Constants.URL_SOURCE_CODE_FORK
 import com.example.c001apk.compose.ui.component.BackButton
 import com.example.c001apk.compose.ui.component.settings.BasicListItem
 import com.example.c001apk.compose.util.openInBrowser
@@ -94,10 +95,17 @@ fun AboutScreen(
             ) { }
             BasicListItem(
                 leadingImageVector = Icons.Outlined.Code,
-                headlineText = "项目源码",
+                headlineText = "原项目地址",
                 supportingText = URL_SOURCE_CODE
             ) {
                 context.openInBrowser(URL_SOURCE_CODE)
+            }
+            BasicListItem(
+                leadingImageVector = Icons.Outlined.Code,
+                headlineText = "本项目地址",
+                supportingText = URL_SOURCE_CODE_FORK
+            ) {
+                context.openInBrowser(URL_SOURCE_CODE_FORK)
             }
             BasicListItem(
                 leadingImageVector = Icons.Outlined.Source,
