@@ -149,17 +149,8 @@ class ReplyActivity : AppCompatActivity(),
         binding.main.isFocusableInTouchMode = false
         baseInputPaddingBottom = binding.inputLayout.paddingBottom
         ViewCompat.setOnApplyWindowInsetsListener(binding.main) { _, insets ->
-            val imeInset = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
             val sysInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
-            val isImeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
-            if (!isImeVisible) {
-                baseContentHeight = binding.main.height
-            }
-            val isResized =
-                baseContentHeight > 0 && binding.main.height < baseContentHeight
-            val useImeInset = isImeVisible && !isResized
-            val bottomInset = if (useImeInset) max(imeInset, sysInset) else sysInset
-            binding.inputLayout.updatePadding(bottom = baseInputPaddingBottom + bottomInset)
+            binding.inputLayout.updatePadding(bottom = baseInputPaddingBottom + sysInset)
             insets
         }
         ViewCompat.requestApplyInsets(binding.main)
