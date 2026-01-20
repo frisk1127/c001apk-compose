@@ -164,9 +164,11 @@ class ReplyActivity : AppCompatActivity(),
                 isEmojiPanelRequested = false
                 binding.emojiLayout.isVisible = false
             }
-            binding.imeScrim.isVisible = useImeInset
-            binding.imeScrim.layoutParams = binding.imeScrim.layoutParams.apply {
-                height = if (useImeInset) imeInset else 0
+            binding.imeScrim?.let { scrim ->
+                scrim.isVisible = useImeInset
+                scrim.layoutParams = scrim.layoutParams.apply {
+                    height = if (useImeInset) imeInset else 0
+                }
             }
             binding.inputLayout.translationY = if (useImeInset) -imeInset.toFloat() else 0f
             binding.main.updatePadding(bottom = baseRootPaddingBottom + sysInset)
