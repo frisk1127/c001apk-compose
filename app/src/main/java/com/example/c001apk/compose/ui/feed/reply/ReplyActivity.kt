@@ -157,8 +157,7 @@ class ReplyActivity : AppCompatActivity(),
             val isResized = rootHeight > 0 &&
                 contentHeight > 0 &&
                 contentHeight + sysInset < rootHeight
-            val useImeInset = isImeVisible &&
-                !(isEmojiPanelVisible || isEmojiPanelRequested)
+            val useImeInset = isImeVisible
             val bottomInset = if (useImeInset) max(imeInset, sysInset) else sysInset
             Log.d(
                 "ReplyActivity",
@@ -167,6 +166,11 @@ class ReplyActivity : AppCompatActivity(),
                     "smoothOpen=${(binding.main as? SmoothInputLayout)?.isKeyBoardOpen} " +
                     "rootH=$rootHeight contentH=$contentHeight resized=$isResized"
             )
+            if (isImeVisible) {
+                isEmojiPanelVisible = false
+                isEmojiPanelRequested = false
+                binding.emojiLayout.isVisible = false
+            }
             binding.inputLayout.translationY = if (useImeInset) -imeInset.toFloat() else 0f
             binding.main.updatePadding(bottom = baseRootPaddingBottom + sysInset)
             insets
