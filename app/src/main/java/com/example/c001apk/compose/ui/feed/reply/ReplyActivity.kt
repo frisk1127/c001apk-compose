@@ -5,6 +5,7 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
@@ -111,6 +112,7 @@ class ReplyActivity : AppCompatActivity(),
         getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
     }
     private val color by lazy { SurfaceColors.SURFACE_1.getColor(this) }
+    private val imeScrimDrawable by lazy { ColorDrawable(color) }
     private val recentList = ArrayList<List<Pair<String, Int>>>()
     private val list = listOf(recentList, emojiList, coolBList)
     private lateinit var pickContent: ActivityResultLauncher<String>
@@ -164,14 +166,21 @@ class ReplyActivity : AppCompatActivity(),
                 isEmojiPanelRequested = false
                 binding.emojiLayout.isVisible = false
             }
-            binding.imeScrim?.let { scrim ->
-                scrim.isVisible = useImeInset
-                scrim.layoutParams = scrim.layoutParams.apply {
-                    height = if (useImeInset) imeInset else 0
-                }
-            }
             binding.inputLayout.translationY = if (useImeInset) -imeInset.toFloat() else 0f
             binding.main.updatePadding(bottom = baseRootPaddingBottom + sysInset)
+            if (useImeInset && imeInset > 0) {
+                imeScrimDrawable.setBounds(
+                    0,
+                    binding.main.height - imeInset,
+                    binding.main.width,
+                    binding.main.height
+                )
+                if (binding.main.overlay.indexOf(imeScrimDrawable) == -1) {
+                    binding.main.overlay.add(imeScrimDrawable)
+                }
+            } else {
+                binding.main.overlay.remove(imeScrimDrawable)
+            }
             insets
         }
         ViewCompat.requestApplyInsets(binding.main)
