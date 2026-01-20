@@ -1,6 +1,5 @@
 import com.android.build.gradle.internal.api.ApkVariantOutputImpl
 import org.jetbrains.kotlin.konan.properties.Properties
-import java.io.ByteArrayOutputStream
 
 plugins {
     alias(libs.plugins.android.application)
@@ -12,18 +11,12 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
 }
 
-fun String.execute(currentWorkingDir: File = file("./")): String {
-    val byteOut = ByteArrayOutputStream()
-    rootProject.exec {
-        workingDir = currentWorkingDir
-        commandLine = split("\\s".toRegex())
-        standardOutput = byteOut
-    }
-    return String(byteOut.toByteArray()).trim()
-}
-
-val gitCommitCount = "git rev-list HEAD --count".execute().toInt()
-val gitCommitHash = "git rev-parse --verify --short HEAD".execute()
+val gitCommitCount = providers.exec {
+    commandLine("git", "rev-list", "HEAD", "--count")
+}.standardOutput.asText.map { it.trim().toInt() }.get()
+val gitCommitHash = providers.exec {
+    commandLine("git", "rev-parse", "--verify", "--short", "HEAD")
+}.standardOutput.asText.map { it.trim() }.get()
 
 android {
     namespace = "com.example.c001apk.compose"
