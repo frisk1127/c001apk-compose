@@ -1,0 +1,83 @@
+name: Build Without R8
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-home-cache-cleanup: true
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Disable R8 for CI build
+        run: |
+          python - << 'PY'
+          from pathlib import Path
+          path = Path("app/build.gradle.kts")
+          text = path.read_text()
+          text = text.replace("isMinifyEnabled = true", "isMinifyEnabled = false")
+          text = text.replace("isShrinkResources = true", "isShrinkResources = false")
+          path.write_text(text)
+          PY
+
+      - name: Build with Gradle
+        run: |
+          echo 'org.gradle.parallel=true' >> gradle.properties
+          echo 'org.gradle.vfs.watch=true' >> gradle.properties
+          echo 'org.gradle.jvmargs=-Xmx2048m' >> gradle.properties
+          sed -i 's/org.gradle.configuration-cache=true//g' gradle.properties
+          ./gradlew assembleRelease
+
+      - name: Restore R8 settings
+        if: ${{ always() }}
+        run: git checkout -- app/build.gradle.kts
+
+      - name: Get Build Tool Version
+        shell: bash
+        run: |
+          BUILD_TOOL_VERSION=$(ls /usr/local/lib/android/sdk/build-tools/ | tail -n 1)
+          echo "BUILD_TOOL_VERSION=$BUILD_TOOL_VERSION" >> $GITHUB_ENV
+          echo "Last build tool version is: $BUILD_TOOL_VERSION"
+
+      - name: Sign Release
+        env:
+          SIGNING_KEY: ${{ secrets.KEYSTORE_BASE64 }}
+          BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION }}
+        if: ${{ env.SIGNING_KEY != '' }}
+        continue-on-error: true
+        uses: kevin-david/zipalign-sign-android-release@v2
+        id: sign_app
+        with:
+          releaseDirectory: app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
+          alias: ${{ secrets.KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Upload build artifact
+        env:
+          SIGNING_KEY: ${{ secrets.KEYSTORE_BASE64 }}
+        if: ${{ env.SIGNING_KEY != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: c001apk-compose-release-no-r8
+          path: ${{ steps.sign_app.outputs.signedReleaseFile }}
