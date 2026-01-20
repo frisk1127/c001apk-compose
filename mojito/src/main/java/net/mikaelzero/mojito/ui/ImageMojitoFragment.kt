@@ -119,7 +119,7 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
                 if (now - lastLongPressTime < 500L) return@Runnable
                 lastLongPressTime = now
                 ImageMojitoActivity.lastGlobalLongPressTime = now
-                Log.d(
+                Log.e(
                     "MojitoLongPress",
                     "manual long press pos=${fragmentConfig.position} drag=${binding.mojitoView.isDrag}"
                 )
@@ -142,7 +142,7 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
                     }
                     downX = event.x
                     downY = event.y
-                    Log.d(
+                    Log.e(
                         "MojitoLongPress",
                         "down pos=${fragmentConfig.position} x=$downX y=$downY"
                     )
@@ -154,7 +154,7 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
                     val dy = kotlin.math.abs(event.y - downY)
                     val horizontalMove = dx > horizontalCancelSlop && dx > dy
                     if (dx > cancelSlop || dy > cancelSlop || horizontalMove || binding.mojitoView.isDrag) {
-                        Log.d(
+                        Log.e(
                             "MojitoLongPress",
                             "cancel pos=${fragmentConfig.position} dx=$dx dy=$dy drag=${binding.mojitoView.isDrag}"
                         )
@@ -164,7 +164,7 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
                 MotionEvent.ACTION_POINTER_DOWN,
                 MotionEvent.ACTION_UP,
                 MotionEvent.ACTION_CANCEL -> {
-                    Log.d(
+                    Log.e(
                         "MojitoLongPress",
                         "end pos=${fragmentConfig.position} action=${event.actionMasked}"
                     )
