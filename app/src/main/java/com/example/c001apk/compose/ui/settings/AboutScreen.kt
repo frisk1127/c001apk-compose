@@ -86,7 +86,7 @@ fun AboutScreen(
             BasicListItem(
                 leadingImageVector = Icons.Outlined.AllInclusive,
                 headlineText = stringResource(id = R.string.app_name),
-                supportingText = "test only"
+                supportingText = "c001apk Revived"
             ) { }
             BasicListItem(
                 leadingImageVector = Icons.Default.ErrorOutline,

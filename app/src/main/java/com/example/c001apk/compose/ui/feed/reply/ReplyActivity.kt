@@ -159,20 +159,14 @@ class ReplyActivity : AppCompatActivity(),
                 contentHeight + sysInset < rootHeight
             val useImeInset = isImeVisible
             val bottomInset = if (useImeInset) max(imeInset, sysInset) else sysInset
-            Log.d(
-                "ReplyActivity",
-                "insets ime=$imeInset sys=$sysInset useIme=$useImeInset " +
-                    "panelVisible=$isEmojiPanelVisible panelRequested=$isEmojiPanelRequested " +
-                    "smoothOpen=${(binding.main as? SmoothInputLayout)?.isKeyBoardOpen} " +
-                    "rootH=$rootHeight contentH=$contentHeight resized=$isResized"
-            )
             if (isImeVisible) {
                 isEmojiPanelVisible = false
                 isEmojiPanelRequested = false
                 binding.emojiLayout.isVisible = false
-                binding.main.setBackgroundColor(color)
-            } else {
-                binding.main.setBackgroundColor(Color.TRANSPARENT)
+            }
+            binding.imeScrim.isVisible = useImeInset
+            binding.imeScrim.layoutParams = binding.imeScrim.layoutParams.apply {
+                height = if (useImeInset) imeInset else 0
             }
             binding.inputLayout.translationY = if (useImeInset) -imeInset.toFloat() else 0f
             binding.main.updatePadding(bottom = baseRootPaddingBottom + sysInset)
