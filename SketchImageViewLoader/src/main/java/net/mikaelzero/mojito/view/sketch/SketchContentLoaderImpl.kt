@@ -196,10 +196,13 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
     override fun onLongTapCallback(onLongTapCallback: OnLongTapCallback) {
         val longPressTimeout = ViewConfiguration.getLongPressTimeout().toLong()
         val viewConfig = ViewConfiguration.get(sketchImageView.context)
-        val cancelSlop = viewConfig.scaledTouchSlop * 12
+        val cancelSlop = viewConfig.scaledTouchSlop * 2
         val interceptSlop = viewConfig.scaledTouchSlop * 2
+        val fastSwipeSlop = viewConfig.scaledTouchSlop * 6
+        val fastSwipeTimeout = 200L
         var downX = 0f
         var downY = 0f
+        var downTime = 0L
         var manualFired = false
         val manualRunnable = Runnable {
             if (manualFired) return@Runnable
@@ -231,6 +234,7 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
                     manualFired = false
                     downX = event.x
                     downY = event.y
+                    downTime = event.eventTime
                     // Keep initial DOWN in child so double-tap can be detected.
                     updateParentIntercept(true)
                     view.removeCallbacks(manualRunnable)
@@ -245,11 +249,15 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
                     }
                     val dx = kotlin.math.abs(event.x - downX)
                     val dy = kotlin.math.abs(event.y - downY)
-                    if (dx > cancelSlop || dy > cancelSlop) {
+                    val elapsed = event.eventTime - downTime
+                    val horizontalSwipe = dx > interceptSlop && dx > dy
+                    if (dx > cancelSlop || dy > cancelSlop || horizontalSwipe) {
                         view.removeCallbacks(manualRunnable)
                     }
-                    val horizontalSwipe = dx > interceptSlop && dx > dy
-                    if (!isZoomed && horizontalSwipe) {
+                    val fastHorizontalSwipe = horizontalSwipe &&
+                        dx > fastSwipeSlop &&
+                        elapsed < fastSwipeTimeout
+                    if ((!isZoomed && horizontalSwipe) || fastHorizontalSwipe) {
                         updateParentIntercept(false)
                     } else {
                         updateParentIntercept(true)
