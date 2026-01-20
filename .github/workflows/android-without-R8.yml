@@ -28,28 +28,13 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Disable R8 for CI build
-        run: |
-          python - << 'PY'
-          from pathlib import Path
-          path = Path("app/build.gradle.kts")
-          text = path.read_text()
-          text = text.replace("isMinifyEnabled = true", "isMinifyEnabled = false")
-          text = text.replace("isShrinkResources = true", "isShrinkResources = false")
-          path.write_text(text)
-          PY
-
       - name: Build with Gradle
         run: |
           echo 'org.gradle.parallel=true' >> gradle.properties
           echo 'org.gradle.vfs.watch=true' >> gradle.properties
           echo 'org.gradle.jvmargs=-Xmx2048m' >> gradle.properties
           sed -i 's/org.gradle.configuration-cache=true//g' gradle.properties
-          ./gradlew assembleRelease
-
-      - name: Restore R8 settings
-        if: ${{ always() }}
-        run: git checkout -- app/build.gradle.kts
+          ./gradlew assembleRelease -PdisableR8=true
 
       - name: Get Build Tool Version
         shell: bash

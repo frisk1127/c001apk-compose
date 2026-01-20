@@ -60,13 +60,15 @@ android {
         }
     }
 
+    val disableR8 = (project.findProperty("disableR8") as? String) == "true"
+
     buildTypes {
         all {
             signingConfig = config ?: signingConfigs["debug"]
         }
         release {
-            isMinifyEnabled = true
-            isShrinkResources = true
+            isMinifyEnabled = !disableR8
+            isShrinkResources = !disableR8
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
