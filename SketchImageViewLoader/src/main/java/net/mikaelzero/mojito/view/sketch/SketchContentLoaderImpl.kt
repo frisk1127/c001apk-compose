@@ -198,8 +198,8 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
         val viewConfig = ViewConfiguration.get(sketchImageView.context)
         val cancelSlop = viewConfig.scaledTouchSlop * 2
         val interceptSlop = viewConfig.scaledTouchSlop * 2
-        val fastSwipeSlop = viewConfig.scaledTouchSlop * 6
-        val fastSwipeTimeout = 200L
+        val fastSwipeSlop = viewConfig.scaledTouchSlop * 4
+        val fastSwipeTimeout = 320L
         var downX = 0f
         var downY = 0f
         var downTime = 0L

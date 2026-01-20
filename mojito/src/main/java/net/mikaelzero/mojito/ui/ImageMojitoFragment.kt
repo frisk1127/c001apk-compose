@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -117,6 +118,10 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
                 if (now - lastLongPressTime < 500L) return@Runnable
                 lastLongPressTime = now
                 ImageMojitoActivity.lastGlobalLongPressTime = now
+                Log.d(
+                    "MojitoLongPress",
+                    "manual long press pos=${fragmentConfig.position} drag=${binding.mojitoView.isDrag}"
+                )
                 if (!binding.mojitoView.isDrag) {
                     ImageMojitoActivity.onMojitoListener?.onLongClick(
                         activity,
@@ -129,31 +134,43 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
             }
             binding.root.setOnTouchListener { view, event ->
                 when (event.actionMasked) {
-                    MotionEvent.ACTION_DOWN -> {
-                        if (event.pointerCount > 1) {
-                            view.removeCallbacks(longPressRunnable)
-                            return@setOnTouchListener false
-                        }
-                        downX = event.x
-                        downY = event.y
+                MotionEvent.ACTION_DOWN -> {
+                    if (event.pointerCount > 1) {
                         view.removeCallbacks(longPressRunnable)
-                        view.postDelayed(longPressRunnable, longPressTimeout)
+                        return@setOnTouchListener false
                     }
-                    MotionEvent.ACTION_MOVE -> {
-                        val dx = kotlin.math.abs(event.x - downX)
-                        val dy = kotlin.math.abs(event.y - downY)
-                        if (dx > cancelSlop || dy > cancelSlop || binding.mojitoView.isDrag) {
-                            view.removeCallbacks(longPressRunnable)
-                        }
-                    }
-                    MotionEvent.ACTION_POINTER_DOWN,
-                    MotionEvent.ACTION_UP,
-                    MotionEvent.ACTION_CANCEL -> {
+                    downX = event.x
+                    downY = event.y
+                    Log.d(
+                        "MojitoLongPress",
+                        "down pos=${fragmentConfig.position} x=$downX y=$downY"
+                    )
+                    view.removeCallbacks(longPressRunnable)
+                    view.postDelayed(longPressRunnable, longPressTimeout)
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val dx = kotlin.math.abs(event.x - downX)
+                    val dy = kotlin.math.abs(event.y - downY)
+                    if (dx > cancelSlop || dy > cancelSlop || binding.mojitoView.isDrag) {
+                        Log.d(
+                            "MojitoLongPress",
+                            "cancel pos=${fragmentConfig.position} dx=$dx dy=$dy drag=${binding.mojitoView.isDrag}"
+                        )
                         view.removeCallbacks(longPressRunnable)
                     }
                 }
-                false
+                MotionEvent.ACTION_POINTER_DOWN,
+                MotionEvent.ACTION_UP,
+                MotionEvent.ACTION_CANCEL -> {
+                    Log.d(
+                        "MojitoLongPress",
+                        "end pos=${fragmentConfig.position} action=${event.actionMasked}"
+                    )
+                    view.removeCallbacks(longPressRunnable)
+                }
             }
+            false
+        }
         }
 
         contentLoader?.onTapCallback(object : OnTapCallback {
