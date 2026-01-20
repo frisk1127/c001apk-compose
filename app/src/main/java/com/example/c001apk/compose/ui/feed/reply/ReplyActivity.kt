@@ -170,6 +170,9 @@ class ReplyActivity : AppCompatActivity(),
                 isEmojiPanelVisible = false
                 isEmojiPanelRequested = false
                 binding.emojiLayout.isVisible = false
+                binding.main.setBackgroundColor(color)
+            } else {
+                binding.main.setBackgroundColor(Color.TRANSPARENT)
             }
             binding.inputLayout.translationY = if (useImeInset) -imeInset.toFloat() else 0f
             binding.main.updatePadding(bottom = baseRootPaddingBottom + sysInset)
