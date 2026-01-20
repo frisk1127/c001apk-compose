@@ -7,11 +7,9 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewConfiguration
 import android.view.MotionEvent
 import androidx.core.os.BundleCompat
 import androidx.fragment.app.Fragment
@@ -104,76 +102,7 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
             fragmentConfig.targetUrl
         )
         showView = contentLoader?.providerRealView()
-        val originUrl = fragmentConfig.originUrl ?: ""
-        val targetUrl = fragmentConfig.targetUrl ?: ""
-        val isGif = originUrl.contains(".gif", true) || targetUrl.contains(".gif", true)
-        if (!isGif) {
-            val longPressTimeout = ViewConfiguration.getLongPressTimeout().toLong()
-            val viewConfig = ViewConfiguration.get(requireContext())
-            val cancelSlop = viewConfig.scaledTouchSlop.toFloat()
-            val horizontalCancelSlop = viewConfig.scaledTouchSlop * 0.5f
-            var downX = 0f
-            var downY = 0f
-            val longPressRunnable = Runnable {
-                val now = SystemClock.uptimeMillis()
-                if (now - lastLongPressTime < 500L) return@Runnable
-                lastLongPressTime = now
-                ImageMojitoActivity.lastGlobalLongPressTime = now
-                Log.e(
-                    "MojitoLongPress",
-                    "manual long press pos=${fragmentConfig.position} drag=${binding.mojitoView.isDrag}"
-                )
-                if (!binding.mojitoView.isDrag) {
-                    ImageMojitoActivity.onMojitoListener?.onLongClick(
-                        activity,
-                        showView ?: binding.mojitoView,
-                        downX,
-                        downY,
-                        fragmentConfig.position
-                    )
-                }
-            }
-            binding.root.setOnTouchListener { view, event ->
-                when (event.actionMasked) {
-                MotionEvent.ACTION_DOWN -> {
-                    if (event.pointerCount > 1) {
-                        view.removeCallbacks(longPressRunnable)
-                        return@setOnTouchListener false
-                    }
-                    downX = event.x
-                    downY = event.y
-                    Log.e(
-                        "MojitoLongPress",
-                        "down pos=${fragmentConfig.position} x=$downX y=$downY"
-                    )
-                    view.removeCallbacks(longPressRunnable)
-                    view.postDelayed(longPressRunnable, longPressTimeout)
-                }
-                MotionEvent.ACTION_MOVE -> {
-                    val dx = kotlin.math.abs(event.x - downX)
-                    val dy = kotlin.math.abs(event.y - downY)
-                    val horizontalMove = dx > horizontalCancelSlop && dx > dy
-                    if (dx > cancelSlop || dy > cancelSlop || horizontalMove || binding.mojitoView.isDrag) {
-                        Log.e(
-                            "MojitoLongPress",
-                            "cancel pos=${fragmentConfig.position} dx=$dx dy=$dy drag=${binding.mojitoView.isDrag}"
-                        )
-                        view.removeCallbacks(longPressRunnable)
-                    }
-                }
-                MotionEvent.ACTION_POINTER_DOWN,
-                MotionEvent.ACTION_UP,
-                MotionEvent.ACTION_CANCEL -> {
-                    Log.e(
-                        "MojitoLongPress",
-                        "end pos=${fragmentConfig.position} action=${event.actionMasked}"
-                    )
-                    view.removeCallbacks(longPressRunnable)
-                }
-            }
-            false
-        }
-        }
+        // Removed root-level long-press fallback to avoid slow-drag false triggers.
 
         contentLoader?.onTapCallback(object : OnTapCallback {
             override fun onTap(view: View, x: Float, y: Float) {
