@@ -151,13 +151,22 @@ class ReplyActivity : AppCompatActivity(),
         ViewCompat.setOnApplyWindowInsetsListener(binding.main) { _, insets ->
             val imeInset = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
             val sysInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
-            val useImeInset = !(isEmojiPanelVisible || isEmojiPanelRequested)
+            val isImeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
+            val rootHeight = binding.main.rootView.height
+            val contentHeight = binding.main.height
+            val isResized = rootHeight > 0 &&
+                contentHeight > 0 &&
+                contentHeight + sysInset < rootHeight
+            val useImeInset = isImeVisible &&
+                !isResized &&
+                !(isEmojiPanelVisible || isEmojiPanelRequested)
             val bottomInset = if (useImeInset) max(imeInset, sysInset) else sysInset
             Log.d(
                 "ReplyActivity",
                 "insets ime=$imeInset sys=$sysInset useIme=$useImeInset " +
                     "panelVisible=$isEmojiPanelVisible panelRequested=$isEmojiPanelRequested " +
-                    "smoothOpen=${(binding.main as? SmoothInputLayout)?.isKeyBoardOpen}"
+                    "smoothOpen=${(binding.main as? SmoothInputLayout)?.isKeyBoardOpen} " +
+                    "rootH=$rootHeight contentH=$contentHeight resized=$isResized"
             )
             binding.inputLayout.updatePadding(bottom = baseInputPaddingBottom + bottomInset)
             insets
