@@ -110,7 +110,8 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
         if (!isGif) {
             val longPressTimeout = ViewConfiguration.getLongPressTimeout().toLong()
             val viewConfig = ViewConfiguration.get(requireContext())
-            val cancelSlop = viewConfig.scaledTouchSlop * 2
+            val cancelSlop = viewConfig.scaledTouchSlop.toFloat()
+            val horizontalCancelSlop = viewConfig.scaledTouchSlop * 0.5f
             var downX = 0f
             var downY = 0f
             val longPressRunnable = Runnable {
@@ -151,7 +152,8 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
                 MotionEvent.ACTION_MOVE -> {
                     val dx = kotlin.math.abs(event.x - downX)
                     val dy = kotlin.math.abs(event.y - downY)
-                    if (dx > cancelSlop || dy > cancelSlop || binding.mojitoView.isDrag) {
+                    val horizontalMove = dx > horizontalCancelSlop && dx > dy
+                    if (dx > cancelSlop || dy > cancelSlop || horizontalMove || binding.mojitoView.isDrag) {
                         Log.d(
                             "MojitoLongPress",
                             "cancel pos=${fragmentConfig.position} dx=$dx dy=$dy drag=${binding.mojitoView.isDrag}"
