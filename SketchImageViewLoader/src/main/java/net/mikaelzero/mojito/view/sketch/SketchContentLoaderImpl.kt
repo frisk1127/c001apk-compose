@@ -81,6 +81,13 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
                         return result
                     }
                     else -> {
+                        val zoomer = sketchImageView.zoomer
+                        if (isHorizontal &&
+                            zoomer != null &&
+                            zoomer.zoomScale <= zoomer.fillZoomScale + 0.01f
+                        ) {
+                            return false
+                        }
                         val rectF = Rect()
                         sketchImageView.zoomer?.getVisibleRect(rectF)
                         val drawRect = RectF()
@@ -114,6 +121,13 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
                         !isDrag
                     }
                     else -> {
+                        val zoomer = sketchImageView.zoomer
+                        if (isHorizontal &&
+                            zoomer != null &&
+                            zoomer.zoomScale <= zoomer.fillZoomScale + 0.01f
+                        ) {
+                            return false
+                        }
                         val drawRect = RectF()
                         sketchImageView.zoomer?.getDrawRect(drawRect)
                         onMojitoViewCallback?.onLongImageMove(abs(drawRect.left) / abs(drawRect.right - drawRect.left))
@@ -197,9 +211,10 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
         val longPressTimeout = ViewConfiguration.getLongPressTimeout().toLong()
         val viewConfig = ViewConfiguration.get(sketchImageView.context)
         val cancelSlop = viewConfig.scaledTouchSlop * 2
+        val slowMoveSlop = viewConfig.scaledTouchSlop * 0.6f
         val interceptSlop = viewConfig.scaledTouchSlop * 2
-        val fastSwipeSlop = viewConfig.scaledTouchSlop * 4
-        val fastSwipeTimeout = 320L
+        val fastSwipeSlop = viewConfig.scaledTouchSlop * 2
+        val fastSwipeTimeout = 450L
         var downX = 0f
         var downY = 0f
         var downTime = 0L
@@ -251,7 +266,7 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
                     val dy = kotlin.math.abs(event.y - downY)
                     val elapsed = event.eventTime - downTime
                     val horizontalSwipe = dx > interceptSlop && dx > dy
-                    if (dx > cancelSlop || dy > cancelSlop || horizontalSwipe) {
+                    if (dx > cancelSlop || dy > cancelSlop || dx > slowMoveSlop || dy > slowMoveSlop || horizontalSwipe) {
                         view.removeCallbacks(manualRunnable)
                     }
                     val fastHorizontalSwipe = horizontalSwipe &&
