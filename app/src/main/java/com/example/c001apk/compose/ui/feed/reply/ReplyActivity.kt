@@ -175,9 +175,8 @@ class ReplyActivity : AppCompatActivity(),
                     binding.main.width,
                     binding.main.height
                 )
-                if (binding.main.overlay.indexOf(imeScrimDrawable) == -1) {
-                    binding.main.overlay.add(imeScrimDrawable)
-                }
+                binding.main.overlay.remove(imeScrimDrawable)
+                binding.main.overlay.add(imeScrimDrawable)
             } else {
                 binding.main.overlay.remove(imeScrimDrawable)
             }
