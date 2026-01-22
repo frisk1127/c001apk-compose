@@ -201,7 +201,7 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
     }
 
     override fun onLongTapCallback(onLongTapCallback: OnLongTapCallback) {
-        val longPressTimeout = ViewConfiguration.getLongPressTimeout().toLong()
+        val longPressTimeout = 900L
         val viewConfig = ViewConfiguration.get(sketchImageView.context)
         val cancelSlop = viewConfig.scaledTouchSlop * 2
         val interceptSlop = viewConfig.scaledTouchSlop * 2
