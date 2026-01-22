@@ -11,6 +11,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewConfiguration
 import android.view.MotionEvent
 import androidx.core.os.BundleCompat
 import androidx.fragment.app.Fragment
@@ -48,6 +49,10 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
     private var iProgress: IProgress? = null
     private var fragmentCoverLoader: FragmentCoverLoader? = null
     private var lastLongPressTime: Long = 0L
+    private var touchSlop = 0
+    private var downX = 0f
+    private var downY = 0f
+    private var hasMoved = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -103,6 +108,30 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
             fragmentConfig.targetUrl
         )
         showView = contentLoader?.providerRealView()
+        touchSlop = ViewConfiguration.get(requireContext()).scaledTouchSlop
+        binding.mojitoView.setOnTouchListener { _, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    downX = event.x
+                    downY = event.y
+                    hasMoved = false
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val dx = kotlin.math.abs(event.x - downX)
+                    val dy = kotlin.math.abs(event.y - downY)
+                    if (dx > touchSlop || dy > touchSlop) {
+                        hasMoved = true
+                    }
+                }
+                MotionEvent.ACTION_UP,
+                MotionEvent.ACTION_CANCEL,
+                MotionEvent.ACTION_POINTER_DOWN,
+                MotionEvent.ACTION_POINTER_UP -> {
+                    hasMoved = false
+                }
+            }
+            false
+        }
         // Removed root-level long-press fallback to avoid slow-drag false triggers.
 
         contentLoader?.onTapCallback(object : OnTapCallback {
@@ -121,6 +150,10 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
                     "MojitoLongPress",
                     "contentLoader longTap pos=${fragmentConfig.position} x=$x y=$y drag=${binding.mojitoView.isDrag}"
                 )
+                if (hasMoved) {
+                    Log.e("MojitoLongPress", "contentLoader ignored due to move")
+                    return
+                }
                 lastLongPressTime = SystemClock.uptimeMillis()
                 ImageMojitoActivity.lastGlobalLongPressTime = lastLongPressTime
                 if (!binding.mojitoView.isDrag) {
@@ -141,6 +174,10 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
                 "MojitoLongPress",
                 "mojitoView longClick pos=${fragmentConfig.position} drag=${binding.mojitoView.isDrag}"
             )
+            if (hasMoved) {
+                Log.e("MojitoLongPress", "mojitoView ignored due to move")
+                return@setOnLongClickListener true
+            }
             val now = SystemClock.uptimeMillis()
             if (now - lastLongPressTime < 500L) {
                 return@setOnLongClickListener true
