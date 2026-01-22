@@ -81,11 +81,7 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
                         return result
                     }
                     else -> {
-                        val zoomer = sketchImageView.zoomer
-                        if (isHorizontal &&
-                            zoomer != null &&
-                            zoomer.zoomScale <= zoomer.fillZoomScale + 0.01f
-                        ) {
+                        if (isHorizontal) {
                             return false
                         }
                         val rectF = Rect()
@@ -121,11 +117,7 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
                         !isDrag
                     }
                     else -> {
-                        val zoomer = sketchImageView.zoomer
-                        if (isHorizontal &&
-                            zoomer != null &&
-                            zoomer.zoomScale <= zoomer.fillZoomScale + 0.01f
-                        ) {
+                        if (isHorizontal) {
                             return false
                         }
                         val drawRect = RectF()
@@ -185,8 +177,8 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
     }
 
     override fun isLongImage(width: Int, height: Int): Boolean {
-        isLongHeightImage = height > width * 22f / 9f
-        isLongWidthImage = width > height * 5 && width > (ScreenUtils.getScreenWidth(sketchImageView.context) * 1.5)
+        isLongHeightImage = height > width * 40f / 9f
+        isLongWidthImage = width > height * 8 && width > (ScreenUtils.getScreenWidth(sketchImageView.context) * 2)
         sketchImageView.zoomer?.isReadMode = isLongHeightImage || isLongWidthImage
         if (isLongWidthImage) {
             longImageHeightOrWidth = width
@@ -211,16 +203,20 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
         val longPressTimeout = ViewConfiguration.getLongPressTimeout().toLong()
         val viewConfig = ViewConfiguration.get(sketchImageView.context)
         val cancelSlop = viewConfig.scaledTouchSlop * 2
-        val slowMoveSlop = viewConfig.scaledTouchSlop * 0.6f
         val interceptSlop = viewConfig.scaledTouchSlop * 2
-        val fastSwipeSlop = viewConfig.scaledTouchSlop * 2
-        val fastSwipeTimeout = 450L
+        val fastSwipeSlop = viewConfig.scaledTouchSlop
+        val fastSwipeTimeout = 600L
         var downX = 0f
         var downY = 0f
+        var lastX = 0f
+        var lastY = 0f
+        var totalDistance = 0f
         var downTime = 0L
+        var moved = false
         var manualFired = false
         val manualRunnable = Runnable {
             if (manualFired) return@Runnable
+            if (moved) return@Runnable
             manualFired = true
             onLongTapCallback.onLongTap(sketchImageView, downX, downY)
         }
@@ -229,6 +225,7 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
         }
 
         sketchImageView.zoomer?.setOnViewLongPressListener { view, x, y ->
+            if (moved) return@setOnViewLongPressListener
             manualFired = true
             view.removeCallbacks(manualRunnable)
             onLongTapCallback.onLongTap(view, x, y)
@@ -247,8 +244,12 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
                         return@setOnTouchListener false
                     }
                     manualFired = false
+                    moved = false
                     downX = event.x
                     downY = event.y
+                    lastX = downX
+                    lastY = downY
+                    totalDistance = 0f
                     downTime = event.eventTime
                     // Keep initial DOWN in child so double-tap can be detected.
                     updateParentIntercept(true)
@@ -264,9 +265,15 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
                     }
                     val dx = kotlin.math.abs(event.x - downX)
                     val dy = kotlin.math.abs(event.y - downY)
+                    val stepX = event.x - lastX
+                    val stepY = event.y - lastY
+                    totalDistance += kotlin.math.hypot(stepX, stepY)
+                    lastX = event.x
+                    lastY = event.y
                     val elapsed = event.eventTime - downTime
                     val horizontalSwipe = dx > interceptSlop && dx > dy
-                    if (dx > cancelSlop || dy > cancelSlop || dx > slowMoveSlop || dy > slowMoveSlop || horizontalSwipe) {
+                    if (totalDistance > cancelSlop || horizontalSwipe) {
+                        moved = true
                         view.removeCallbacks(manualRunnable)
                     }
                     val fastHorizontalSwipe = horizontalSwipe &&
@@ -280,11 +287,13 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
                 }
                 MotionEvent.ACTION_POINTER_DOWN -> {
                     manualFired = true
+                    moved = true
                     view.removeCallbacks(manualRunnable)
                     updateParentIntercept(true)
                 }
                 MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     manualFired = true
+                    moved = true
                     updateParentIntercept(false)
                     view.removeCallbacks(manualRunnable)
                 }
