@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -116,6 +117,10 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
         }
         contentLoader?.onLongTapCallback(object : OnLongTapCallback {
             override fun onLongTap(view: View, x: Float, y: Float) {
+                Log.e(
+                    "MojitoLongPress",
+                    "contentLoader longTap pos=${fragmentConfig.position} x=$x y=$y drag=${binding.mojitoView.isDrag}"
+                )
                 lastLongPressTime = SystemClock.uptimeMillis()
                 ImageMojitoActivity.lastGlobalLongPressTime = lastLongPressTime
                 if (!binding.mojitoView.isDrag) {
@@ -132,6 +137,10 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
 
         binding.mojitoView.isLongClickable = true
         binding.mojitoView.setOnLongClickListener { view ->
+            Log.e(
+                "MojitoLongPress",
+                "mojitoView longClick pos=${fragmentConfig.position} drag=${binding.mojitoView.isDrag}"
+            )
             val now = SystemClock.uptimeMillis()
             if (now - lastLongPressTime < 500L) {
                 return@setOnLongClickListener true
