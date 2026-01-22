@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewConfiguration
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.util.Log
 import androidx.lifecycle.LifecycleObserver
 import net.mikaelzero.mojito.Mojito.Companion.mojitoConfig
 import net.mikaelzero.mojito.interfaces.OnMojitoViewCallback
@@ -218,6 +219,10 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
             if (manualFired) return@Runnable
             if (moved) return@Runnable
             manualFired = true
+            Log.e(
+                "SketchLongPress",
+                "manual pos=($downX,$downY) moved=$moved total=$totalDistance"
+            )
             onLongTapCallback.onLongTap(sketchImageView, downX, downY)
         }
         val updateParentIntercept = { disallow: Boolean ->
@@ -228,6 +233,10 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
             if (moved) return@setOnViewLongPressListener
             manualFired = true
             view.removeCallbacks(manualRunnable)
+            Log.e(
+                "SketchLongPress",
+                "zoomer pos=($x,$y) moved=$moved total=$totalDistance"
+            )
             onLongTapCallback.onLongTap(view, x, y)
         }
         // Fallback when ImageZoomer isn't working yet (e.g. static images or jittery touch).
@@ -251,6 +260,10 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
                     lastY = downY
                     totalDistance = 0f
                     downTime = event.eventTime
+                    Log.e(
+                        "SketchLongPress",
+                        "down x=$downX y=$downY"
+                    )
                     // Keep initial DOWN in child so double-tap can be detected.
                     updateParentIntercept(true)
                     view.removeCallbacks(manualRunnable)
@@ -275,6 +288,10 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
                     if (totalDistance > cancelSlop || horizontalSwipe) {
                         moved = true
                         view.removeCallbacks(manualRunnable)
+                        Log.e(
+                            "SketchLongPress",
+                            "cancel dx=$dx dy=$dy total=$totalDistance horiz=$horizontalSwipe"
+                        )
                     }
                     val fastHorizontalSwipe = horizontalSwipe &&
                         dx > fastSwipeSlop &&
@@ -290,12 +307,14 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
                     moved = true
                     view.removeCallbacks(manualRunnable)
                     updateParentIntercept(true)
+                    Log.e("SketchLongPress", "pointer_down")
                 }
                 MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     manualFired = true
                     moved = true
                     updateParentIntercept(false)
                     view.removeCallbacks(manualRunnable)
+                    Log.e("SketchLongPress", "end action=${event.actionMasked}")
                 }
             }
             false
