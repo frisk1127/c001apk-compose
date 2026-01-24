@@ -6,13 +6,9 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.os.SystemClock
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewConfiguration
-import android.view.MotionEvent
 import androidx.core.os.BundleCompat
 import androidx.fragment.app.Fragment
 import net.mikaelzero.mojito.Mojito.Companion.imageLoader
@@ -49,13 +45,6 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
     private var iProgress: IProgress? = null
     private var fragmentCoverLoader: FragmentCoverLoader? = null
     private var lastLongPressTime: Long = 0L
-    private var touchSlop = 0
-    private var downX = 0f
-    private var downY = 0f
-    private var downTime = 0L
-    private var lastMoveTime = 0L
-    private var maxMoveDistance = 0f
-    private var hasMoved = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -111,41 +100,6 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
             fragmentConfig.targetUrl
         )
         showView = contentLoader?.providerRealView()
-        touchSlop = ViewConfiguration.get(requireContext()).scaledTouchSlop
-        binding.mojitoView.setOnTouchListener { _, event ->
-            when (event.actionMasked) {
-                MotionEvent.ACTION_DOWN -> {
-                    downX = event.x
-                    downY = event.y
-                    downTime = event.eventTime
-                    lastMoveTime = downTime
-                    maxMoveDistance = 0f
-                    hasMoved = false
-                }
-                MotionEvent.ACTION_MOVE -> {
-                    val dx = kotlin.math.abs(event.x - downX)
-                    val dy = kotlin.math.abs(event.y - downY)
-                    val distance = kotlin.math.hypot(dx, dy)
-                    if (distance > maxMoveDistance) {
-                        maxMoveDistance = distance
-                    }
-                    if (dx > touchSlop || dy > touchSlop) {
-                        hasMoved = true
-                        lastMoveTime = event.eventTime
-                    }
-                }
-                MotionEvent.ACTION_UP,
-                MotionEvent.ACTION_CANCEL,
-                MotionEvent.ACTION_POINTER_DOWN,
-                MotionEvent.ACTION_POINTER_UP -> {
-                    hasMoved = false
-                    maxMoveDistance = 0f
-                }
-            }
-            false
-        }
-        // Removed root-level long-press fallback to avoid slow-drag false triggers.
-
         contentLoader?.onTapCallback(object : OnTapCallback {
             override fun onTap(view: View, x: Float, y: Float) {
                 backToMin()
@@ -158,19 +112,13 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
         }
         contentLoader?.onLongTapCallback(object : OnLongTapCallback {
             override fun onLongTap(view: View, x: Float, y: Float) {
-                Log.e(
-                    "MojitoLongPress",
-                    "contentLoader longTap pos=${fragmentConfig.position} x=$x y=$y drag=${binding.mojitoView.isDrag}"
-                )
-                val movedDuringPress = maxMoveDistance > touchSlop &&
-                    (lastMoveTime - downTime) <= 900L
-                if (hasMoved || movedDuringPress) {
-                    Log.e("MojitoLongPress", "contentLoader ignored due to move")
-                    return
-                }
-                lastLongPressTime = SystemClock.uptimeMillis()
-                ImageMojitoActivity.lastGlobalLongPressTime = lastLongPressTime
                 if (!binding.mojitoView.isDrag) {
+                    val now = android.os.SystemClock.uptimeMillis()
+                    if (now - lastLongPressTime < 500L) {
+                        return
+                    }
+                    lastLongPressTime = now
+                    ImageMojitoActivity.lastGlobalLongPressTime = lastLongPressTime
                     ImageMojitoActivity.onMojitoListener?.onLongClick(
                         activity,
                         view,
@@ -181,36 +129,6 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
                 }
             }
         })
-
-        binding.mojitoView.isLongClickable = true
-        binding.mojitoView.setOnLongClickListener { view ->
-            Log.e(
-                "MojitoLongPress",
-                "mojitoView longClick pos=${fragmentConfig.position} drag=${binding.mojitoView.isDrag}"
-            )
-            val movedDuringPress = maxMoveDistance > touchSlop &&
-                (lastMoveTime - downTime) <= 900L
-            if (hasMoved || movedDuringPress) {
-                Log.e("MojitoLongPress", "mojitoView ignored due to move")
-                return@setOnLongClickListener true
-            }
-            val now = SystemClock.uptimeMillis()
-            if (now - lastLongPressTime < 500L) {
-                return@setOnLongClickListener true
-            }
-            lastLongPressTime = now
-            ImageMojitoActivity.lastGlobalLongPressTime = now
-            if (!binding.mojitoView.isDrag) {
-                ImageMojitoActivity.onMojitoListener?.onLongClick(
-                    activity,
-                    contentLoader?.providerRealView() ?: view,
-                    view.width / 2f,
-                    view.height / 2f,
-                    fragmentConfig.position
-                )
-            }
-            true
-        }
 
         binding.imageCoverLayout.setOnTouchListener { layoutView, event ->
             val targetView =

@@ -3,12 +3,12 @@ package net.mikaelzero.mojito.view.sketch
 import android.content.Context
 import android.graphics.Rect
 import android.graphics.RectF
+import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import android.widget.FrameLayout
 import android.widget.ImageView
-import android.util.Log
 import androidx.lifecycle.LifecycleObserver
 import net.mikaelzero.mojito.Mojito.Companion.mojitoConfig
 import net.mikaelzero.mojito.interfaces.OnMojitoViewCallback
@@ -17,7 +17,6 @@ import net.mikaelzero.mojito.loader.OnLongTapCallback
 import net.mikaelzero.mojito.loader.OnTapCallback
 import net.mikaelzero.mojito.tools.ScreenUtils
 import net.mikaelzero.mojito.view.sketch.core.SketchImageView
-import net.mikaelzero.mojito.view.sketch.core.decode.ImageSizeCalculator
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -201,122 +200,78 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
     }
 
     override fun onLongTapCallback(onLongTapCallback: OnLongTapCallback) {
-        val longPressTimeout = 900L
         val viewConfig = ViewConfiguration.get(sketchImageView.context)
-        val cancelSlop = viewConfig.scaledTouchSlop * 2
-        val interceptSlop = viewConfig.scaledTouchSlop * 2
-        val fastSwipeSlop = viewConfig.scaledTouchSlop
-        val fastSwipeTimeout = 600L
+        val touchSlop = viewConfig.scaledTouchSlop
         var downX = 0f
         var downY = 0f
-        var lastX = 0f
-        var lastY = 0f
-        var totalDistance = 0f
-        var downTime = 0L
         var moved = false
-        var manualFired = false
-        val manualRunnable = Runnable {
-            if (manualFired) return@Runnable
-            if (moved) return@Runnable
-            manualFired = true
-            Log.e(
-                "SketchLongPress",
-                "manual pos=($downX,$downY) moved=$moved total=$totalDistance"
-            )
-            onLongTapCallback.onLongTap(sketchImageView, downX, downY)
-        }
+        var multiTouch = false
+        var isZoomed = false
         val updateParentIntercept = { disallow: Boolean ->
             sketchImageView.parent?.requestDisallowInterceptTouchEvent(disallow)
         }
 
-        sketchImageView.zoomer?.setOnViewLongPressListener { view, x, y ->
-            if (moved) return@setOnViewLongPressListener
-            manualFired = true
-            view.removeCallbacks(manualRunnable)
-            Log.e(
-                "SketchLongPress",
-                "zoomer pos=($x,$y) moved=$moved total=$totalDistance"
-            )
-            onLongTapCallback.onLongTap(view, x, y)
-        }
-        // Fallback when ImageZoomer isn't working yet (e.g. static images or jittery touch).
-        sketchImageView.setOnTouchListener { view, event ->
+        val gestureDetector = GestureDetector(
+            sketchImageView.context,
+            object : GestureDetector.SimpleOnGestureListener() {
+                override fun onDown(e: MotionEvent): Boolean {
+                    return true
+                }
+
+                override fun onLongPress(e: MotionEvent) {
+                    if (moved || multiTouch || isZoomed) return
+                    onLongTapCallback.onLongTap(sketchImageView, e.x, e.y)
+                }
+            }
+        )
+
+        sketchImageView.setOnTouchListener { _, event ->
             val zoomer = sketchImageView.zoomer
             val baseScale = if (zoomer == null) 1f else max(zoomer.fullZoomScale, zoomer.fillZoomScale)
-            val isZoomed = zoomer != null && zoomer.zoomScale - baseScale > 0.02f
+            isZoomed = zoomer != null && zoomer.zoomScale - baseScale > 0.02f
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
                     if (event.pointerCount > 1) {
-                        manualFired = true
-                        view.removeCallbacks(manualRunnable)
+                        multiTouch = true
+                        moved = true
                         updateParentIntercept(true)
                         return@setOnTouchListener false
                     }
-                    manualFired = false
                     moved = false
+                    multiTouch = false
                     downX = event.x
                     downY = event.y
-                    lastX = downX
-                    lastY = downY
-                    totalDistance = 0f
-                    downTime = event.eventTime
-                    Log.e(
-                        "SketchLongPress",
-                        "down x=$downX y=$downY"
-                    )
-                    // Keep initial DOWN in child so double-tap can be detected.
-                    updateParentIntercept(true)
-                    view.removeCallbacks(manualRunnable)
-                    view.postDelayed(manualRunnable, longPressTimeout)
+                    val disallow = isZoomed || isLongHeightImage || isLongWidthImage
+                    updateParentIntercept(disallow)
                 }
                 MotionEvent.ACTION_MOVE -> {
                     if (event.pointerCount > 1) {
-                        manualFired = true
-                        view.removeCallbacks(manualRunnable)
+                        multiTouch = true
+                        moved = true
                         updateParentIntercept(true)
                         return@setOnTouchListener false
                     }
                     val dx = kotlin.math.abs(event.x - downX)
                     val dy = kotlin.math.abs(event.y - downY)
-                    val stepX = event.x - lastX
-                    val stepY = event.y - lastY
-                    totalDistance += kotlin.math.hypot(stepX, stepY)
-                    lastX = event.x
-                    lastY = event.y
-                    val elapsed = event.eventTime - downTime
-                    val horizontalSwipe = dx > interceptSlop && dx > dy
-                    if (totalDistance > cancelSlop || horizontalSwipe) {
+                    if (dx > touchSlop || dy > touchSlop) {
                         moved = true
-                        view.removeCallbacks(manualRunnable)
-                        Log.e(
-                            "SketchLongPress",
-                            "cancel dx=$dx dy=$dy total=$totalDistance horiz=$horizontalSwipe"
-                        )
                     }
-                    val fastHorizontalSwipe = horizontalSwipe &&
-                        dx > fastSwipeSlop &&
-                        elapsed < fastSwipeTimeout
-                    if ((!isZoomed && horizontalSwipe) || fastHorizontalSwipe) {
-                        updateParentIntercept(false)
-                    } else {
-                        updateParentIntercept(true)
-                    }
+                    val horizontalSwipe = dx > dy && dx > touchSlop
+                    val allowParent = !isZoomed && !isLongHeightImage && !isLongWidthImage && horizontalSwipe
+                    updateParentIntercept(!allowParent)
                 }
                 MotionEvent.ACTION_POINTER_DOWN -> {
-                    manualFired = true
+                    multiTouch = true
                     moved = true
-                    view.removeCallbacks(manualRunnable)
                     updateParentIntercept(true)
-                    Log.e("SketchLongPress", "pointer_down")
                 }
                 MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    manualFired = true
+                    multiTouch = false
                     moved = true
                     updateParentIntercept(false)
-                    view.removeCallbacks(manualRunnable)
-                    Log.e("SketchLongPress", "end action=${event.actionMasked}")
                 }
             }
+            gestureDetector.onTouchEvent(event)
             false
         }
     }
