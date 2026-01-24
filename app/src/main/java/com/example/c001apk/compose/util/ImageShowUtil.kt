@@ -97,6 +97,10 @@ object ImageShowUtil {
                         y: Float,
                         position: Int
                     ) {
+                        Log.d(
+                            "MojitoLongPress",
+                            "ImageShowUtil onLongClick pos=$position x=$x y=$y activity=${fragmentActivity != null}"
+                        )
                         if (fragmentActivity != null) {
                             showSaveImgDialog(
                                 fragmentActivity,
@@ -150,6 +154,10 @@ object ImageShowUtil {
                     y: Float,
                     position: Int
                 ) {
+                    Log.d(
+                        "MojitoLongPress",
+                        "ImageShowUtilSimple onLongClick pos=$position x=$x y=$y activity=${fragmentActivity != null}"
+                    )
                     if (fragmentActivity != null) {
                         showSaveImgDialog(
                             fragmentActivity,
@@ -185,6 +193,10 @@ object ImageShowUtil {
                         y: Float,
                         position: Int
                     ) {
+                        Log.d(
+                            "MojitoLongPress",
+                            "ImageShowUtilSingle onLongClick pos=$position x=$x y=$y activity=${fragmentActivity != null}"
+                        )
                         if (fragmentActivity != null) {
                             showSaveImgDialog(fragmentActivity, url, null, userAgent)
                         } else {

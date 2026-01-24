@@ -545,15 +545,16 @@ public class MojitoView extends FrameLayout {
                 float moveY = event.getY();
                 mTranslateX = moveX - mDownX;
                 mMoveDownTranslateY = moveY - mDownY;
-                mYDistanceTraveled = Math.abs(mMoveDownTranslateY) + mYDistanceTraveled;
-                if (Math.abs(mYDistanceTraveled) >= touchSlop
-                        || Math.abs(mTranslateX) < Math.abs(mYDistanceTraveled)
-                        || isDrag) {
+                float absX = Math.abs(mTranslateX);
+                float absY = Math.abs(mMoveDownTranslateY);
+                mYDistanceTraveled = absY;
+                boolean verticalDrag = absY > touchSlop && absY > absX;
+                if (verticalDrag || isDrag) {
                     if (contentLoader.dispatchTouchEvent(
                             isDrag,
                             false,
                             mMoveDownTranslateY < 0,
-                            Math.abs(mTranslateX) > Math.abs(mMoveDownTranslateY)
+                            absX > absY
                     )) {
                         //if is long image,top or bottom or minScale, need handle event
                         //if image scale<1(origin scale) , need handle event
@@ -591,7 +592,7 @@ public class MojitoView extends FrameLayout {
                 }
                 //如果滑动距离不足,则不需要事件
                 //if touch slop too short,un need event
-                if (Math.abs(mYDistanceTraveled) < touchSlop) {
+                if (Math.abs(mMoveDownTranslateY) < touchSlop) {
                     if (isTouchPointInContentLayout(contentLayout, event)) {
                         break;
                     }

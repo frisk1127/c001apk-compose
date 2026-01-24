@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewConfiguration
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.util.Log
 import androidx.lifecycle.LifecycleObserver
 import net.mikaelzero.mojito.Mojito.Companion.mojitoConfig
 import net.mikaelzero.mojito.interfaces.OnMojitoViewCallback
@@ -201,7 +202,9 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
 
     override fun onLongTapCallback(onLongTapCallback: OnLongTapCallback) {
         val viewConfig = ViewConfiguration.get(sketchImageView.context)
-        val touchSlop = viewConfig.scaledTouchSlop
+        val touchSlop = viewConfig.scaledTouchSlop.toFloat()
+        val density = sketchImageView.context.resources.displayMetrics.density
+        val cancelSlop = max(1f * density, touchSlop / 4f)
         var downX = 0f
         var downY = 0f
         var moved = false
@@ -215,10 +218,33 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
             sketchImageView.context,
             object : GestureDetector.SimpleOnGestureListener() {
                 override fun onDown(e: MotionEvent): Boolean {
+                    Log.d("LongPressDebug", "onDown x=${e.x} y=${e.y}")
+                    return true
+                }
+
+                override fun onScroll(
+                    e1: MotionEvent?,
+                    e2: MotionEvent,
+                    distanceX: Float,
+                    distanceY: Float
+                ): Boolean {
+                    if (kotlin.math.abs(distanceX) > cancelSlop ||
+                        kotlin.math.abs(distanceY) > cancelSlop
+                    ) {
+                        moved = true
+                    }
+                    Log.d(
+                        "LongPressDebug",
+                        "onScroll dx=$distanceX dy=$distanceY moved=$moved zoomed=$isZoomed multi=$multiTouch"
+                    )
                     return true
                 }
 
                 override fun onLongPress(e: MotionEvent) {
+                    Log.d(
+                        "LongPressDebug",
+                        "onLongPress x=${e.x} y=${e.y} moved=$moved zoomed=$isZoomed multi=$multiTouch"
+                    )
                     if (moved || multiTouch || isZoomed) return
                     onLongTapCallback.onLongTap(sketchImageView, e.x, e.y)
                 }
@@ -243,6 +269,10 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
                     downY = event.y
                     val disallow = isZoomed || isLongHeightImage || isLongWidthImage
                     updateParentIntercept(disallow)
+                    Log.d(
+                        "LongPressDebug",
+                        "ACTION_DOWN x=$downX y=$downY zoomed=$isZoomed long=$isLongHeightImage/$isLongWidthImage"
+                    )
                 }
                 MotionEvent.ACTION_MOVE -> {
                     if (event.pointerCount > 1) {
@@ -253,22 +283,29 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
                     }
                     val dx = kotlin.math.abs(event.x - downX)
                     val dy = kotlin.math.abs(event.y - downY)
-                    if (dx > touchSlop || dy > touchSlop) {
+                    val distance = kotlin.math.hypot(dx, dy)
+                    if (distance > cancelSlop) {
                         moved = true
                     }
                     val horizontalSwipe = dx > dy && dx > touchSlop
                     val allowParent = !isZoomed && !isLongHeightImage && !isLongWidthImage && horizontalSwipe
                     updateParentIntercept(!allowParent)
+                    Log.d(
+                        "LongPressDebug",
+                        "ACTION_MOVE dx=$dx dy=$dy dist=$distance moved=$moved allowParent=$allowParent zoomed=$isZoomed"
+                    )
                 }
                 MotionEvent.ACTION_POINTER_DOWN -> {
                     multiTouch = true
                     moved = true
                     updateParentIntercept(true)
+                    Log.d("LongPressDebug", "POINTER_DOWN moved=$moved")
                 }
                 MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     multiTouch = false
                     moved = true
                     updateParentIntercept(false)
+                    Log.d("LongPressDebug", "END action=${event.actionMasked} moved=$moved")
                 }
             }
             gestureDetector.onTouchEvent(event)

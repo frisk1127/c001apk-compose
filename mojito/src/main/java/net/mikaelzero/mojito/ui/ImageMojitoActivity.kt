@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
+import android.util.Log
 import android.view.KeyEvent
 import android.view.Window
 import android.window.OnBackInvokedCallback
@@ -42,6 +43,7 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
     val fragmentMap = hashMapOf<Int, ImageMojitoFragment?>()
     private var backInvokedCallback: OnBackInvokedCallback? = null
     private var backHandled = false
+    private var viewPagerScrollState = ViewPager.SCROLL_STATE_IDLE
 
     override fun onCreate(savedInstanceState: Bundle?) {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -158,6 +160,7 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
 
         binding.viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
             override fun onPageScrollStateChanged(state: Int) {
+                viewPagerScrollState = state
             }
 
             override fun onPageScrolled(
@@ -254,17 +257,25 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
         val originUrl = fragment.fragmentConfig.originUrl ?: ""
         val targetUrl = fragment.fragmentConfig.targetUrl ?: ""
         if (originUrl.contains(".gif", true) || targetUrl.contains(".gif", true)) {
+            Log.d("MojitoLongPress", "tryDispatchLongPress skipped gif x=$x y=$y")
+            return false
+        }
+        if (viewPagerScrollState != ViewPager.SCROLL_STATE_IDLE) {
+            Log.d("MojitoLongPress", "tryDispatchLongPress blocked by scroll state x=$x y=$y")
             return false
         }
         val now = SystemClock.uptimeMillis()
         if (now - lastGlobalLongPressTime < 500L) {
+            Log.d("MojitoLongPress", "tryDispatchLongPress throttled x=$x y=$y")
             return false
         }
         val mojitoView = fragment.view?.findViewById<MojitoView>(net.mikaelzero.mojito.R.id.mojitoView)
         if (mojitoView?.isDrag == true) {
+            Log.d("MojitoLongPress", "tryDispatchLongPress ignored drag x=$x y=$y")
             return false
         }
         lastGlobalLongPressTime = now
+        Log.d("MojitoLongPress", "tryDispatchLongPress dispatch x=$x y=$y")
         onMojitoListener?.onLongClick(
             this@ImageMojitoActivity,
             fragment.view ?: binding.viewPager,

@@ -47,7 +47,7 @@ public class NoScrollViewPager extends ViewPager {
     private void initTouchConfig() {
         ViewConfiguration config = ViewConfiguration.get(getContext());
         longPressTimeout = ViewConfiguration.getLongPressTimeout();
-        cancelSlop = config.getScaledTouchSlop() * 4;
+        cancelSlop = Math.max(1, config.getScaledTouchSlop() / 2);
     }
 
     @Override
@@ -93,6 +93,11 @@ public class NoScrollViewPager extends ViewPager {
     }
 
     private void handleLongPressEvent(MotionEvent ev) {
+        if (isLocked) {
+            longPressActive = false;
+            removeCallbacks(longPressRunnable);
+            return;
+        }
         switch (ev.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
                 if (ev.getPointerCount() != 1) {
@@ -112,7 +117,8 @@ public class NoScrollViewPager extends ViewPager {
                 }
                 float dx = Math.abs(ev.getX() - downX);
                 float dy = Math.abs(ev.getY() - downY);
-                if (dx > cancelSlop || dy > cancelSlop) {
+                float distance = (float) Math.hypot(dx, dy);
+                if (distance > cancelSlop) {
                     longPressActive = false;
                     removeCallbacks(longPressRunnable);
                 }
