@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.outlined.AllInclusive
 import androidx.compose.material.icons.outlined.Code
+import androidx.compose.material.icons.outlined.ForkRight
 import androidx.compose.material.icons.outlined.Source
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -101,7 +102,7 @@ fun AboutScreen(
                 context.openInBrowser(URL_SOURCE_CODE)
             }
             BasicListItem(
-                leadingImageVector = Icons.Outlined.Code,
+                leadingImageVector = Icons.Outlined.ForkRight,
                 headlineText = "本项目地址",
                 supportingText = URL_SOURCE_CODE_FORK
             ) {
