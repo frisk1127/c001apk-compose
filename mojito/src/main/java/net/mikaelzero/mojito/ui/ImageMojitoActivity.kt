@@ -48,10 +48,13 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
     private var viewPagerScrollState = ViewPager.SCROLL_STATE_IDLE
     private var isStatusBarHidden = false
     private var finishPosted = false
+    private var isFinishingPreview = false
+    private val updateStatusBarRunnable = Runnable { updateStatusBarForCurrentImage() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         super.onCreate(savedInstanceState)
+        Log.d("MojitoStatusBar", "onCreate")
         if (Mojito.mojitoConfig().transparentNavigationBar()) {
             ImmersionBar.with(this).transparentBar().init()
         } else {
@@ -139,7 +142,7 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
         }
         binding.viewPager.adapter = imageViewPagerAdapter
         binding.viewPager.setCurrentItem(currentPosition, false)
-        binding.viewPager.post { updateStatusBarForCurrentImage() }
+        binding.viewPager.post(updateStatusBarRunnable)
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (backHandled) {
@@ -178,7 +181,9 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
             override fun onPageSelected(position: Int) {
                 activityCoverLoader?.pageChange(viewPagerBeans.size, position)
                 onMojitoListener?.onViewPageSelected(position)
-                binding.viewPager.post { updateStatusBarForCurrentImage() }
+                Log.d("MojitoStatusBar", "onPageSelected: position=$position")
+                binding.viewPager.removeCallbacks(updateStatusBarRunnable)
+                binding.viewPager.post(updateStatusBarRunnable)
             }
         })
         activityCoverLoader?.pageChange(viewPagerBeans.size, activityConfig.position)
@@ -194,15 +199,19 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
     }
 
     fun finishView() {
-        restoreSystemBars()
         if (finishPosted) {
             return
         }
         finishPosted = true
+        isFinishingPreview = true
+        Log.d("MojitoStatusBar", "finishView")
+        binding.viewPager.removeCallbacks(updateStatusBarRunnable)
+        restoreSystemBars()
         binding.root.post { finishInternal() }
     }
 
     private fun finishInternal() {
+        Log.d("MojitoStatusBar", "finishInternal")
         progressLoader = null
         fragmentCoverLoader = null
         multiContentLoader = null
@@ -223,8 +232,15 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
     }
 
     fun updateStatusBarForCurrentImage() {
+        if (isFinishingPreview) {
+            return
+        }
         val fragment = getCurrentFragment() as? ImageMojitoFragment ?: return
         val shouldHide = fragment.shouldHideStatusBar()
+        Log.d(
+            "MojitoStatusBar",
+            "updateStatusBarForCurrentImage: shouldHide=$shouldHide hidden=$isStatusBarHidden info=${fragment.getStatusBarOverlapInfo()}"
+        )
         if (shouldHide == isStatusBarHidden) {
             return
         }
@@ -267,7 +283,9 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
     }
 
     override fun onDestroy() {
+        Log.d("MojitoStatusBar", "onDestroy")
         super.onDestroy()
+        binding.viewPager.removeCallbacks(updateStatusBarRunnable)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             backInvokedCallback?.let { onBackInvokedDispatcher.unregisterOnBackInvokedCallback(it) }
             backInvokedCallback = null
@@ -290,6 +308,7 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
     }
 
     fun restoreSystemBars() {
+        Log.d("MojitoStatusBar", "restoreSystemBars")
         WindowInsetsControllerCompat(window, window.decorView)
             .show(WindowInsetsCompat.Type.statusBars())
         isStatusBarHidden = false
