@@ -207,7 +207,7 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
         Log.d("MojitoStatusBar", "finishView")
         binding.viewPager.removeCallbacks(updateStatusBarRunnable)
         restoreSystemBars()
-        binding.root.post { finishInternal() }
+        binding.root.postDelayed({ finishInternal() }, 80L)
     }
 
     private fun finishInternal() {
@@ -227,7 +227,6 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
     }
 
     fun backToMin() {
-        restoreSystemBars()
         (imageViewPagerAdapter.getItem(binding.viewPager.currentItem) as ImageMojitoFragment).backToMin()
     }
 
