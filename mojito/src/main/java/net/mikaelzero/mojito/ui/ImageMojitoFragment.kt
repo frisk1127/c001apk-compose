@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.os.BundleCompat
 import androidx.fragment.app.Fragment
+import com.gyf.immersionbar.ImmersionBar
 import net.mikaelzero.mojito.Mojito.Companion.imageLoader
 import net.mikaelzero.mojito.Mojito.Companion.imageViewFactory
 import net.mikaelzero.mojito.Mojito.Companion.mojitoConfig
@@ -46,6 +47,7 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
     private var iProgress: IProgress? = null
     private var fragmentCoverLoader: FragmentCoverLoader? = null
     private var lastLongPressTime: Long = 0L
+    private val tempLocation = IntArray(2)
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -477,12 +479,14 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
         ImageMojitoActivity.activityCoverLoader?.move(moveX, moveY)
         fragmentCoverLoader?.move(moveX, moveY)
         ImageMojitoActivity.onMojitoListener?.onDrag(view, moveX, moveY)
+        (activity as? ImageMojitoActivity)?.updateStatusBarForCurrentImage()
     }
 
     override fun onRelease(isToMax: Boolean, isToMin: Boolean) {
         ImageMojitoActivity.iIndicator?.fingerRelease(isToMax, isToMin)
         fragmentCoverLoader?.fingerRelease(isToMax, isToMin)
         ImageMojitoActivity.activityCoverLoader?.fingerRelease(isToMax, isToMin)
+        (activity as? ImageMojitoActivity)?.updateStatusBarForCurrentImage()
     }
 
     override fun showFinish(mojitoView: MojitoView, showImmediately: Boolean) {
@@ -490,6 +494,7 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
         if (!showImmediately) {
             ImageMojitoActivity.hasShowedAnimMap[fragmentConfig.position] = true
         }
+        view?.post { (activity as? ImageMojitoActivity)?.updateStatusBarForCurrentImage() }
     }
 
     override fun onLongImageMove(ratio: Float) {
@@ -500,6 +505,46 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
         if (context is ImageMojitoActivity) {
             (context as ImageMojitoActivity).setViewPagerLock(isLock)
         }
+    }
+
+    fun hasValidBounds(): Boolean {
+        val targetView = showView ?: contentLoader?.providerRealView() ?: return false
+        val rect = contentLoader?.displayRect ?: return false
+        if (targetView.width == 0 || targetView.height == 0) {
+            return false
+        }
+        return rect.width() > 0f && rect.height() > 0f
+    }
+
+    fun getStatusBarOverlapInfo(): String {
+        val targetView = showView ?: contentLoader?.providerRealView()
+        if (targetView == null) {
+            return "view=null"
+        }
+        val rect = contentLoader?.displayRect
+        if (rect == null) {
+            return "rect=null"
+        }
+        targetView.getLocationOnScreen(tempLocation)
+        val viewTop = tempLocation[1]
+        val imageTop = viewTop + rect.top
+        val imageBottom = viewTop + rect.bottom
+        val statusBarHeight = ImmersionBar.getStatusBarHeight(requireActivity())
+        return "top=$imageTop bottom=$imageBottom height=${rect.height()} statusBar=$statusBarHeight"
+    }
+
+    fun shouldHideStatusBar(): Boolean {
+        val targetView = showView ?: contentLoader?.providerRealView() ?: return false
+        val rect = contentLoader?.displayRect ?: return false
+        if (targetView.width == 0 || targetView.height == 0) {
+            return false
+        }
+        targetView.getLocationOnScreen(tempLocation)
+        val viewTop = tempLocation[1]
+        val imageTop = viewTop + rect.top
+        val imageBottom = viewTop + rect.bottom
+        val statusBarHeight = ImmersionBar.getStatusBarHeight(requireActivity())
+        return imageTop <= statusBarHeight && imageBottom >= statusBarHeight
     }
 
 }
