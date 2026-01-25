@@ -7,12 +7,10 @@ import android.os.SystemClock
 import android.util.Log
 import android.view.KeyEvent
 import android.view.Window
-import android.view.WindowManager
 import android.window.OnBackInvokedCallback
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.Fragment
@@ -49,14 +47,11 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
     private var backHandled = false
     private var viewPagerScrollState = ViewPager.SCROLL_STATE_IDLE
     private var isStatusBarHidden = false
-    private var statusBarRetryCount = 0
+    private var finishPosted = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         super.onCreate(savedInstanceState)
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        Log.d("MojitoStatusBar", "onCreate: setDecorFitsSystemWindows(false)")
-        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
         if (Mojito.mojitoConfig().transparentNavigationBar()) {
             ImmersionBar.with(this).transparentBar().init()
         } else {
@@ -64,20 +59,6 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
         }
         binding = ActivityImageBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        val topInset = ImmersionBar.getStatusBarHeight(this)
-        Log.d("MojitoStatusBar", "onCreate: statusBarHeight=$topInset")
-        binding.indicatorLayout.setPadding(
-            binding.indicatorLayout.paddingLeft,
-            topInset,
-            binding.indicatorLayout.paddingRight,
-            binding.indicatorLayout.paddingBottom
-        )
-        binding.userCustomLayout.setPadding(
-            binding.userCustomLayout.paddingLeft,
-            topInset,
-            binding.userCustomLayout.paddingRight,
-            binding.userCustomLayout.paddingBottom
-        )
 
         binding.userCustomLayout.removeAllViews()
         activityCoverLoader?.apply {
@@ -197,8 +178,6 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
             override fun onPageSelected(position: Int) {
                 activityCoverLoader?.pageChange(viewPagerBeans.size, position)
                 onMojitoListener?.onViewPageSelected(position)
-                Log.d("MojitoStatusBar", "onPageSelected: position=$position")
-                statusBarRetryCount = 0
                 binding.viewPager.post { updateStatusBarForCurrentImage() }
             }
         })
@@ -216,6 +195,14 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
 
     fun finishView() {
         restoreSystemBars()
+        if (finishPosted) {
+            return
+        }
+        finishPosted = true
+        binding.root.post { finishInternal() }
+    }
+
+    private fun finishInternal() {
         progressLoader = null
         fragmentCoverLoader = null
         multiContentLoader = null
@@ -231,26 +218,14 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
     }
 
     fun backToMin() {
+        restoreSystemBars()
         (imageViewPagerAdapter.getItem(binding.viewPager.currentItem) as ImageMojitoFragment).backToMin()
     }
 
     fun updateStatusBarForCurrentImage() {
         val fragment = getCurrentFragment() as? ImageMojitoFragment ?: return
         val shouldHide = fragment.shouldHideStatusBar()
-        if (!fragment.hasValidBounds()) {
-            if (statusBarRetryCount++ < 6) {
-                binding.viewPager.postDelayed({ updateStatusBarForCurrentImage() }, 60L)
-            }
-            return
-        }
-        Log.d(
-            "MojitoStatusBar",
-            "updateStatusBarForCurrentImage: shouldHide=$shouldHide hidden=$isStatusBarHidden info=${fragment.getStatusBarOverlapInfo()}"
-        )
         if (shouldHide == isStatusBarHidden) {
-            if (!shouldHide && statusBarRetryCount++ < 6) {
-                binding.viewPager.postDelayed({ updateStatusBarForCurrentImage() }, 60L)
-            }
             return
         }
         val controller = WindowInsetsControllerCompat(window, window.decorView)
@@ -317,9 +292,7 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
     fun restoreSystemBars() {
         WindowInsetsControllerCompat(window, window.decorView)
             .show(WindowInsetsCompat.Type.statusBars())
-        window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         isStatusBarHidden = false
-        Log.d("MojitoStatusBar", "restoreSystemBars")
     }
 
     
