@@ -229,6 +229,8 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
     }
 
     fun backToMin() {
+        // Block status bar toggles during exit animation to avoid flicker.
+        isFinishingPreview = true
         (imageViewPagerAdapter.getItem(binding.viewPager.currentItem) as ImageMojitoFragment).backToMin()
     }
 
