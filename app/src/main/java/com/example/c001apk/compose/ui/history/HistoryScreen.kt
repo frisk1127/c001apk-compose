@@ -82,7 +82,12 @@ fun HistoryScreen(
                     BackButton { onBackClick() }
                 },
                 title = {
-                    Text(text = type)
+                    val title = when (type) {
+                        HistoryType.FAV.name -> "本地收藏"
+                        HistoryType.HISTORY.name -> "浏览历史"
+                        else -> type
+                    }
+                    Text(text = title)
                 },
                 actions = {
                     AnimatedVisibility(
