@@ -12,7 +12,6 @@ import android.window.OnBackInvokedDispatcher
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
-import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.Fragment
@@ -210,7 +209,7 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
         Log.d("MojitoStatusBar", "finishView")
         binding.viewPager.removeCallbacks(updateStatusBarRunnable)
         restoreSystemBars()
-        finishAfterInsetsRestore()
+        binding.root.post { finishInternal() }
     }
 
     private fun finishInternal() {
@@ -315,18 +314,6 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
             .show(WindowInsetsCompat.Type.statusBars())
         isStatusBarHidden = false
     }
-
-    private fun finishAfterInsetsRestore() {
-        val root = binding.root
-        val timeoutMs = 220L
-        ViewCompat.requestApplyInsets(root)
-        root.postDelayed({
-            ViewCompat.requestApplyInsets(root)
-            finishInternal()
-        }, timeoutMs)
-    }
-
-    
 
     fun tryDispatchLongPress(x: Float, y: Float): Boolean {
         val fragment = getCurrentFragment() as? ImageMojitoFragment ?: return false
