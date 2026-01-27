@@ -573,6 +573,8 @@ public class MojitoView extends FrameLayout {
             case MotionEvent.ACTION_CANCEL:
                 //个别情况比如快速滑动或其他情况触发了ACTION_CANCEL需要重置为normal状态
                 backToNormal(true);
+                isDrag = false;
+                mYDistanceTraveled = 0;
                 break;
             case MotionEvent.ACTION_UP:
                 if (isAnimating) {
@@ -588,6 +590,8 @@ public class MojitoView extends FrameLayout {
                     //if is long image,top or bottom or minScale, need handle event
                     //if image scale<1(origin scale) , need handle event
                     setViewPagerLocking(false);
+                    isDrag = false;
+                    mYDistanceTraveled = 0;
                     break;
                 }
                 //如果滑动距离不足,则不需要事件
