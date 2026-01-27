@@ -93,11 +93,6 @@ public class NoScrollViewPager extends ViewPager {
     }
 
     private void handleLongPressEvent(MotionEvent ev) {
-        if (isLocked) {
-            longPressActive = false;
-            removeCallbacks(longPressRunnable);
-            return;
-        }
         switch (ev.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
                 if (ev.getPointerCount() != 1) {
