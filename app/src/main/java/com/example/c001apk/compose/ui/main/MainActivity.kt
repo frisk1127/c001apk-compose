@@ -163,8 +163,11 @@ class MainActivity : ComponentActivity() {
         ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { _, insets ->
             val currentTop = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
             val stableTop = stableStatusBarInset
-                ?: currentTop.takeIf { it > 0 }?.also { stableStatusBarInset = it }
-                ?: 0
+                ?: currentTop.takeIf { it > 0 }
+                ?: fallbackStatusBarHeight()
+            if (stableStatusBarInset == null && stableTop > 0) {
+                stableStatusBarInset = stableTop
+            }
             if (stableTop == 0) {
                 return@setOnApplyWindowInsetsListener insets
             }
@@ -173,5 +176,9 @@ class MainActivity : ComponentActivity() {
                 .build()
         }
     }
-}
 
+    private fun fallbackStatusBarHeight(): Int {
+        val resId = resources.getIdentifier("status_bar_height", "dimen", "android")
+        return if (resId > 0) resources.getDimensionPixelSize(resId) else 0
+    }
+}
