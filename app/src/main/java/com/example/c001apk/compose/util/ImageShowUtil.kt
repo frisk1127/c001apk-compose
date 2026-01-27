@@ -2,14 +2,29 @@ package com.example.c001apk.compose.util
 
 import android.content.ActivityNotFoundException
 import android.content.Context
-import android.content.DialogInterface
+import android.app.Dialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Build.VERSION.SDK_INT
 import android.os.Environment
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.util.Log
 import android.view.View
 import android.widget.ImageView
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.view.isVisible
@@ -19,6 +34,7 @@ import com.example.c001apk.compose.constant.Constants.EMPTY_STRING
 import com.example.c001apk.compose.constant.Constants.SUFFIX_THUMBNAIL
 import com.example.c001apk.compose.view.CircleIndexIndicator
 import com.example.c001apk.compose.view.NineGridImageView
+import com.example.c001apk.compose.ui.theme.C001apkComposeTheme
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -214,47 +230,128 @@ object ImageShowUtil {
         urlList: List<String>?,
         userAgent: String?,
     ) {
+        if (context is FragmentActivity) {
+            showSaveImgDialogCompose(context, url, urlList, userAgent)
+            return
+        }
         val items = arrayOf("保存图片", "保存全部图片", "图片分享", "复制图片地址")
         MaterialAlertDialogBuilder(context).apply {
             setItems(items) { _: DialogInterface?, position: Int ->
-                when (position) {
-                    0 -> CoroutineScope(Dispatchers.IO).launch {
-                        checkImageExist(context, url, true, userAgent)
-                    }
-
-                    1 -> CoroutineScope(Dispatchers.IO).launch {
-                        if (urlList.isNullOrEmpty()) {
-                            checkImageExist(context, url, true, userAgent)
-                        } else {
-                            urlList.forEachIndexed { index, url ->
-                                checkImageExist(context, url, index == urlList.lastIndex, userAgent)
-                            }
-                        }
-                    }
-
-                    2 -> CoroutineScope(Dispatchers.IO).launch {
-                        val index = url.lastIndexOf('/')
-                        val filename = url.substring(index + 1)
-                        if (checkShareImageExist(context, filename)) {
-                            shareImage(
-                                context,
-                                File(context.externalCacheDir, "imageShare/$filename"),
-                                null
-                            )
-                        } else {
-                            ImageDownloadUtil.downloadImage(
-                                context, url, filename,
-                                isEnd = true,
-                                isShare = true,
-                                userAgent = userAgent,
-                            )
-                        }
-                    }
-
-                    3 -> context.copyText(url)
-                }
+                handleSaveDialogAction(context, url, urlList, userAgent, position)
             }
             show()
+        }
+    }
+
+    private fun showSaveImgDialogCompose(
+        activity: FragmentActivity,
+        url: String,
+        urlList: List<String>?,
+        userAgent: String?,
+    ) {
+        val dialog = Dialog(activity)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        val items = listOf("保存图片", "保存全部图片", "图片分享", "复制图片地址")
+        val composeView = ComposeView(activity).apply {
+            setContent {
+                C001apkComposeTheme(
+                    darkTheme = CookieUtil.isDarkMode,
+                    themeType = CookieUtil.themeType,
+                    seedColor = CookieUtil.seedColor,
+                    materialYou = CookieUtil.materialYou,
+                    pureBlack = CookieUtil.pureBlack,
+                    paletteStyle = CookieUtil.paletteStyle,
+                    fontScale = CookieUtil.fontScale,
+                    contentScale = CookieUtil.contentScale,
+                ) {
+                    SaveImageDialogContent(
+                        items = items,
+                        onClick = { index ->
+                            handleSaveDialogAction(activity, url, urlList, userAgent, index)
+                            dialog.dismiss()
+                        }
+                    )
+                }
+            }
+        }
+        dialog.setContentView(composeView)
+        dialog.show()
+    }
+
+    @Composable
+    private fun SaveImageDialogContent(
+        items: List<String>,
+        onClick: (Int) -> Unit,
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp),
+            shape = MaterialTheme.shapes.extraLarge,
+            tonalElevation = 6.dp,
+            color = MaterialTheme.colorScheme.surface
+        ) {
+            Column(
+                modifier = Modifier.padding(PaddingValues(vertical = 8.dp)),
+            ) {
+                items.forEachIndexed { index, item ->
+                    Text(
+                        text = item,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onClick(index) }
+                            .padding(horizontal = 24.dp, vertical = 14.dp),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+        }
+    }
+
+    private fun handleSaveDialogAction(
+        context: Context,
+        url: String,
+        urlList: List<String>?,
+        userAgent: String?,
+        position: Int,
+    ) {
+        when (position) {
+            0 -> CoroutineScope(Dispatchers.IO).launch {
+                checkImageExist(context, url, true, userAgent)
+            }
+
+            1 -> CoroutineScope(Dispatchers.IO).launch {
+                if (urlList.isNullOrEmpty()) {
+                    checkImageExist(context, url, true, userAgent)
+                } else {
+                    urlList.forEachIndexed { index, url ->
+                        checkImageExist(context, url, index == urlList.lastIndex, userAgent)
+                    }
+                }
+            }
+
+            2 -> CoroutineScope(Dispatchers.IO).launch {
+                val index = url.lastIndexOf('/')
+                val filename = url.substring(index + 1)
+                if (checkShareImageExist(context, filename)) {
+                    shareImage(
+                        context,
+                        File(context.externalCacheDir, "imageShare/$filename"),
+                        null
+                    )
+                } else {
+                    ImageDownloadUtil.downloadImage(
+                        context, url, filename,
+                        isEnd = true,
+                        isShare = true,
+                        userAgent = userAgent,
+                    )
+                }
+            }
+
+            3 -> context.copyText(url)
         }
     }
 

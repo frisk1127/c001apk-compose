@@ -4,6 +4,7 @@ import com.example.c001apk.compose.constant.Constants.API_VERSION
 import com.example.c001apk.compose.constant.Constants.EMPTY_STRING
 import com.example.c001apk.compose.constant.Constants.VERSION_CODE
 import com.example.c001apk.compose.constant.Constants.VERSION_NAME
+import com.example.c001apk.compose.ThemeType
 
 /**
  * Created by bggRGjQaUbCoE on 2024/6/3
@@ -44,5 +45,11 @@ object CookieUtil {
     var openInBrowser = false
     var recordHistory = true
     var materialYou = true
+    var themeType: ThemeType = ThemeType.Default
+    var paletteStyle: Int = 0
+    var seedColor = EMPTY_STRING
+    var pureBlack = false
+    var fontScale = 1.0f
+    var contentScale = 1.0f
 
 }

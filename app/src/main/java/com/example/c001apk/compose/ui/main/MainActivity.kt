@@ -33,6 +33,12 @@ import com.example.c001apk.compose.util.CookieUtil.isLogin
 import com.example.c001apk.compose.util.CookieUtil.materialYou
 import com.example.c001apk.compose.util.CookieUtil.openInBrowser
 import com.example.c001apk.compose.util.CookieUtil.recordHistory
+import com.example.c001apk.compose.util.CookieUtil.themeType
+import com.example.c001apk.compose.util.CookieUtil.paletteStyle
+import com.example.c001apk.compose.util.CookieUtil.seedColor
+import com.example.c001apk.compose.util.CookieUtil.pureBlack
+import com.example.c001apk.compose.util.CookieUtil.fontScale
+import com.example.c001apk.compose.util.CookieUtil.contentScale
 import com.example.c001apk.compose.util.CookieUtil.sdkInt
 import com.example.c001apk.compose.util.CookieUtil.showEmoji
 import com.example.c001apk.compose.util.CookieUtil.showSquare
@@ -123,6 +129,12 @@ class MainActivity : ComponentActivity() {
                 recordHistory = preferences.recordHistory
                 materialYou = preferences.materialYou
                 isDarkMode = preferences.isDarkMode()
+                themeType = preferences.themeType
+                paletteStyle = preferences.paletteStyle
+                seedColor = preferences.seedColor
+                pureBlack = preferences.pureBlack
+                fontScale = preferences.fontScale
+                contentScale = preferences.contentScale
 
                 C001apkComposeTheme(
                     darkTheme = preferences.isDarkMode(),
