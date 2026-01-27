@@ -230,7 +230,7 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
 
     fun backToMin() {
         // Block status bar toggles during exit animation to avoid flicker.
-        isFinishingPreview = true
+        beginExitIfNeeded()
         (imageViewPagerAdapter.getItem(binding.viewPager.currentItem) as ImageMojitoFragment).backToMin()
     }
 
@@ -315,6 +315,14 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
         WindowInsetsControllerCompat(window, window.decorView)
             .show(WindowInsetsCompat.Type.statusBars())
         isStatusBarHidden = false
+    }
+
+    fun beginExitIfNeeded() {
+        if (isFinishingPreview) {
+            return
+        }
+        isFinishingPreview = true
+        binding.viewPager.removeCallbacks(updateStatusBarRunnable)
     }
 
     fun tryDispatchLongPress(x: Float, y: Float): Boolean {

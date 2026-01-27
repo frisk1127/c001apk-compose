@@ -428,6 +428,7 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
     }
 
     override fun backToMin() {
+        (activity as? ImageMojitoActivity)?.beginExitIfNeeded()
         _binding?.mojitoView?.backToMin()
     }
 
