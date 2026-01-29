@@ -236,7 +236,7 @@ object ImageShowUtil {
         }
         val items = arrayOf("保存图片", "保存全部图片", "图片分享", "复制图片地址")
         MaterialAlertDialogBuilder(context).apply {
-            setItems(items) { _: DialogInterface?, position: Int ->
+            setItems(items) { _, position: Int ->
                 handleSaveDialogAction(context, url, urlList, userAgent, position)
             }
             show()
