@@ -57,6 +57,7 @@
     <string name="menu_unfollow">取消关注</string>
     <string name="menu_report">举报</string>
     <string name="menu_unblock">取消拉黑</string>
+    <string name="menu_block">拉黑</string>
     <string name="menu_delete">删除</string>
     <string name="menu_sort">排序</string>
     <string name="menu_check">查看</string>
@@ -66,4 +67,7 @@
     <string name="menu_open_in_browser">在浏览器打开</string>
     <string name="menu_clean_caches">清理缓存</string>
     <string name="menu_reset">重置</string>
+    <string name="sort_reply">最近回复</string>
+    <string name="sort_hot">热度排序</string>
+    <string name="sort_dateline">最新发布</string>
 </resources>

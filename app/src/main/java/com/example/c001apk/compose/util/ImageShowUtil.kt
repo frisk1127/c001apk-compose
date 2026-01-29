@@ -23,12 +23,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.view.isVisible
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.ViewTreeLifecycleOwner
+import androidx.lifecycle.ViewTreeViewModelStoreOwner
+import androidx.savedstate.ViewTreeSavedStateRegistryOwner
 import com.example.c001apk.compose.R
 import com.example.c001apk.compose.constant.Constants.EMPTY_STRING
 import com.example.c001apk.compose.constant.Constants.SUFFIX_THUMBNAIL
@@ -253,6 +257,12 @@ object ImageShowUtil {
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         val items = listOf("保存图片", "保存全部图片", "图片分享", "复制图片地址")
         val composeView = ComposeView(activity).apply {
+            setViewCompositionStrategy(
+                ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
+            )
+            ViewTreeLifecycleOwner.set(this, activity)
+            ViewTreeViewModelStoreOwner.set(this, activity)
+            ViewTreeSavedStateRegistryOwner.set(this, activity)
             setContent {
                 C001apkComposeTheme(
                     darkTheme = CookieUtil.isDarkMode,

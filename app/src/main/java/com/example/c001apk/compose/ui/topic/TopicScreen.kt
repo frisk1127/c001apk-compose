@@ -203,7 +203,7 @@ fun TopicScreen(
                                                 if (viewModel.isBlocked) {
                                                     stringResource(id = R.string.menu_unblock)
                                                 } else {
-                                                    "拉黑"
+                                                    stringResource(id = R.string.menu_block)
                                                 }
                                             )
                                         },
@@ -234,7 +234,13 @@ fun TopicScreen(
                                                 }
                                             )
                                             Text(
-                                                text = sort.name,
+                                                text = stringResource(
+                                                    id = when (sort) {
+                                                        ProductSortType.REPLY -> R.string.sort_reply
+                                                        ProductSortType.HOT -> R.string.sort_hot
+                                                        ProductSortType.DATELINE -> R.string.sort_dateline
+                                                    }
+                                                ),
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 modifier = Modifier
                                                     .fillMaxWidth()
