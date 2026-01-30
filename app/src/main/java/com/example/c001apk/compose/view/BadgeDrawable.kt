@@ -33,6 +33,7 @@ class BadgeDrawable(
     private val width: Int
     private val height: Int
     private val paint: Paint
+    private val cacheKey: String = "$text-$colorPrimaryContainer-$colorOnPrimaryContainer"
 
     init {
         val padding = PADDING
@@ -46,7 +47,7 @@ class BadgeDrawable(
         }
         height = (padding + textBounds.height() + padding).toInt()
         width = (padding + textBounds.width() + padding).toInt()
-        if (bitmaps[text] == null) {
+        if (bitmaps[cacheKey] == null) {
             val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
             bitmap.setHasAlpha(true)
             val canvas = Canvas(bitmap)
@@ -58,7 +59,7 @@ class BadgeDrawable(
             )
             val fix = if (text == "GIF") 1 else 2
             canvas.drawText(text, padding - fix, height - padding - fix, textPaint)
-            bitmaps[text] = bitmap
+            bitmaps[cacheKey] = bitmap
         }
         paint = Paint()
     }
@@ -72,7 +73,7 @@ class BadgeDrawable(
     }
 
     override fun draw(canvas: Canvas) {
-        bitmaps[text]?.let {
+        bitmaps[cacheKey]?.let {
             canvas.drawBitmap(
                 it,
                 getBounds().left.toFloat(),

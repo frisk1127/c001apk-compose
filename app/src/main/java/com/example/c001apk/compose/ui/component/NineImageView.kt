@@ -37,6 +37,8 @@ fun NineImageView(
             }
         },
         update = { imageView ->
+            imageView.colorPrimaryContainer = primaryContainer
+            imageView.colorOnPrimaryContainer = onPrimaryContainer
             if (!picArr.isNullOrEmpty()) {
                 if (picArr.size == 1 || feedType in listOf("feedArticle", "trade")) {
                     val imageLp = getImageLp(pic ?: picArr[0])

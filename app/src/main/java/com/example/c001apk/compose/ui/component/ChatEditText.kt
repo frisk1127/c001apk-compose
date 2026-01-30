@@ -38,12 +38,16 @@ fun ChatEditText(
 ) {
 
     val primary = MaterialTheme.colorScheme.primary.toArgb()
+    val onSurface = MaterialTheme.colorScheme.onSurface.toArgb()
+    val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
 
     AndroidView(
         modifier = modifier,
         factory = { context ->
             EditText(context).apply {
                 highlightColor = setAlphaComponent(primary, 128)
+                setTextColor(onSurface)
+                setHintTextColor(onSurfaceVariant)
                 maxLines = 4
                 hint = "写私信..."
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
@@ -87,6 +91,9 @@ fun ChatEditText(
             }
         },
         update = { editText ->
+            editText.highlightColor = setAlphaComponent(primary, 128)
+            editText.setTextColor(onSurface)
+            editText.setHintTextColor(onSurfaceVariant)
             if (clearText) {
                 resetClear()
                 editText.text = null
