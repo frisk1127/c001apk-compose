@@ -2,7 +2,6 @@ package com.example.c001apk.compose.util
 
 import android.content.ActivityNotFoundException
 import android.content.Context
-import android.app.Dialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Build.VERSION.SDK_INT
@@ -12,6 +11,7 @@ import android.graphics.drawable.ColorDrawable
 import android.util.Log
 import android.view.View
 import android.widget.ImageView
+import androidx.activity.ComponentDialog
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -250,14 +250,13 @@ object ImageShowUtil {
         urlList: List<String>?,
         userAgent: String?,
     ) {
-        val dialog = Dialog(activity)
+        val dialog = ComponentDialog(activity)
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         val items = listOf("保存图片", "保存全部图片", "图片分享", "复制图片地址")
         val composeView = ComposeView(activity).apply {
             setViewCompositionStrategy(
                 ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
             )
-            attachComposeOwners(this, activity)
             setContent {
                 C001apkComposeTheme(
                     darkTheme = CookieUtil.isDarkMode,
@@ -281,22 +280,6 @@ object ImageShowUtil {
         }
         dialog.setContentView(composeView)
         dialog.show()
-    }
-
-    private fun attachComposeOwners(view: View, owner: FragmentActivity) {
-        setViewTreeOwner("androidx.lifecycle.ViewTreeLifecycleOwner", view, owner)
-        setViewTreeOwner("androidx.lifecycle.ViewTreeViewModelStoreOwner", view, owner)
-        setViewTreeOwner("androidx.savedstate.ViewTreeSavedStateRegistryOwner", view, owner)
-    }
-
-    private fun setViewTreeOwner(className: String, view: View, owner: Any) {
-        try {
-            val cls = Class.forName(className)
-            val method = cls.methods.firstOrNull { it.name == "set" && it.parameterTypes.size == 2 }
-            method?.invoke(null, view, owner)
-        } catch (_: Throwable) {
-            // Ignore when the dependency is missing on this build variant.
-        }
     }
 
     @Composable
