@@ -10,7 +10,6 @@ import android.os.Environment
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.util.Log
-import android.view.View
 import android.widget.ImageView
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -26,7 +25,6 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.view.isVisible
