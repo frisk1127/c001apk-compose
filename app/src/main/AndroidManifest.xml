@@ -35,6 +35,11 @@
             android:launchMode="singleTop"
             android:theme="@style/AppThemeTranslucent"
             android:windowSoftInputMode="adjustResize|stateVisible" />
+        <activity
+            android:name=".ui.feed.reply.AtTopicActivity"
+            android:exported="false"
+            android:theme="@style/Theme.C001apkCompose"
+            android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".ui.main.MainActivity"

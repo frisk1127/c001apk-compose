@@ -884,14 +884,9 @@ class ReplyActivity : AppCompatActivity(),
     }
 
     private fun launchAtTopic(type: String) {
-        val insertText = if (type == "topic") "#" else "@"
-        binding.editText.requestFocus()
-        val start = binding.editText.selectionStart.coerceAtLeast(0)
-        val end = binding.editText.selectionEnd.coerceAtLeast(0)
-        val min = minOf(start, end)
-        val max = maxOf(start, end)
-        binding.editText.editableText.replace(min, max, insertText)
-        showInput()
+        val intent = Intent(this, AtTopicActivity::class.java)
+        intent.putExtra("type", type)
+        atTopicResultLauncher.launch(intent)
     }
 
     private fun launchPick() {

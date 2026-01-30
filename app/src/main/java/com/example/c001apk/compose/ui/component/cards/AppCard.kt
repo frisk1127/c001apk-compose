@@ -59,7 +59,12 @@ fun AppCard(
                     if (appCardType == AppCardType.CONTACTS)
                         onViewUser(data.userInfo?.uid ?: data.fUserInfo?.uid.orEmpty())
                     else
-                        onOpenLink(data.url.orEmpty(), data.title)
+                        onOpenLink(
+                            data.url.orEmpty(),
+                            if (appCardType == AppCardType.USER)
+                                data.username ?: data.userInfo?.username ?: data.fUserInfo?.username
+                            else data.title
+                        )
                 },
                 onLongClick = if (appCardType == AppCardType.RECENT) {
                     {
