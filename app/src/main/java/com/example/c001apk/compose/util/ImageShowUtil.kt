@@ -26,13 +26,11 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.view.isVisible
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.ViewTreeLifecycleOwner
-import androidx.lifecycle.ViewTreeViewModelStoreOwner
-import androidx.savedstate.ViewTreeSavedStateRegistryOwner
 import com.example.c001apk.compose.R
 import com.example.c001apk.compose.constant.Constants.EMPTY_STRING
 import com.example.c001apk.compose.constant.Constants.SUFFIX_THUMBNAIL
@@ -260,9 +258,7 @@ object ImageShowUtil {
             setViewCompositionStrategy(
                 ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
             )
-            ViewTreeLifecycleOwner.set(this, activity)
-            ViewTreeViewModelStoreOwner.set(this, activity)
-            ViewTreeSavedStateRegistryOwner.set(this, activity)
+            attachComposeOwners(this, activity)
             setContent {
                 C001apkComposeTheme(
                     darkTheme = CookieUtil.isDarkMode,
@@ -286,6 +282,22 @@ object ImageShowUtil {
         }
         dialog.setContentView(composeView)
         dialog.show()
+    }
+
+    private fun attachComposeOwners(view: View, owner: FragmentActivity) {
+        setViewTreeOwner("androidx.lifecycle.ViewTreeLifecycleOwner", view, owner)
+        setViewTreeOwner("androidx.lifecycle.ViewTreeViewModelStoreOwner", view, owner)
+        setViewTreeOwner("androidx.savedstate.ViewTreeSavedStateRegistryOwner", view, owner)
+    }
+
+    private fun setViewTreeOwner(className: String, view: View, owner: Any) {
+        try {
+            val cls = Class.forName(className)
+            val method = cls.methods.firstOrNull { it.name == "set" && it.parameterTypes.size == 2 }
+            method?.invoke(null, view, owner)
+        } catch (_: Throwable) {
+            // Ignore when the dependency is missing on this build variant.
+        }
     }
 
     @Composable
