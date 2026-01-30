@@ -83,6 +83,7 @@ import com.example.c001apk.compose.R
 import com.example.c001apk.compose.ThemeMode
 import com.example.c001apk.compose.ThemeType
 import com.example.c001apk.compose.constant.Constants.URL_SOURCE_CODE
+import com.example.c001apk.compose.constant.Constants.URL_SOURCE_CODE_FORK
 import com.example.c001apk.compose.logic.providable.LocalUserPreferences
 import com.example.c001apk.compose.ui.blacklist.BlackListType
 import com.example.c001apk.compose.ui.component.HtmlText
@@ -159,7 +160,7 @@ fun SettingsScreen(
                                     onClick = {
                                         dropdownMenuExpanded = false
                                         when (index) {
-                                            0 -> context.openInBrowser("$URL_SOURCE_CODE/issues")
+                                            0 -> context.openInBrowser("$URL_SOURCE_CODE_FORK/issues")
 
                                             1 -> showAboutDialog = true
                                         }
@@ -744,6 +745,12 @@ fun AboutDialog(onDismiss: () -> Unit) {
                         html = stringResource(
                             id = R.string.about_source_code,
                             "<b><a href=\"${URL_SOURCE_CODE}\">GitHub</a></b>"
+                        )
+                    )
+                    HtmlText(
+                        html = stringResource(
+                            id = R.string.about_source_code_fork,
+                            "<b><a href=\"${URL_SOURCE_CODE_FORK}\">GitHub</a></b>"
                         )
                     )
                 }
