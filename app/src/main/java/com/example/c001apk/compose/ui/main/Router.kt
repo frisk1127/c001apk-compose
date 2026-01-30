@@ -16,7 +16,7 @@ import com.example.c001apk.compose.R
  */
 sealed class Router(
     val name: String,
-    @StringRes val stringId: Int? = null,
+    @param:StringRes val stringId: Int? = null,
     val unselectedIcon: ImageVector? = null,
     val selectedIcon: ImageVector? = null,
 ) {

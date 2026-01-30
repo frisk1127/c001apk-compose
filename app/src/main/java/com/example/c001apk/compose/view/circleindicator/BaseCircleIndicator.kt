@@ -303,7 +303,7 @@ open class BaseCircleIndicator : LinearLayout {
             indicatorDrawable?.let {
                 DrawableCompat.setTintList(it, tintColor)
             }
-            ViewCompat.setBackground(view, indicatorDrawable)
+            view.background = indicatorDrawable
         } else {
             view.setBackgroundResource(drawableRes)
         }

@@ -27,13 +27,13 @@ import kotlin.coroutines.suspendCoroutine
  */
 @Singleton
 class NetworkRepo @Inject constructor(
-    @Api1Service
+    @param:Api1Service
     private val apiService: ApiService,
-    @Api1ServiceNoRedirect
+    @param:Api1ServiceNoRedirect
     private val apiServiceNoRedirect: ApiService,
-    @Api2Service
+    @param:Api2Service
     private val api2Service: ApiService,
-    @AccountService
+    @param:AccountService
     private val accountService: ApiService,
 ) {
 

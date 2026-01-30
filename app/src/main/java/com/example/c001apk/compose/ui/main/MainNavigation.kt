@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
+import android.os.Parcelable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -482,10 +483,7 @@ fun MainNavigation(
                 route = Router.UPDATE.name,
             ) {
                 val bundle = it.arguments
-                val data = if (SDK_INT >= 33)
-                    bundle?.getParcelableArrayList("list", UpdateCheckItem::class.java)
-                else
-                    bundle?.getParcelableArrayList("list")
+                val data = bundle?.getParcelableArrayListCompat<UpdateCheckItem>("list")
                 AppUpdateScreen(
                     onBackClick = navController::popBackStack,
                     data = data,
@@ -913,4 +911,15 @@ fun NavHostController.navigateToChat(ukey: String, uid: String, username: String
 
 fun NavHostController.navigateToCollection(id: String) {
     navigate("${Router.COLLECTION.name}/$id")
+}
+
+private inline fun <reified T : Parcelable> Bundle.getParcelableArrayListCompat(
+    key: String,
+): ArrayList<T>? {
+    return if (SDK_INT >= 33) {
+        getParcelableArrayList(key, T::class.java)
+    } else {
+        @Suppress("DEPRECATION")
+        getParcelableArrayList(key)
+    }
 }

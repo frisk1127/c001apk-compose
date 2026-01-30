@@ -1,6 +1,7 @@
 package com.example.c001apk.compose.ui.feed.reply
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -9,6 +10,7 @@ import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
+import android.os.Build.VERSION.SDK_INT
 import android.os.CountDownTimer
 import android.os.Handler
 import android.os.Looper
@@ -37,7 +39,7 @@ import androidx.core.graphics.ColorUtils
 import androidx.core.view.HapticFeedbackConstantsCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.lifecycle.Lifecycle
@@ -144,8 +146,7 @@ class ReplyActivity : AppCompatActivity(),
         window.clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
         window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
         window.setSoftInputMode(
-            WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE or
-                WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+            WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE
         )
         binding.main.isFocusable = false
         binding.main.isFocusableInTouchMode = false
@@ -672,7 +673,9 @@ class ReplyActivity : AppCompatActivity(),
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
+        @Suppress("DEPRECATION")
         window.statusBarColor = Color.TRANSPARENT
+        @Suppress("DEPRECATION")
         window.navigationBarColor = SurfaceColors.SURFACE_1.getColor(this)
     }
 
@@ -685,10 +688,8 @@ class ReplyActivity : AppCompatActivity(),
                 it.requestFocus()
                 it.requestFocusFromTouch()
                 imm.showSoftInput(it, InputMethodManager.SHOW_IMPLICIT)
-                WindowInsetsControllerCompat(window, it)
+                WindowCompat.getInsetsController(window, it)
                     .show(WindowInsetsCompat.Type.ime())
-                ViewCompat.getWindowInsetsController(it)
-                    ?.show(WindowInsetsCompat.Type.ime())
             }
         ViewCompat.requestApplyInsets(binding.main)
     }
@@ -708,7 +709,7 @@ class ReplyActivity : AppCompatActivity(),
         }
         showInput()
         if (imeRetryCount++ >= maxImeRetry) {
-            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
+            imm.showSoftInput(binding.editText, InputMethodManager.SHOW_IMPLICIT)
             imeRetryHandler.removeCallbacks(imeRetryRunnable)
             return
         }
@@ -724,10 +725,8 @@ class ReplyActivity : AppCompatActivity(),
 
     private fun hideImeForEmoji() {
         imm.hideSoftInputFromWindow(binding.editText.windowToken, 0)
-        WindowInsetsControllerCompat(window, binding.editText)
+        WindowCompat.getInsetsController(window, binding.editText)
             .hide(WindowInsetsCompat.Type.ime())
-        ViewCompat.getWindowInsetsController(binding.editText)
-            ?.hide(WindowInsetsCompat.Type.ime())
     }
 
     @SuppressLint("InflateParams")
@@ -872,10 +871,19 @@ class ReplyActivity : AppCompatActivity(),
 
     override fun finish() {
         super.finish()
-        overridePendingTransition(
-            R.anim.anim_bottom_sheet_slide_up,
-            R.anim.anim_bottom_sheet_slide_down
-        )
+        if (SDK_INT >= 34) {
+            overrideActivityTransition(
+                Activity.OVERRIDE_TRANSITION_CLOSE,
+                R.anim.anim_bottom_sheet_slide_up,
+                R.anim.anim_bottom_sheet_slide_down
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            overridePendingTransition(
+                R.anim.anim_bottom_sheet_slide_up,
+                R.anim.anim_bottom_sheet_slide_down
+            )
+        }
     }
 
 }

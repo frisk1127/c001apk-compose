@@ -10,6 +10,7 @@ import com.google.gson.stream.JsonWriter
 import java.io.IOException
 
 object LikeAdapterFactory : TypeAdapterFactory {
+    @Suppress("UNCHECKED_CAST")
     override fun <T> create(gson: Gson, type: TypeToken<T>): TypeAdapter<T> {
         return LikeAdapter(gson) as TypeAdapter<T>
     }

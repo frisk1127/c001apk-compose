@@ -111,10 +111,14 @@ fun C001apkComposeTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
+            @Suppress("DEPRECATION")
             window.statusBarColor = Color.Transparent.toArgb()
+            @Suppress("DEPRECATION")
             window.navigationBarColor = Color.Transparent.toArgb()
             if (SDK_INT >= Q) {
+                @Suppress("DEPRECATION")
                 window.isStatusBarContrastEnforced = false
+                @Suppress("DEPRECATION")
                 window.isNavigationBarContrastEnforced = false
             }
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme

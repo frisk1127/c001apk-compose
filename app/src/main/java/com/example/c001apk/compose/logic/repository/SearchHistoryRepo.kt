@@ -10,7 +10,7 @@ import javax.inject.Singleton
 
 @Singleton
 class SearchHistoryRepo @Inject constructor(
-    @SearchHistory
+    @param:SearchHistory
     private val searchHistoryDao: StringEntityDao,
 ) {
 

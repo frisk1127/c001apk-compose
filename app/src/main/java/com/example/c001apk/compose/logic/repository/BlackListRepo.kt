@@ -13,9 +13,9 @@ import javax.inject.Singleton
 
 @Singleton
 class BlackListRepo @Inject constructor(
-    @UserBlackList
+    @param:UserBlackList
     private val userBlackListDao: StringEntityDao,
-    @TopicBlackList
+    @param:TopicBlackList
     private val topicBlackListDao: StringEntityDao,
 ) {
 

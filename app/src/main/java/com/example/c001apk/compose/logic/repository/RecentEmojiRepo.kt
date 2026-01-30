@@ -10,7 +10,7 @@ import javax.inject.Singleton
 
 @Singleton
 class RecentEmojiRepo @Inject constructor(
-    @RecentEmoji
+    @param:RecentEmoji
     private val recentEmojiDao: StringEntityDao,
 ) {
 

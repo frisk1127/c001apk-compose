@@ -42,10 +42,6 @@ object Utils {
             .setTitle(name)
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
             .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, name)
-        if (SDK_INT < 29) {
-            request.allowScanningByMediaScanner()
-            request.setVisibleInDownloadsUi(true)
-        }
         downloadManager.enqueue(request)
     }
 

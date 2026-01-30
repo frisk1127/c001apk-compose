@@ -11,9 +11,9 @@ import javax.inject.Singleton
 
 @Singleton
 class HistoryFavoriteRepo @Inject constructor(
-    @BrowseHistory
+    @param:BrowseHistory
     private val browseHistoryDao: HistoryFavoriteDao,
-    @FeedFavorite
+    @param:FeedFavorite
     private val feedFavoriteDao: HistoryFavoriteDao,
 ) {
 

@@ -5,7 +5,6 @@ import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build.VERSION.SDK_INT
 import android.os.Environment
 import android.view.ViewGroup
 import android.webkit.CookieManager
@@ -82,19 +81,8 @@ fun WebView(
                     loadsImagesAutomatically = true
                     allowFileAccess = false
                     userAgentString = prefs.userAgent
-                    if (SDK_INT >= 32) {
-                        if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
-                            WebSettingsCompat.setAlgorithmicDarkeningAllowed(this, true)
-                        }
-                    } else {
-                        if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
-                            if (isDarkMode) {
-                                WebSettingsCompat.setForceDark(
-                                    this,
-                                    WebSettingsCompat.FORCE_DARK_ON
-                                )
-                            }
-                        }
+                    if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
+                        WebSettingsCompat.setAlgorithmicDarkeningAllowed(this, isDarkMode)
                     }
                 }
 

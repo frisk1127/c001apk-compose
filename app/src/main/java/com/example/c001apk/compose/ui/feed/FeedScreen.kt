@@ -2,6 +2,7 @@ package com.example.c001apk.compose.ui.feed
 
 import android.app.Activity.RESULT_OK
 import android.content.Intent
+import android.os.Parcelable
 import android.os.Build.VERSION.SDK_INT
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResult
@@ -166,12 +167,7 @@ fun FeedScreen(
     val replyLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
             if (result.resultCode == RESULT_OK) {
-                val data = if (SDK_INT >= 33)
-                    result.data?.getParcelableExtra(
-                        "response_data", HomeFeedResponse.Data::class.java
-                    )
-                else
-                    result.data?.getParcelableExtra("response_data")
+                val data = result.data?.getParcelableExtraCompat<HomeFeedResponse.Data>("response_data")
                 data?.let {
                     viewModel.updateReply(it)
                     context.makeToast("回复成功")
@@ -672,4 +668,13 @@ fun FeedScreen(
         context.makeToast(it)
     }
 
+}
+
+private inline fun <reified T : Parcelable> Intent.getParcelableExtraCompat(key: String): T? {
+    return if (SDK_INT >= 33) {
+        getParcelableExtra(key, T::class.java)
+    } else {
+        @Suppress("DEPRECATION")
+        getParcelableExtra(key)
+    }
 }
