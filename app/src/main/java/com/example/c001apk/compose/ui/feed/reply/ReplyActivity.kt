@@ -6,6 +6,7 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.content.res.ColorStateList
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
@@ -35,6 +36,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.HapticFeedbackConstantsCompat
 import androidx.core.view.ViewCompat
@@ -49,11 +51,15 @@ import androidx.viewpager2.widget.ViewPager2
 import coil.load
 import com.example.c001apk.compose.BuildConfig
 import com.example.c001apk.compose.R
+import com.example.c001apk.compose.ThemeType
 import com.example.c001apk.compose.databinding.ActivityReplyBinding
 import com.example.c001apk.compose.databinding.ItemCaptchaBinding
+import com.example.c001apk.compose.constant.Constants.seedColors
 import com.example.c001apk.compose.logic.model.OSSUploadPrepareModel
 import com.example.c001apk.compose.ui.feed.reply.emoji.EmojiPagerAdapter
 import com.example.c001apk.compose.util.CookieUtil.materialYou
+import com.example.c001apk.compose.util.CookieUtil.seedColor
+import com.example.c001apk.compose.util.CookieUtil.themeType
 import com.example.c001apk.compose.util.EmojiTextWatcher
 import com.example.c001apk.compose.util.EmojiUtils
 import com.example.c001apk.compose.util.EmojiUtils.coolBList
@@ -113,7 +119,7 @@ class ReplyActivity : AppCompatActivity(),
     private val imm by lazy {
         getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
     }
-    private val color by lazy { SurfaceColors.SURFACE_1.getColor(this) }
+    private val color by lazy { resolveSurfaceContainerColor() }
     private val imeScrimDrawable by lazy { ColorDrawable(color) }
     private val recentList = ArrayList<List<Pair<String, Int>>>()
     private val list = listOf(recentList, emojiList, coolBList)
@@ -196,6 +202,53 @@ class ReplyActivity : AppCompatActivity(),
         initPhotoPick()
         initAtUser()
 
+    }
+
+    private fun resolvePrimaryColor(): Int {
+        if (materialYou) {
+            return MaterialColors.getColor(
+                this,
+                com.google.android.material.R.attr.colorPrimary,
+                0
+            )
+        }
+        val seed = seedColors.getOrNull(ThemeType.entries.indexOf(themeType))
+            ?: "FF$seedColor".toLongOrNull(16)
+            ?: seedColors[0]
+        return seed.toInt()
+    }
+
+    private fun resolveSurfaceContainerColor(): Int {
+        if (materialYou) {
+            return SurfaceColors.SURFACE_1.getColor(this)
+        }
+        val base = ContextCompat.getColor(this, R.color.color_surface)
+        val primary = resolvePrimaryColor()
+        return ColorUtils.blendARGB(base, primary, 0.08f)
+    }
+
+    private fun resolveSurfaceColor(): Int {
+        return if (materialYou) {
+            MaterialColors.getColor(
+                this,
+                com.google.android.material.R.attr.colorSurface,
+                0
+            )
+        } else {
+            ContextCompat.getColor(this, R.color.color_surface)
+        }
+    }
+
+    private fun resolvePrimaryDarkColor(primary: Int): Int {
+        return if (materialYou) {
+            MaterialColors.getColor(
+                this,
+                com.google.android.material.R.attr.colorPrimaryDark,
+                primary
+            )
+        } else {
+            ColorUtils.blendARGB(primary, Color.BLACK, 0.2f)
+        }
     }
 
     private fun initAtUser() {
@@ -454,11 +507,8 @@ class ReplyActivity : AppCompatActivity(),
                         )
                         binding.captchaImg.setImageBitmap(img)
                         binding.captchaText.highlightColor = ColorUtils.setAlphaComponent(
-                            MaterialColors.getColor(
-                                this@ReplyActivity,
-                                com.google.android.material.R.attr.colorPrimaryDark,
-                                0
-                            ), 128
+                            resolvePrimaryDarkColor(resolvePrimaryColor()),
+                            128
                         )
                         MaterialAlertDialogBuilder(this@ReplyActivity).apply {
                             setView(binding.root)
@@ -624,23 +674,25 @@ class ReplyActivity : AppCompatActivity(),
     }
 
     private fun initEditText() {
+        val primaryColor = resolvePrimaryColor()
+        val primaryDarkColor = resolvePrimaryDarkColor(primaryColor)
+        val boxColor = color
         binding.editText.apply {
             isFocusable = true
             isFocusableInTouchMode = true
             highlightColor = ColorUtils.setAlphaComponent(
-                MaterialColors.getColor(
-                    this@ReplyActivity,
-                    com.google.android.material.R.attr.colorPrimaryDark,
-                    0
-                ), 128
+                primaryDarkColor,
+                128
             )
+            post { setCursorColor(this, primaryColor) }
+            setOnFocusChangeListener { _, hasFocus ->
+                if (hasFocus) {
+                    setCursorColor(this, primaryColor)
+                }
+            }
             addTextChangedListener(EmojiTextWatcher(
                 this@ReplyActivity, binding.editText.textSize,
-                MaterialColors.getColor(
-                    this@ReplyActivity,
-                    com.google.android.material.R.attr.colorPrimary,
-                    0
-                )
+                primaryColor
             ) {
                 if (binding.editText.text.toString().trim().isBlank()) {
                     binding.publish.isClickable = false
@@ -648,11 +700,7 @@ class ReplyActivity : AppCompatActivity(),
                 } else {
                     binding.publish.isClickable = true
                     binding.publish.setTextColor(
-                        MaterialColors.getColor(
-                            this@ReplyActivity,
-                            com.google.android.material.R.attr.colorPrimary,
-                            0
-                        )
+                        primaryColor
                     )
                 }
             })
@@ -661,6 +709,24 @@ class ReplyActivity : AppCompatActivity(),
                 launchAtTopic("user")
             })
             setOnKeyListener(FastDeleteAtUserKeyListener)
+        }
+        binding.textInputLayout.defaultHintTextColor = ColorStateList.valueOf(primaryColor)
+        binding.textInputLayout.setBoxStrokeColor(primaryColor)
+        binding.textInputLayout.setCounterTextColor(ColorStateList.valueOf(primaryColor))
+        binding.textInputLayout.boxBackgroundColor = boxColor
+        binding.textInputLayout.setCursorColor(ColorStateList.valueOf(primaryColor))
+    }
+
+    private fun setCursorColor(editText: TextView, color: Int) {
+        if (SDK_INT >= 29) {
+            val width = max(2.dp, 2)
+            val height = max(editText.textSize.toInt(), 1)
+            val cursorDrawable = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                setColor(color)
+                setSize(width, height)
+            }
+            editText.textCursorDrawable = cursorDrawable
         }
     }
 

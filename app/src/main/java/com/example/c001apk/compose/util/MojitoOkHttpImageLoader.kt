@@ -55,9 +55,13 @@ class MojitoOkHttpImageLoader(context: Context) : ImageLoader {
         }
 
         if (cacheFile.exists()) {
-            callback.onSuccess(cacheFile)
-            callback.onFinish()
-            return
+            if (cacheFile.length() > 0) {
+                callback.onSuccess(cacheFile)
+                callback.onFinish()
+                return
+            } else {
+                cacheFile.delete()
+            }
         }
 
         val request = Request.Builder().url(uri.toString()).build()
@@ -72,6 +76,9 @@ class MojitoOkHttpImageLoader(context: Context) : ImageLoader {
                     val body = response.body ?: throw IOException("empty body")
                     val total = body.contentLength().coerceAtLeast(0L)
                     val tempFile = File(cacheDir, "${cacheFile.name}.tmp")
+                    if (tempFile.exists()) {
+                        tempFile.delete()
+                    }
                     body.byteStream().use { input ->
                         FileOutputStream(tempFile).use { output ->
                             val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
