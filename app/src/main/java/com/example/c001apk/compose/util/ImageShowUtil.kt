@@ -10,6 +10,7 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.util.Log
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.activity.ComponentDialog
 import androidx.compose.foundation.clickable
@@ -253,6 +254,10 @@ object ImageShowUtil {
     ) {
         val dialog = ComponentDialog(activity)
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.setOnShowListener {
+            val width = (activity.resources.displayMetrics.widthPixels * 0.78f).toInt()
+            dialog.window?.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
+        }
         val items = listOf("保存图片", "保存全部图片", "图片分享", "复制图片地址")
         val composeView = ComposeView(activity).apply {
             setViewCompositionStrategy(
@@ -292,9 +297,9 @@ object ImageShowUtil {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp),
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(18.dp),
             tonalElevation = 0.dp,
-            color = MaterialTheme.colorScheme.surfaceContainerHigh
+            color = MaterialTheme.colorScheme.surfaceContainer
         ) {
             Column(
                 modifier = Modifier.padding(PaddingValues(vertical = 10.dp)),
@@ -306,7 +311,7 @@ object ImageShowUtil {
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { onClick(index) }
-                            .padding(horizontal = 24.dp, vertical = 12.dp),
+                            .padding(horizontal = 20.dp, vertical = 12.dp),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
