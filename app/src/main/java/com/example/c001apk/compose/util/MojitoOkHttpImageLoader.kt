@@ -54,6 +54,12 @@ class MojitoOkHttpImageLoader(context: Context) : ImageLoader {
             return
         }
 
+        if (cacheFile.exists()) {
+            callback.onSuccess(cacheFile)
+            callback.onFinish()
+            return
+        }
+
         val request = Request.Builder().url(uri.toString()).build()
         val call = client.newCall(request)
         callMap[requestId] = call
@@ -81,9 +87,6 @@ class MojitoOkHttpImageLoader(context: Context) : ImageLoader {
                             }
                             output.flush()
                         }
-                    }
-                    if (cacheFile.exists()) {
-                        cacheFile.delete()
                     }
                     if (!tempFile.renameTo(cacheFile)) {
                         throw IOException("cache rename failed")
