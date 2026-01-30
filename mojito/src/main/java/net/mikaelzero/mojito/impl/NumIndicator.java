@@ -87,22 +87,6 @@ public class NumIndicator implements IIndicator {
         }
     }
 
-    @Override
-    public void onShow(ViewPager2 viewPager) {
-        numTv.setVisibility(View.VISIBLE);
-        if (viewPager.getAdapter() != null) {
-            viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
-                @Override
-                public void onPageSelected(int position) {
-                    String str = (position + 1) + "/" + viewPager.getAdapter().getItemCount();
-                    numTv.setText(str);
-                }
-            });
-            String firstStr = (viewPager.getCurrentItem() + 1) + "/" + viewPager.getAdapter().getItemCount();
-            numTv.setText(firstStr);
-        }
-    }
-
 
     @Override
     public void move(float moveX, float moveY) {

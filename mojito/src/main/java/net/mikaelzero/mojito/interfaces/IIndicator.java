@@ -11,9 +11,6 @@ public interface IIndicator {
 
     void onShow(ViewPager viewPager);
 
-    default void onShow(ViewPager2 viewPager) {
-    }
-
     /**
      * 拖动的时候  移动的 X 和 Y 距离
      */

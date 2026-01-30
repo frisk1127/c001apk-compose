@@ -15,8 +15,6 @@ import android.view.animation.Interpolator
 import android.widget.LinearLayout
 import androidx.viewpager.widget.ViewPager
 import androidx.viewpager.widget.ViewPager.OnPageChangeListener
-import androidx.viewpager2.widget.ViewPager2
-import androidx.recyclerview.widget.RecyclerView
 import com.example.c001apk.compose.util.dp
 import net.mikaelzero.mojito.R
 import kotlin.math.abs
@@ -28,9 +26,6 @@ class CircleIndicator @JvmOverloads constructor(
 ) : LinearLayout(context, attrs, defStyleAttr) {
 
     private var mViewpager: ViewPager? = null
-    private var mViewPager2: ViewPager2? = null
-    private var mViewPager2Adapter: RecyclerView.Adapter<*>? = null
-    private var isViewPager2ObserverRegistered = false
     private var mIndicatorBackground: GradientDrawable? = null
     private var mAnimatorOut: Animator? = null
     private var mAnimatorIn: Animator? = null
@@ -50,37 +45,34 @@ class CircleIndicator @JvmOverloads constructor(
         }
 
         override fun onPageSelected(position: Int) {
-            handlePageSelected(position)
+            if (mViewpager?.adapter == null || (mViewpager?.adapter?.count ?: 0) <= 0) {
+                return
+            }
+            if (mAnimatorIn?.isRunning == true) {
+                mAnimatorIn?.end()
+                mAnimatorIn?.cancel()
+            }
+            if (mAnimatorOut?.isRunning == true) {
+                mAnimatorOut?.end()
+                mAnimatorOut?.cancel()
+            }
+            val currentIndicator: View? = getChildAt(mLastPosition)
+            if (mLastPosition >= 0 && currentIndicator != null) {
+                currentIndicator.background = mIndicatorBackground
+                mAnimatorIn?.setTarget(currentIndicator)
+                mAnimatorIn?.start()
+            }
+            val selectedIndicator = getChildAt(position)
+            if (selectedIndicator != null) {
+                selectedIndicator.background = mIndicatorBackground
+                mAnimatorOut?.setTarget(selectedIndicator)
+                mAnimatorOut?.start()
+            }
+            mLastPosition = position
         }
 
         override fun onPageScrollStateChanged(state: Int) {}
     }
-
-    private val mInternalPageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
-        override fun onPageSelected(position: Int) {
-            handlePageSelected(position)
-        }
-    }
-
-    private val dataSetObserver2 = object : RecyclerView.AdapterDataObserver() {
-        override fun onChanged() {
-            super.onChanged()
-            if (mViewPager2 == null) {
-                return
-            }
-            val newCount = mViewPager2?.adapter?.itemCount ?: 0
-            val currentCount = childCount
-            mLastPosition = if (newCount == currentCount) {
-                return
-            } else if (mLastPosition < newCount) {
-                mViewPager2?.currentItem ?: 0
-            } else {
-                -1
-            }
-            createIndicators()
-        }
-    }
-
     val dataSetObserver: DataSetObserver = object : DataSetObserver() {
         override fun onChanged() {
             super.onChanged()
@@ -173,32 +165,12 @@ class CircleIndicator @JvmOverloads constructor(
 
     fun setViewPager(viewPager: ViewPager?) {
         mViewpager = viewPager
-        mViewPager2 = null
         if (mViewpager != null && mViewpager?.adapter != null) {
             mLastPosition = -1
             createIndicators()
             mViewpager?.removeOnPageChangeListener(mInternalPageChangeListener)
             mViewpager?.addOnPageChangeListener(mInternalPageChangeListener)
             mInternalPageChangeListener.onPageSelected(mViewpager?.currentItem ?: 0)
-        }
-    }
-
-    fun setViewPager2(viewPager: ViewPager2?) {
-        mViewPager2 = viewPager
-        mViewpager = null
-        if (mViewPager2 != null && mViewPager2?.adapter != null) {
-            mLastPosition = -1
-            createIndicators()
-            mViewPager2?.unregisterOnPageChangeCallback(mInternalPageChangeCallback)
-            mViewPager2?.registerOnPageChangeCallback(mInternalPageChangeCallback)
-            if (isViewPager2ObserverRegistered) {
-                mViewPager2Adapter?.unregisterAdapterDataObserver(dataSetObserver2)
-                isViewPager2ObserverRegistered = false
-            }
-            mViewPager2Adapter = mViewPager2?.adapter
-            mViewPager2Adapter?.registerAdapterDataObserver(dataSetObserver2)
-            isViewPager2ObserverRegistered = mViewPager2Adapter != null
-            mInternalPageChangeCallback.onPageSelected(mViewPager2?.currentItem ?: 0)
         }
     }
 
@@ -215,11 +187,11 @@ class CircleIndicator @JvmOverloads constructor(
 
     private fun createIndicators() {
         removeAllViews()
-        val count = mViewPager2?.adapter?.itemCount ?: (mViewpager?.adapter?.count ?: 0)
+        val count = mViewpager?.adapter?.count ?: 0
         if (count <= 0) {
             return
         }
-        val currentItem = mViewPager2?.currentItem ?: (mViewpager?.currentItem ?: 0)
+        val currentItem = mViewpager?.currentItem ?: 0
         val orientation = orientation
         for (i in 0 until count) {
             if (currentItem == i) {
@@ -228,34 +200,6 @@ class CircleIndicator @JvmOverloads constructor(
                 addIndicator(orientation, mImmediateAnimatorIn)
             }
         }
-    }
-
-    private fun handlePageSelected(position: Int) {
-        val count = mViewPager2?.adapter?.itemCount ?: (mViewpager?.adapter?.count ?: 0)
-        if (count <= 0) {
-            return
-        }
-        if (mAnimatorIn?.isRunning == true) {
-            mAnimatorIn?.end()
-            mAnimatorIn?.cancel()
-        }
-        if (mAnimatorOut?.isRunning == true) {
-            mAnimatorOut?.end()
-            mAnimatorOut?.cancel()
-        }
-        val currentIndicator: View? = getChildAt(mLastPosition)
-        if (mLastPosition >= 0 && currentIndicator != null) {
-            currentIndicator.background = mIndicatorBackground
-            mAnimatorIn?.setTarget(currentIndicator)
-            mAnimatorIn?.start()
-        }
-        val selectedIndicator = getChildAt(position)
-        if (selectedIndicator != null) {
-            selectedIndicator.background = mIndicatorBackground
-            mAnimatorOut?.setTarget(selectedIndicator)
-            mAnimatorOut?.start()
-        }
-        mLastPosition = position
     }
 
     private fun addIndicator(orientation: Int, animator: Animator?) {

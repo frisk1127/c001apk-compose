@@ -6,7 +6,6 @@ import android.view.View
 import android.widget.FrameLayout
 import androidx.core.view.isVisible
 import androidx.viewpager.widget.ViewPager
-import androidx.viewpager2.widget.ViewPager2
 import net.mikaelzero.mojito.interfaces.IIndicator
 import net.mikaelzero.mojito.tools.Utils
 
@@ -38,11 +37,6 @@ class CircleIndexIndicator : IIndicator {
     override fun onShow(viewPager: ViewPager) {
         circleIndicator?.isVisible = true
         circleIndicator?.setViewPager(viewPager)
-    }
-
-    override fun onShow(viewPager: ViewPager2) {
-        circleIndicator?.isVisible = true
-        circleIndicator?.setViewPager2(viewPager)
     }
 
     override fun move(moveX: Float, moveY: Float) {
