@@ -425,7 +425,9 @@ class ReplyActivity : AppCompatActivity(),
                         ossUpload(
                             this@ReplyActivity, responseData, uriList, typeList, md5List,
                             iOnSuccess = { index ->
-                                Log.i("OSSUpload", "uploadSuccess")
+                                if (BuildConfig.DEBUG) {
+                                    Log.i("OSSUpload", "uploadSuccess")
+                                }
                                 if (index == uriList.lastIndex) {
                                     if (type == "createFeed")
                                         viewModel.onPostCreateFeed()
@@ -434,7 +436,9 @@ class ReplyActivity : AppCompatActivity(),
                                 }
                             },
                             iOnFailure = {
-                                Log.i("OSSUpload", "uploadFailed")
+                                if (BuildConfig.DEBUG) {
+                                    Log.i("OSSUpload", "uploadFailed")
+                                }
                                 runOnUiThread {
                                     closeDialog()
                                     Toast.makeText(

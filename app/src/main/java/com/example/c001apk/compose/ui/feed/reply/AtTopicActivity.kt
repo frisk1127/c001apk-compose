@@ -46,6 +46,7 @@ import com.example.c001apk.compose.util.CookieUtil
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.hilt.navigation.compose.hiltViewModel
 import android.util.Log
+import com.example.c001apk.compose.BuildConfig
 
 @AndroidEntryPoint
 class AtTopicActivity : ComponentActivity() {
@@ -191,11 +192,11 @@ private fun FollowUserList(
         (viewModelState as? com.example.c001apk.compose.logic.state.LoadingState.Success)?.response
             ?: emptyList()
     if (dataList.isNotEmpty()) {
-        Log.d("AtTopic", "follow list size=${dataList.size}")
+        logDebug("follow list size=${dataList.size}")
         dataList.forEach { item ->
             val id = item.uid ?: item.userInfo?.uid ?: item.fUserInfo?.uid
             val name = item.username ?: item.userInfo?.username ?: item.fUserInfo?.username
-            Log.d("AtTopic", "item uid=$id name=$name")
+            logDebug("item uid=$id name=$name")
         }
     }
 
@@ -242,7 +243,7 @@ private fun FollowUserList(
                                         ?: item.userInfo?.username
                                         ?: item.fUserInfo?.username
                                 }
-                                Log.d("AtTopic", "itemClick uid=$it name=$name")
+                                logDebug("itemClick uid=$it name=$name")
                                 if (!name.isNullOrEmpty()) {
                                     onSelect("@$name ")
                                 }
@@ -286,4 +287,10 @@ private fun HotTopicList(
         updateInitPage = {},
         onReport = { _, _ -> },
     )
+}
+
+private fun logDebug(message: String) {
+    if (BuildConfig.DEBUG) {
+        Log.d("AtTopic", message)
+    }
 }

@@ -25,6 +25,7 @@ import android.widget.FrameLayout;
 
 import androidx.annotation.RequiresApi;
 
+import net.mikaelzero.mojito.BuildConfig;
 import net.mikaelzero.mojito.interfaces.OnMojitoViewCallback;
 import net.mikaelzero.mojito.loader.ContentLoader;
 import net.mikaelzero.mojito.tools.MarginViewWrapper;
@@ -99,7 +100,9 @@ public class MojitoView extends FrameLayout {
         screenWidth = ScreenUtils.getScreenWidth(context);
         screenHeight = Mojito.mojitoConfig().transparentNavigationBar() ? ScreenUtils.getScreenHeight(context) : ScreenUtils.getAppScreenHeight(context);
         MAX_TRANSLATE_Y = screenHeight * Mojito.mojitoConfig().maxTransYRatio();
-        Log.e("MojitoView", "screenWidth = " + screenWidth + " screenHeight = " + screenHeight + " MAX_TRANSLATE_Y = " + MAX_TRANSLATE_Y);
+        if (BuildConfig.DEBUG) {
+            Log.e("MojitoView", "screenWidth = " + screenWidth + " screenHeight = " + screenHeight + " MAX_TRANSLATE_Y = " + MAX_TRANSLATE_Y);
+        }
 
         addView(LayoutInflater.from(getContext()).inflate(R.layout.layout_content, null), 0);
         contentLayout = findViewById(R.id.contentLayout);
@@ -114,7 +117,9 @@ public class MojitoView extends FrameLayout {
         screenWidth = ScreenUtils.getScreenWidth(getContext());
         screenHeight = Mojito.mojitoConfig().transparentNavigationBar() ? ScreenUtils.getScreenHeight(getContext()) : ScreenUtils.getAppScreenHeight(getContext());
         MAX_TRANSLATE_Y = screenHeight * Mojito.mojitoConfig().maxTransYRatio();
-        Log.e("MojitoView==>2", "screenWidth = " + screenWidth + " screenHeight = " + screenHeight + " MAX_TRANSLATE_Y = " + MAX_TRANSLATE_Y);
+        if (BuildConfig.DEBUG) {
+            Log.e("MojitoView==>2", "screenWidth = " + screenWidth + " screenHeight = " + screenHeight + " MAX_TRANSLATE_Y = " + MAX_TRANSLATE_Y);
+        }
     }
 
     public void showWithoutView(int realWidth, int realHeight, boolean showImmediately) {

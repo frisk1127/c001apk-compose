@@ -32,6 +32,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.view.isVisible
 import androidx.fragment.app.FragmentActivity
+import com.example.c001apk.compose.BuildConfig
 import com.example.c001apk.compose.R
 import com.example.c001apk.compose.constant.Constants.EMPTY_STRING
 import com.example.c001apk.compose.constant.Constants.SUFFIX_THUMBNAIL
@@ -116,10 +117,12 @@ object ImageShowUtil {
                         y: Float,
                         position: Int
                     ) {
-                        Log.d(
-                            "MojitoLongPress",
-                            "ImageShowUtil onLongClick pos=$position x=$x y=$y activity=${fragmentActivity != null}"
-                        )
+                        if (BuildConfig.DEBUG) {
+                            Log.d(
+                                "MojitoLongPress",
+                                "ImageShowUtil onLongClick pos=$position x=$x y=$y activity=${fragmentActivity != null}"
+                            )
+                        }
                         if (fragmentActivity != null) {
                             showSaveImgDialog(
                                 fragmentActivity,
@@ -128,7 +131,9 @@ object ImageShowUtil {
                                 userAgent,
                             )
                         } else {
-                            Log.i("Mojito", "fragmentActivity is null, skip save image")
+                            if (BuildConfig.DEBUG) {
+                                Log.i("Mojito", "fragmentActivity is null, skip save image")
+                            }
                         }
                     }
                 },
@@ -173,10 +178,12 @@ object ImageShowUtil {
                     y: Float,
                     position: Int
                 ) {
-                    Log.d(
-                        "MojitoLongPress",
-                        "ImageShowUtilSimple onLongClick pos=$position x=$x y=$y activity=${fragmentActivity != null}"
-                    )
+                    if (BuildConfig.DEBUG) {
+                        Log.d(
+                            "MojitoLongPress",
+                            "ImageShowUtilSimple onLongClick pos=$position x=$x y=$y activity=${fragmentActivity != null}"
+                        )
+                    }
                     if (fragmentActivity != null) {
                         showSaveImgDialog(
                             fragmentActivity,
@@ -185,7 +192,9 @@ object ImageShowUtil {
                             userAgent
                         )
                     } else {
-                        Log.i("Mojito", "fragmentActivity is null, skip save image")
+                        if (BuildConfig.DEBUG) {
+                            Log.i("Mojito", "fragmentActivity is null, skip save image")
+                        }
                     }
                 }
             })
@@ -206,20 +215,24 @@ object ImageShowUtil {
                 }
                 setOnMojitoListener(object : SimpleMojitoViewCallback() {
                     override fun onLongClick(
-                        fragmentActivity: FragmentActivity?,
-                        view: View,
-                        x: Float,
-                        y: Float,
-                        position: Int
-                    ) {
-                        Log.d(
-                            "MojitoLongPress",
-                            "ImageShowUtilSingle onLongClick pos=$position x=$x y=$y activity=${fragmentActivity != null}"
-                        )
+                    fragmentActivity: FragmentActivity?,
+                    view: View,
+                    x: Float,
+                    y: Float,
+                    position: Int
+                ) {
+                        if (BuildConfig.DEBUG) {
+                            Log.d(
+                                "MojitoLongPress",
+                                "ImageShowUtilSingle onLongClick pos=$position x=$x y=$y activity=${fragmentActivity != null}"
+                            )
+                        }
                         if (fragmentActivity != null) {
                             showSaveImgDialog(fragmentActivity, url, null, userAgent)
                         } else {
-                            Log.i("Mojito", "fragmentActivity is null, skip save image")
+                            if (BuildConfig.DEBUG) {
+                                Log.i("Mojito", "fragmentActivity is null, skip save image")
+                            }
                         }
                     }
                 })

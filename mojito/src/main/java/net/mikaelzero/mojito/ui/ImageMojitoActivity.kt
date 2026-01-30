@@ -18,6 +18,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.ViewPager
 import com.gyf.immersionbar.ImmersionBar
+import net.mikaelzero.mojito.BuildConfig
 import net.mikaelzero.mojito.MojitoView
 import net.mikaelzero.mojito.Mojito
 import net.mikaelzero.mojito.bean.ActivityConfig
@@ -56,7 +57,9 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        Log.d("MojitoStatusBar", "onCreate")
+        if (BuildConfig.DEBUG) {
+            Log.d("MojitoStatusBar", "onCreate")
+        }
         if (Mojito.mojitoConfig().transparentNavigationBar()) {
             ImmersionBar.with(this).transparentBar().init()
         } else {
@@ -183,7 +186,9 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
             override fun onPageSelected(position: Int) {
                 activityCoverLoader?.pageChange(viewPagerBeans.size, position)
                 onMojitoListener?.onViewPageSelected(position)
-                Log.d("MojitoStatusBar", "onPageSelected: position=$position")
+                if (BuildConfig.DEBUG) {
+                    Log.d("MojitoStatusBar", "onPageSelected: position=$position")
+                }
                 binding.viewPager.removeCallbacks(updateStatusBarRunnable)
                 binding.viewPager.post(updateStatusBarRunnable)
             }
@@ -206,14 +211,18 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
         }
         finishPosted = true
         isFinishingPreview = true
-        Log.d("MojitoStatusBar", "finishView")
+        if (BuildConfig.DEBUG) {
+            Log.d("MojitoStatusBar", "finishView")
+        }
         binding.viewPager.removeCallbacks(updateStatusBarRunnable)
         restoreSystemBars()
         binding.root.post { finishInternal() }
     }
 
     private fun finishInternal() {
-        Log.d("MojitoStatusBar", "finishInternal")
+        if (BuildConfig.DEBUG) {
+            Log.d("MojitoStatusBar", "finishInternal")
+        }
         progressLoader = null
         fragmentCoverLoader = null
         multiContentLoader = null
@@ -240,10 +249,12 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
         }
         val fragment = getCurrentFragment() as? ImageMojitoFragment ?: return
         val shouldHide = fragment.shouldHideStatusBar()
-        Log.d(
-            "MojitoStatusBar",
-            "updateStatusBarForCurrentImage: shouldHide=$shouldHide hidden=$isStatusBarHidden info=${fragment.getStatusBarOverlapInfo()}"
-        )
+        if (BuildConfig.DEBUG) {
+            Log.d(
+                "MojitoStatusBar",
+                "updateStatusBarForCurrentImage: shouldHide=$shouldHide hidden=$isStatusBarHidden info=${fragment.getStatusBarOverlapInfo()}"
+            )
+        }
         if (shouldHide == isStatusBarHidden) {
             return
         }
@@ -286,7 +297,9 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
     }
 
     override fun onDestroy() {
-        Log.d("MojitoStatusBar", "onDestroy")
+        if (BuildConfig.DEBUG) {
+            Log.d("MojitoStatusBar", "onDestroy")
+        }
         super.onDestroy()
         binding.viewPager.removeCallbacks(updateStatusBarRunnable)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -311,7 +324,9 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
     }
 
     fun restoreSystemBars() {
-        Log.d("MojitoStatusBar", "restoreSystemBars")
+        if (BuildConfig.DEBUG) {
+            Log.d("MojitoStatusBar", "restoreSystemBars")
+        }
         WindowInsetsControllerCompat(window, window.decorView)
             .show(WindowInsetsCompat.Type.statusBars())
         isStatusBarHidden = false
@@ -330,25 +345,35 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
         val originUrl = fragment.fragmentConfig.originUrl ?: ""
         val targetUrl = fragment.fragmentConfig.targetUrl ?: ""
         if (originUrl.contains(".gif", true) || targetUrl.contains(".gif", true)) {
-            Log.d("MojitoLongPress", "tryDispatchLongPress skipped gif x=$x y=$y")
+            if (BuildConfig.DEBUG) {
+                Log.d("MojitoLongPress", "tryDispatchLongPress skipped gif x=$x y=$y")
+            }
             return false
         }
         if (viewPagerScrollState != ViewPager.SCROLL_STATE_IDLE) {
-            Log.d("MojitoLongPress", "tryDispatchLongPress blocked by scroll state x=$x y=$y")
+            if (BuildConfig.DEBUG) {
+                Log.d("MojitoLongPress", "tryDispatchLongPress blocked by scroll state x=$x y=$y")
+            }
             return false
         }
         val now = SystemClock.uptimeMillis()
         if (now - lastGlobalLongPressTime < 500L) {
-            Log.d("MojitoLongPress", "tryDispatchLongPress throttled x=$x y=$y")
+            if (BuildConfig.DEBUG) {
+                Log.d("MojitoLongPress", "tryDispatchLongPress throttled x=$x y=$y")
+            }
             return false
         }
         val mojitoView = fragment.view?.findViewById<MojitoView>(net.mikaelzero.mojito.R.id.mojitoView)
         if (mojitoView?.isDrag == true) {
-            Log.d("MojitoLongPress", "tryDispatchLongPress ignored drag x=$x y=$y")
+            if (BuildConfig.DEBUG) {
+                Log.d("MojitoLongPress", "tryDispatchLongPress ignored drag x=$x y=$y")
+            }
             return false
         }
         lastGlobalLongPressTime = now
-        Log.d("MojitoLongPress", "tryDispatchLongPress dispatch x=$x y=$y")
+        if (BuildConfig.DEBUG) {
+            Log.d("MojitoLongPress", "tryDispatchLongPress dispatch x=$x y=$y")
+        }
         onMojitoListener?.onLongClick(
             this@ImageMojitoActivity,
             fragment.view ?: binding.viewPager,

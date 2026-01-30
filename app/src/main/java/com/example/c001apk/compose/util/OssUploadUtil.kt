@@ -15,6 +15,7 @@ import com.alibaba.sdk.android.oss.model.ObjectMetadata
 import com.alibaba.sdk.android.oss.model.PutObjectRequest
 import com.alibaba.sdk.android.oss.model.PutObjectResult
 import com.example.c001apk.compose.logic.model.OSSUploadPrepareResponse
+import com.example.c001apk.compose.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -46,7 +47,9 @@ object OssUploadUtil {
             conf.socketTimeout = 5 * 60 * 1000
             conf.maxConcurrentRequest = 5
             conf.maxErrorRetry = 2
-            OSSLog.enableLog()
+            if (BuildConfig.DEBUG) {
+                OSSLog.enableLog()
+            }
             val credentialProvider = OSSStsTokenCredentialProvider(
                 accessKeyId,
                 accessKeySecret,
@@ -117,16 +120,20 @@ object OssUploadUtil {
             // Request exception
             if (clientException != null) {
                 // Local exception, such as a network exception
-                Log.i("OSSUpload", "uploadFailed: clientException: ${clientException.message}")
-                clientException.printStackTrace()
+                if (BuildConfig.DEBUG) {
+                    Log.i("OSSUpload", "uploadFailed: clientException: ${clientException.message}")
+                    clientException.printStackTrace()
+                }
             }
             if (serviceException != null) {
                 // Service exception
-                Log.i("OSSUpload", "OSSUpload: serviceException: ${serviceException.message}")
-                Log.i("OSSUpload", "ErrorCode=" + serviceException.errorCode)
-                Log.i("OSSUpload", "RequestId=" + serviceException.requestId)
-                Log.i("OSSUpload", "HostId=" + serviceException.hostId)
-                Log.i("OSSUpload", "RawMessage=" + serviceException.rawMessage)
+                if (BuildConfig.DEBUG) {
+                    Log.i("OSSUpload", "OSSUpload: serviceException: ${serviceException.message}")
+                    Log.i("OSSUpload", "ErrorCode=" + serviceException.errorCode)
+                    Log.i("OSSUpload", "RequestId=" + serviceException.requestId)
+                    Log.i("OSSUpload", "HostId=" + serviceException.hostId)
+                    Log.i("OSSUpload", "RawMessage=" + serviceException.rawMessage)
+                }
             }
         }
     }

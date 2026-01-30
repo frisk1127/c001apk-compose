@@ -19,7 +19,7 @@ android {
 
     buildFeatures {
         viewBinding = true
-        buildConfig = false
+        buildConfig = true
     }
 
     compileOptions {

@@ -24,6 +24,7 @@ import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import net.mikaelzero.mojito.view.sketch.BuildConfig;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -102,7 +103,11 @@ public class SLog {
     private static Proxy proxy = new ProxyImpl();
 
     static {
-        setLevel(LEVEL_INFO);
+        if (BuildConfig.DEBUG) {
+            setLevel(LEVEL_INFO);
+        } else {
+            setLevel(LEVEL_NONE);
+        }
     }
 
     /**
@@ -198,7 +203,9 @@ public class SLog {
         SLog.levelAndTypeFlags = newFlag;
         String newLevelName = getLevelName();
 
-        Log.w(TAG, String.format("%s. setLevel. %s -> %s", NAME, oldLevelName, newLevelName));
+        if (BuildConfig.DEBUG) {
+            Log.w(TAG, String.format("%s. setLevel. %s -> %s", NAME, oldLevelName, newLevelName));
+        }
     }
 
     /**
@@ -243,7 +250,9 @@ public class SLog {
         SLog.levelAndTypeFlags = newFlag;
         String newTypeNames = getTypeNames();
 
-        Log.w(TAG, String.format("%s. openType: %s -> %s", NAME, oldTypeNames, newTypeNames));
+        if (BuildConfig.DEBUG) {
+            Log.w(TAG, String.format("%s. openType: %s -> %s", NAME, oldTypeNames, newTypeNames));
+        }
     }
 
     /**
@@ -263,7 +272,9 @@ public class SLog {
         SLog.levelAndTypeFlags &= ~maskHigh16Bits;
         String newTypeNames = getTypeNames();
 
-        Log.w(TAG, String.format("%s. closeType: %s -> %s", NAME, oldTypeNames, newTypeNames));
+        if (BuildConfig.DEBUG) {
+            Log.w(TAG, String.format("%s. closeType: %s -> %s", NAME, oldTypeNames, newTypeNames));
+        }
     }
 
     public static String getTypeNames() {
@@ -658,56 +669,89 @@ public class SLog {
 
         @Override
         public int v(String tag, String msg) {
+            if (!BuildConfig.DEBUG) {
+                return 0;
+            }
             return Log.v(tag, msg);
         }
 
         @Override
         public int v(String tag, String msg, Throwable tr) {
+            if (!BuildConfig.DEBUG) {
+                return 0;
+            }
             return Log.v(tag, msg, tr);
         }
 
         @Override
         public int d(String tag, String msg) {
+            if (!BuildConfig.DEBUG) {
+                return 0;
+            }
             return Log.d(tag, msg);
         }
 
         @Override
         public int d(String tag, String msg, Throwable tr) {
+            if (!BuildConfig.DEBUG) {
+                return 0;
+            }
             return Log.d(tag, msg, tr);
         }
 
         @Override
         public int i(String tag, String msg) {
+            if (!BuildConfig.DEBUG) {
+                return 0;
+            }
             return Log.i(tag, msg);
         }
 
         @Override
         public int i(String tag, String msg, Throwable tr) {
+            if (!BuildConfig.DEBUG) {
+                return 0;
+            }
             return Log.i(tag, msg, tr);
         }
 
         @Override
         public int w(String tag, String msg) {
+            if (!BuildConfig.DEBUG) {
+                return 0;
+            }
             return Log.w(tag, msg);
         }
 
         @Override
         public int w(String tag, String msg, Throwable tr) {
+            if (!BuildConfig.DEBUG) {
+                return 0;
+            }
             return Log.w(tag, msg, tr);
         }
 
         @Override
         public int w(String tag, Throwable tr) {
+            if (!BuildConfig.DEBUG) {
+                return 0;
+            }
             return Log.w(tag, tr);
         }
 
         @Override
         public int e(String tag, String msg) {
+            if (!BuildConfig.DEBUG) {
+                return 0;
+            }
             return Log.e(tag, msg);
         }
 
         @Override
         public int e(String tag, String msg, Throwable tr) {
+            if (!BuildConfig.DEBUG) {
+                return 0;
+            }
             return Log.e(tag, msg, tr);
         }
 
