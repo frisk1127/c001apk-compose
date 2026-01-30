@@ -10,6 +10,7 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.util.Log
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.activity.ComponentDialog
 import androidx.compose.foundation.clickable
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -280,6 +282,10 @@ object ImageShowUtil {
         }
         dialog.setContentView(composeView)
         dialog.show()
+        dialog.window?.setLayout(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
     }
 
     @Composable
@@ -289,23 +295,23 @@ object ImageShowUtil {
     ) {
         Surface(
             modifier = Modifier
-                .fillMaxWidth()
+                .widthIn(max = 320.dp)
                 .padding(horizontal = 24.dp),
-            shape = MaterialTheme.shapes.extraLarge,
+            shape = MaterialTheme.shapes.large,
             tonalElevation = 6.dp,
             color = MaterialTheme.colorScheme.surface
         ) {
             Column(
-                modifier = Modifier.padding(PaddingValues(vertical = 8.dp)),
+                modifier = Modifier.padding(PaddingValues(vertical = 10.dp)),
             ) {
                 items.forEachIndexed { index, item ->
                     Text(
                         text = item,
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { onClick(index) }
-                            .padding(horizontal = 24.dp, vertical = 14.dp),
+                            .padding(horizontal = 20.dp, vertical = 12.dp),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
