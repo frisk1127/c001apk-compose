@@ -704,10 +704,6 @@ class ReplyActivity : AppCompatActivity(),
                     )
                 }
             })
-            addTextChangedListener(OnTextInputListener("@") {
-                isFromAt = true
-                launchAtTopic("user")
-            })
             setOnKeyListener(FastDeleteAtUserKeyListener)
         }
         binding.textInputLayout.defaultHintTextColor = ColorStateList.valueOf(primaryColor)

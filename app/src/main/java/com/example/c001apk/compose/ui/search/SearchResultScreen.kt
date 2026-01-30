@@ -76,7 +76,7 @@ private fun searchTypeTitle(type: SearchType): String {
         SearchType.FEED -> "动态"
         SearchType.APP -> "应用"
         SearchType.GAME -> "游戏"
-        SearchType.PRODUCT -> "数码"
+        SearchType.PRODUCT -> "设备"
         SearchType.USER -> "用户"
         SearchType.TOPIC -> "话题"
     }
