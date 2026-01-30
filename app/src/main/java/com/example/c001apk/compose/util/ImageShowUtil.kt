@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.view.isVisible
@@ -291,12 +292,12 @@ object ImageShowUtil {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp),
-            shape = MaterialTheme.shapes.extraLarge,
-            tonalElevation = 6.dp,
-            color = MaterialTheme.colorScheme.surface
+            shape = RoundedCornerShape(20.dp),
+            tonalElevation = 0.dp,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh
         ) {
             Column(
-                modifier = Modifier.padding(PaddingValues(vertical = 8.dp)),
+                modifier = Modifier.padding(PaddingValues(vertical = 10.dp)),
             ) {
                 items.forEachIndexed { index, item ->
                     Text(
@@ -305,7 +306,7 @@ object ImageShowUtil {
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { onClick(index) }
-                            .padding(horizontal = 24.dp, vertical = 14.dp),
+                            .padding(horizontal = 24.dp, vertical = 12.dp),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
