@@ -29,7 +29,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        run: ./gradlew assembleRelease -Pandroid.newDsl=false
+        run: ./gradlew assembleRelease -Pandroid.newDsl=false -Pandroid.builtInKotlin=false
 
       - name: Get Build Tool Version
         shell: bash
