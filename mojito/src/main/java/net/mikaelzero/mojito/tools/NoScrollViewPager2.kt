@@ -3,6 +3,7 @@ package net.mikaelzero.mojito.tools
 import android.content.Context
 import android.util.AttributeSet
 import android.view.MotionEvent
+import android.view.View
 import android.view.ViewConfiguration
 import android.widget.FrameLayout
 import androidx.recyclerview.widget.RecyclerView
@@ -35,6 +36,9 @@ class NoScrollViewPager2 @JvmOverloads constructor(
             LayoutParams.MATCH_PARENT,
             LayoutParams.MATCH_PARENT
         )
+        if (viewPager.id == View.NO_ID) {
+            viewPager.id = View.generateViewId()
+        }
         addView(viewPager)
         initTouchConfig()
     }

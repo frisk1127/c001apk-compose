@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Point;
+import android.graphics.Insets;
 import android.os.Build;
 import android.provider.Settings;
 import android.view.Display;
@@ -12,6 +13,7 @@ import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.Surface;
 import android.view.ViewConfiguration;
+import android.view.WindowInsets;
 import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
@@ -39,10 +41,11 @@ public final class ScreenUtils {
             return wm.getCurrentWindowMetrics().getBounds().width();
         }
         Point point = new Point();
+        Display display = getDefaultDisplayLegacy(wm);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            wm.getDefaultDisplay().getRealSize(point);
+            getRealSizeLegacy(display, point);
         } else {
-            wm.getDefaultDisplay().getSize(point);
+            getSizeLegacy(display, point);
         }
         return point.x;
     }
@@ -59,10 +62,11 @@ public final class ScreenUtils {
             return wm.getCurrentWindowMetrics().getBounds().height();
         }
         Point point = new Point();
+        Display display = getDefaultDisplayLegacy(wm);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            wm.getDefaultDisplay().getRealSize(point);
+            getRealSizeLegacy(display, point);
         } else {
-            wm.getDefaultDisplay().getSize(point);
+            getSizeLegacy(display, point);
         }
         return point.y;
     }
@@ -74,12 +78,18 @@ public final class ScreenUtils {
     public static int getNavigationBarHeight(Context context) {
         WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         if (wm == null) return -1;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Insets insets = wm.getCurrentWindowMetrics()
+                    .getWindowInsets()
+                    .getInsetsIgnoringVisibility(WindowInsets.Type.navigationBars());
+            return insets.bottom;
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            Display display = wm.getDefaultDisplay();
+            Display display = getDefaultDisplayLegacy(wm);
             Point size = new Point();
             Point realSize = new Point();
-            display.getSize(size);
-            display.getRealSize(realSize);
+            getSizeLegacy(display, size);
+            getRealSizeLegacy(display, realSize);
             Resources resources = context.getResources();
             int navigationBarIsMin = 0;
             //判断是否显示了导航栏，如果不存在，高度就为0
@@ -139,7 +149,14 @@ public final class ScreenUtils {
      * @return the rotation of screen
      */
     public static int getScreenRotation(@NonNull final Activity activity) {
-        switch (activity.getWindowManager().getDefaultDisplay().getRotation()) {
+        int rotation;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Display display = activity.getDisplay();
+            rotation = display != null ? display.getRotation() : Surface.ROTATION_0;
+        } else {
+            rotation = getRotationLegacy(activity.getWindowManager());
+        }
+        switch (rotation) {
             case Surface.ROTATION_0:
                 return 0;
             case Surface.ROTATION_90:
@@ -151,5 +168,25 @@ public final class ScreenUtils {
             default:
                 return 0;
         }
+    }
+
+    @SuppressWarnings("deprecation")
+    private static Display getDefaultDisplayLegacy(@NonNull WindowManager wm) {
+        return wm.getDefaultDisplay();
+    }
+
+    @SuppressWarnings("deprecation")
+    private static void getSizeLegacy(@NonNull Display display, @NonNull Point out) {
+        display.getSize(out);
+    }
+
+    @SuppressWarnings("deprecation")
+    private static void getRealSizeLegacy(@NonNull Display display, @NonNull Point out) {
+        display.getRealSize(out);
+    }
+
+    @SuppressWarnings("deprecation")
+    private static int getRotationLegacy(@NonNull WindowManager wm) {
+        return wm.getDefaultDisplay().getRotation();
     }
 }

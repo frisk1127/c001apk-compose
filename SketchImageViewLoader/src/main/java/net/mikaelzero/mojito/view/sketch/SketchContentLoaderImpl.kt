@@ -329,7 +329,33 @@ class SketchContentLoaderImpl : ContentLoader, LifecycleObserver {
     }
 
     override fun pageChange(isHidden: Boolean) {
-
+        if (BuildConfig.DEBUG) {
+            val rect = RectF()
+            sketchImageView.zoomer?.getDrawRect(rect)
+            val paused = sketchImageView.zoomer?.blockDisplayer?.isPaused
+            Log.d(
+                "MojitoPager",
+                "pageChange hidden=$isHidden paused=$paused rect=${rect.width()}x${rect.height()} long=$isLongHeightImage/$isLongWidthImage"
+            )
+        }
+        if (isHidden) {
+            return
+        }
+        sketchImageView.post {
+            val blockDisplayer = sketchImageView.zoomer?.blockDisplayer
+            blockDisplayer?.setPause(false)
+            blockDisplayer?.onMatrixChanged()
+            blockDisplayer?.invalidateView()
+            sketchImageView.invalidate()
+            if (BuildConfig.DEBUG) {
+                val rect = RectF()
+                sketchImageView.zoomer?.getDrawRect(rect)
+                Log.d(
+                    "MojitoPager",
+                    "pageChange resume rect=${rect.width()}x${rect.height()}"
+                )
+            }
+        }
     }
 
 }

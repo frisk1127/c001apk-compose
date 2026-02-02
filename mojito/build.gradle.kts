@@ -32,6 +32,11 @@ android {
     }
 }
 
+// Temporary: print Java deprecation details during compile.
+tasks.withType<JavaCompile>().configureEach {
+    options.compilerArgs.add("-Xlint:deprecation")
+}
+
 kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)

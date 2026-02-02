@@ -10,6 +10,8 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.util.Log
+import android.widget.ImageView
 import androidx.core.os.BundleCompat
 import androidx.fragment.app.Fragment
 import com.gyf.immersionbar.ImmersionBar
@@ -444,6 +446,31 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
     override fun onPause() {
         contentLoader?.pageChange(true)
         super.onPause()
+    }
+
+    fun onPageHidden(hidden: Boolean) {
+        if (net.mikaelzero.mojito.BuildConfig.DEBUG) {
+            val rect = contentLoader?.displayRect
+            Log.d(
+                "MojitoPager",
+                "onPageHidden pos=${fragmentConfig.position} hidden=$hidden view=${showView?.width}x${showView?.height} rect=${rect?.width()}x${rect?.height()}"
+            )
+        }
+        contentLoader?.pageChange(hidden)
+        if (!hidden) {
+            val rect = contentLoader?.displayRect
+            val needsReload = rect == null || rect.width() <= 0f || rect.height() <= 0f
+            val imageView = showView as? ImageView
+            if ((needsReload || imageView?.drawable == null) && !isDetached && context != null) {
+                if (net.mikaelzero.mojito.BuildConfig.DEBUG) {
+                    Log.d(
+                        "MojitoPager",
+                        "onPageHidden reload pos=${fragmentConfig.position} rect=${rect?.width()}x${rect?.height()} drawable=${imageView?.drawable != null}"
+                    )
+                }
+                loadImage()
+            }
+        }
     }
 
     override fun onDestroyView() {

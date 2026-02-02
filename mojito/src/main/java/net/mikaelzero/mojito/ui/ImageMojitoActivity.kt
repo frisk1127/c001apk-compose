@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.os.SystemClock
 import android.util.Log
 import android.view.KeyEvent
+import android.view.View
 import android.view.Window
 import android.window.OnBackInvokedCallback
 import android.window.OnBackInvokedDispatcher
@@ -45,7 +46,6 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
     private var viewParams: List<ViewParams>? = null
     lateinit var activityConfig: ActivityConfig
     private lateinit var imageViewPagerAdapter: MojitoPagerAdapter
-    val fragmentMap = hashMapOf<Int, ImageMojitoFragment?>()
     private var backInvokedCallback: OnBackInvokedCallback? = null
     private var backHandled = false
     private var viewPagerScrollState = ViewPager2.SCROLL_STATE_IDLE
@@ -53,6 +53,7 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
     private var finishPosted = false
     private var isFinishingPreview = false
     private val updateStatusBarRunnable = Runnable { updateStatusBarForCurrentImage() }
+    private var lastSelectedPosition = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -121,6 +122,10 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
         imageViewPagerAdapter = MojitoPagerAdapter(this, viewPagerBeans)
         binding.viewPager.adapter = imageViewPagerAdapter
         binding.viewPager.setCurrentItem(currentPosition, false)
+        lastSelectedPosition = currentPosition
+        binding.viewPager.post {
+            findFragment(currentPosition)?.onPageHidden(false)
+        }
         binding.viewPager.post(updateStatusBarRunnable)
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -148,11 +153,25 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
         binding.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageScrollStateChanged(state: Int) {
                 viewPagerScrollState = state
+                if (BuildConfig.DEBUG) {
+                    Log.d("MojitoPager", "onPageScrollStateChanged state=$state current=${binding.viewPager.currentItem}")
+                }
             }
 
             override fun onPageSelected(position: Int) {
                 activityCoverLoader?.pageChange(viewPagerBeans.size, position)
                 onMojitoListener?.onViewPageSelected(position)
+                if (lastSelectedPosition != position) {
+                    if (BuildConfig.DEBUG) {
+                        Log.d(
+                            "MojitoPager",
+                            "onPageSelected from=$lastSelectedPosition to=$position"
+                        )
+                    }
+                    findFragment(lastSelectedPosition)?.onPageHidden(true)
+                    findFragment(position)?.onPageHidden(false)
+                    lastSelectedPosition = position
+                }
                 if (BuildConfig.DEBUG) {
                     Log.d("MojitoStatusBar", "onPageSelected: position=$position")
                 }
@@ -197,7 +216,6 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
         activityCoverLoader = null
         onMojitoListener = null
         viewParams = null
-        fragmentMap.clear()
         Mojito.clean()
         finish()
         @Suppress("DEPRECATION")
@@ -251,10 +269,6 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
         override fun getItemCount(): Int = items.size
 
         override fun createFragment(position: Int): Fragment {
-            val fragment = fragmentMap[position]
-            if (fragment != null) {
-                return fragment
-            }
             val item = items[position]
             val fragmentConfig = FragmentConfig(
                 item.url,
@@ -265,10 +279,18 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
                 item.showImmediately,
                 activityConfig.errorDrawableResIdList[position] ?: 0
             )
-            val imageFragment = ImageMojitoFragment.newInstance(fragmentConfig)
-            fragmentMap[position] = imageFragment
-            return imageFragment
+            return ImageMojitoFragment.newInstance(fragmentConfig)
         }
+    }
+
+    private fun findFragment(position: Int): ImageMojitoFragment? {
+        val itemId = try {
+            imageViewPagerAdapter.getItemId(position)
+        } catch (_: Exception) {
+            position.toLong()
+        }
+        val tag = "f$itemId"
+        return supportFragmentManager.findFragmentByTag(tag) as? ImageMojitoFragment
     }
 
     companion object {
@@ -283,7 +305,7 @@ class ImageMojitoActivity : AppCompatActivity(), IMojitoActivity {
     }
 
     override fun getCurrentFragment(): IMojitoFragment? {
-        return fragmentMap[binding.viewPager.currentItem] as IMojitoFragment?
+        return findFragment(binding.viewPager.currentItem)
     }
 
     override fun getContext(): Context {

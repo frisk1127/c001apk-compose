@@ -4,12 +4,12 @@ import org.jetbrains.kotlin.konan.properties.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.google.dagger.hilt.android)
-    alias(libs.plugins.google.devtools.ksp)
-    alias(libs.plugins.google.protobuf)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.jetbrains.kotlin.plugin.compose)
     alias(libs.plugins.kotlin.parcelize)
+    alias(libs.plugins.google.dagger.hilt.android)
+    alias(libs.plugins.google.devtools.ksp)
+    alias(libs.plugins.google.protobuf)
 }
 
 val gitCommitCount = providers.exec {

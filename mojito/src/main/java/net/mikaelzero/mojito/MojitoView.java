@@ -73,7 +73,7 @@ public class MojitoView extends FrameLayout {
     int releaseHeight = 0;
     int realWidth;
     int realHeight;
-    int touchSlop = ViewConfiguration.getTouchSlop();
+    int touchSlop = ViewConfiguration.get(getContext()).getScaledTouchSlop();
 
     int imageLeftOfAnimatorEnd = 0;
     int imageTopOfAnimatorEnd = 0;
