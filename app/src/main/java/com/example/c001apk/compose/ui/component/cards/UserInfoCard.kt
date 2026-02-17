@@ -160,7 +160,7 @@ fun UserInfoCard(
                 }
         ) {
             Text(
-                text = "uid: ${data.uid}",
+                text = "UID: ${data.uid}",
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier
