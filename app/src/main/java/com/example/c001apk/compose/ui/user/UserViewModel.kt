@@ -53,7 +53,7 @@ class UserViewModel @AssistedInject constructor(
                         username = response.username.orEmpty()
                         isBlocked = blackListRepo.checkUid(uid)
                         if (isBlocked)
-                            loadingState = LoadingState.Error("$username is blocked")
+                            loadingState = LoadingState.Error("$username 已被拉黑")
                         else
                             fetchData()
                     }
@@ -70,7 +70,7 @@ class UserViewModel @AssistedInject constructor(
             delay(50)
             isRefreshing = false
         }
-        loadingState = LoadingState.Error("$username is blocked")
+        loadingState = LoadingState.Error("$username 已被拉黑")
     }
 
     var isPull = false

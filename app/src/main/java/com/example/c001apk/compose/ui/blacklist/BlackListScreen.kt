@@ -286,7 +286,12 @@ fun BlackListScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = type, modifier = Modifier
+                        text = when (type) {
+                            BlackListType.USER.name -> "用户"
+                            BlackListType.TOPIC.name -> "话题"
+                            else -> type
+                        },
+                        modifier = Modifier
                             .weight(1f)
                             .padding(start = 10.dp),
                         style = MaterialTheme.typography.titleSmall.copy(

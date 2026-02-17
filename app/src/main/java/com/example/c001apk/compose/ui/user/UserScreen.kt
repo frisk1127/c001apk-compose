@@ -306,7 +306,7 @@ fun UserScreen(
                 text = {
                     Text(
                         text = """
-                                uid: ${data.uid}
+                                UID: ${data.uid}
                                 
                                 等级: Lv.${data.level}
                                 

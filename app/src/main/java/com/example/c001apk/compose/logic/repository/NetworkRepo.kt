@@ -339,7 +339,7 @@ class NetworkRepo @Inject constructor(
         val result = try {
             val response = block()
             if (!response.message.isNullOrEmpty()) {
-                LoadingState.Error(response.message)
+                LoadingState.Error(mapServerMessage(response.message))
             } else if (!response.data.isNullOrEmpty()) {
                 LoadingState.Success(response.data)
             } else if (response.data?.isEmpty() == true) {
@@ -348,7 +348,7 @@ class NetworkRepo @Inject constructor(
                 LoadingState.Error(LOADING_FAILED)
             }
         } catch (e: Exception) {
-            LoadingState.Error(e.message ?: "unknown error")
+            LoadingState.Error(mapErrorMessage(e))
         }
         emit(result)
     }.flowOn(Dispatchers.IO)
@@ -362,7 +362,7 @@ class NetworkRepo @Inject constructor(
                 LoadingState.Empty
             }
         } catch (e: Exception) {
-            LoadingState.Error(e.message ?: "unknown error")
+            LoadingState.Error(mapErrorMessage(e))
         }
         emit(result)
     }.flowOn(Dispatchers.IO)
@@ -371,16 +371,35 @@ class NetworkRepo @Inject constructor(
         val result = try {
             val response = block()
             if (!response.message.isNullOrEmpty()) {
-                LoadingState.Error(response.message)
+                LoadingState.Error(mapServerMessage(response.message))
             } else if (response.data != null) {
                 LoadingState.Success(response.data)
             } else {
                 LoadingState.Error(LOADING_FAILED)
             }
         } catch (e: Exception) {
-            LoadingState.Error(e.message ?: "unknown error")
+            LoadingState.Error(mapErrorMessage(e))
         }
         emit(result)
     }.flowOn(Dispatchers.IO)
+
+    private fun mapServerMessage(message: String?): String {
+        val normalized = message?.trim().orEmpty()
+        if (normalized.equals("timeout", ignoreCase = true)) {
+            return "超时"
+        }
+        return normalized.ifEmpty { LOADING_FAILED }
+    }
+
+    private fun mapErrorMessage(e: Exception): String {
+        if (e is java.net.SocketTimeoutException) {
+            return "超时"
+        }
+        val message = e.message?.trim().orEmpty()
+        if (message.contains("timeout", ignoreCase = true)) {
+            return "超时"
+        }
+        return message.ifEmpty { "unknown error" }
+    }
 
 }
