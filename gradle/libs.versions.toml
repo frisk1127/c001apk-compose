@@ -25,7 +25,6 @@ junit = "4.13.2"
 junitVersion = "1.2.1"
 kotlin = "2.2.10"
 ksp = "2.2.10-2.0.2"
-leakcanary = "2.14"
 material = "1.12.0"
 material3 = "1.3.0"
 materialKolor = "1.7.0"
@@ -92,7 +91,6 @@ jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 immersionbar = { module = "com.geyifeng.immersionbar:immersionbar", version.ref = "immersionbar" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
-leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary" }
 material-kolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
 me-zhanghai-android-appiconloader-coil = { group = "me.zhanghai.android.appiconloader", name = "appiconloader-coil", version.ref = "appiconloader-coil" }
 oss-android-sdk = { module = "com.aliyun.dpa:oss-android-sdk", version.ref = "oss-android-sdk" }
