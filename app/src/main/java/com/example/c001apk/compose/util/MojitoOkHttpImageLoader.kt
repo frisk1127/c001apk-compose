@@ -21,6 +21,7 @@ class MojitoOkHttpImageLoader(context: Context) : ImageLoader {
 
     private val callMap = ConcurrentHashMap<Int, Call>()
     private val cacheDir = File(context.cacheDir, "mojito").apply { mkdirs() }
+    private val cachePublishLock = Any()
 
     override fun loadImage(
         requestId: Int,
@@ -72,6 +73,7 @@ class MojitoOkHttpImageLoader(context: Context) : ImageLoader {
         val call = client.newCall(request)
         callMap[requestId] = call
         thread(name = "mojito-loader-$requestId") {
+            var tempFile: File? = null
             try {
                 call.execute().use { response ->
                     if (!response.isSuccessful) {
@@ -79,19 +81,16 @@ class MojitoOkHttpImageLoader(context: Context) : ImageLoader {
                     }
                     val body = response.body ?: throw IOException("empty body")
                     val total = body.contentLength().coerceAtLeast(0L)
-                    val tempFile = File(cacheDir, "${cacheFile.name}.tmp")
-                    if (tempFile.exists()) {
-                        tempFile.delete()
-                    }
+                    tempFile = File.createTempFile("${cacheFile.name}.", ".tmp", cacheDir)
+                    var current = 0L
                     body.byteStream().use { input ->
                         FileOutputStream(tempFile).use { output ->
                             val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
                             var read: Int
-                            var current = 0L
                             while (input.read(buffer).also { read = it } != -1) {
                                 output.write(buffer, 0, read)
+                                current += read
                                 if (total > 0L) {
-                                    current += read
                                     val progress = ((current * 100) / total).toInt()
                                     callback.onProgress(progress)
                                 }
@@ -99,8 +98,20 @@ class MojitoOkHttpImageLoader(context: Context) : ImageLoader {
                             output.flush()
                         }
                     }
-                    if (!tempFile.renameTo(cacheFile)) {
-                        throw IOException("cache rename failed")
+                    if (total > 0L && current != total) {
+                        throw IOException("incomplete response: expected $total bytes, received $current")
+                    }
+                    synchronized(cachePublishLock) {
+                        if (cacheFile.exists() && cacheFile.length() > 0L) {
+                            tempFile.delete()
+                        } else {
+                            if (cacheFile.exists()) {
+                                cacheFile.delete()
+                            }
+                            if (!tempFile.renameTo(cacheFile)) {
+                                throw IOException("cache rename failed")
+                            }
+                        }
                     }
                     callback.onSuccess(cacheFile)
                 }
@@ -111,6 +122,7 @@ class MojitoOkHttpImageLoader(context: Context) : ImageLoader {
                     callback.onFail(e)
                 }
             } finally {
+                tempFile?.delete()
                 callback.onFinish()
                 callMap.remove(requestId)
             }

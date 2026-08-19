@@ -48,6 +48,8 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
     private var fragmentCoverLoader: FragmentCoverLoader? = null
     private var lastLongPressTime: Long = 0L
     private val tempLocation = IntArray(2)
+    private var isTargetLoadStarted = false
+    private var isTargetLoaded = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -264,6 +266,12 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
         } else {
             !fragmentConfig.autoLoadTarget
         }
+        if (!onlyRetrieveFromCache) {
+            if (isTargetLoadStarted || isTargetLoaded) {
+                return
+            }
+            isTargetLoadStarted = true
+        }
         mImageLoader?.loadImage(
             showView.hashCode(),
             Uri.parse(url),
@@ -283,6 +291,7 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
 
                 override fun onFail(error: Exception?) {
                     if (!onlyRetrieveFromCache) {
+                        isTargetLoadStarted = false
                         loadImageFail(onlyRetrieveFromCache)
                     }
                 }
@@ -292,6 +301,7 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
                         if (isDetached || context == null) {
                             return@post
                         }
+                        isTargetLoadStarted = false
                         isTargetLoaded = true
                         handleImageOnSuccess(image)
                     }
@@ -499,8 +509,6 @@ class ImageMojitoFragment : Fragment(), IMojitoFragment, OnMojitoViewCallback {
         ImageMojitoActivity.activityCoverLoader?.fingerRelease(isToMax, isToMin)
         (activity as? ImageMojitoActivity)?.updateStatusBarForCurrentImage()
     }
-
-    private var isTargetLoaded = false
 
     override fun showFinish(mojitoView: MojitoView, showImmediately: Boolean) {
         ImageMojitoActivity.onMojitoListener?.onShowFinish(mojitoView, showImmediately)
