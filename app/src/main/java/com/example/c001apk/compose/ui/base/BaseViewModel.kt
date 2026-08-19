@@ -246,6 +246,7 @@ abstract class BaseViewModel(
     open fun onBlockUser(uid: String) {
         viewModelScope.launch(Dispatchers.IO) {
             blackListRepo.saveUid(uid)
+            toastText = "拉黑成功"
 
             if (loadingState is LoadingState.Success) {
                 var response =

@@ -150,10 +150,13 @@ class AppViewModel @AssistedInject constructor(
 
     fun blockApp() {
         viewModelScope.launch(Dispatchers.IO) {
-            if (isBlocked)
+            if (isBlocked) {
                 blackListRepo.deleteTopic(title)
-            else
+                toastText = "取消拉黑成功"
+            } else {
                 blackListRepo.saveTopic(title)
+                toastText = "拉黑成功"
+            }
             isBlocked = !isBlocked
         }
     }

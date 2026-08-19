@@ -33,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -42,6 +43,7 @@ import com.example.c001apk.compose.ui.component.BackButton
 import com.example.c001apk.compose.ui.component.cards.HistoryCard
 import com.example.c001apk.compose.ui.component.cards.LoadingCard
 import com.example.c001apk.compose.util.ReportType
+import com.example.c001apk.compose.util.makeToast
 
 /**
  * Created by bggRGjQaUbCoE on 2024/6/17
@@ -70,6 +72,7 @@ fun HistoryScreen(
     val dataList by viewModel.dataList.collectAsStateWithLifecycle(initialValue = emptyList())
 
     val layoutDirection = LocalLayoutDirection.current
+    val context = LocalContext.current
     var showClearDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -179,6 +182,11 @@ fun HistoryScreen(
                 }
             )
         }
+    }
+
+    viewModel.toastText?.let {
+        context.makeToast(it)
+        viewModel.resetToastText()
     }
 
 }

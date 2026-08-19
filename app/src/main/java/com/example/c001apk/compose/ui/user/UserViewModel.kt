@@ -124,10 +124,13 @@ class UserViewModel @AssistedInject constructor(
 
     override fun onBlockUser(uid: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            if (isBlocked)
+            if (isBlocked) {
                 blackListRepo.deleteUid(uid)
-            else
+                toastText = "取消拉黑成功"
+            } else {
                 blackListRepo.saveUid(uid)
+                toastText = "拉黑成功"
+            }
             isBlocked = !isBlocked
         }
     }

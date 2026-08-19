@@ -49,6 +49,7 @@ class ChatViewModel @AssistedInject constructor(
     override fun onBlockUser(uid: String) {
         viewModelScope.launch(Dispatchers.IO) {
             blackListRepo.saveUid(uid)
+            toastText = "拉黑成功"
         }
     }
 

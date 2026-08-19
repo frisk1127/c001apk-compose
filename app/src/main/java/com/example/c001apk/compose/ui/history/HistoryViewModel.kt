@@ -2,6 +2,9 @@ package com.example.c001apk.compose.ui.history
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.example.c001apk.compose.logic.repository.BlackListRepo
 import com.example.c001apk.compose.logic.repository.HistoryFavoriteRepo
 import dagger.assisted.Assisted
@@ -31,6 +34,13 @@ class HistoryViewModel @AssistedInject constructor(
         HistoryType.HISTORY -> historyFavoriteRepo.loadAllHistoryListFlow()
     }
 
+    var toastText by mutableStateOf<String?>(null)
+        private set
+
+    fun resetToastText() {
+        toastText = null
+    }
+
     fun blockUser(uid: String) {
         viewModelScope.launch(Dispatchers.IO) {
             if (!blackListRepo.checkUid(uid)) {
@@ -40,6 +50,7 @@ class HistoryViewModel @AssistedInject constructor(
                 HistoryType.FAV -> historyFavoriteRepo.deleteFavByUid(uid)
                 HistoryType.HISTORY -> historyFavoriteRepo.deleteHistoryByUid(uid)
             }
+            toastText = "已拉黑并移除相关记录"
         }
     }
 
@@ -49,6 +60,7 @@ class HistoryViewModel @AssistedInject constructor(
                 HistoryType.FAV -> historyFavoriteRepo.deleteFavorite(id)
                 HistoryType.HISTORY -> historyFavoriteRepo.deleteHistory(id)
             }
+            toastText = "删除成功"
         }
     }
 
@@ -58,6 +70,7 @@ class HistoryViewModel @AssistedInject constructor(
                 HistoryType.FAV -> historyFavoriteRepo.deleteAllFavorite()
                 HistoryType.HISTORY -> historyFavoriteRepo.deleteAllHistory()
             }
+            toastText = "清除成功"
         }
     }
 

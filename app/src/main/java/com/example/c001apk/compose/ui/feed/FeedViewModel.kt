@@ -461,10 +461,13 @@ class FeedViewModel @AssistedInject constructor(
 
     fun blockUser() {
         viewModelScope.launch(Dispatchers.IO) {
-            if (isBlocked)
+            if (isBlocked) {
                 blackListRepo.deleteUid(feedUid)
-            else
+                toastText = "取消拉黑成功"
+            } else {
                 blackListRepo.saveUid(feedUid)
+                toastText = "拉黑成功"
+            }
             isBlocked = !isBlocked
         }
     }
@@ -487,6 +490,7 @@ class FeedViewModel @AssistedInject constructor(
                 )
             }
             isFav = !isFav
+            toastText = if (isFav) "收藏成功" else "取消收藏成功"
         }
     }
 
@@ -535,6 +539,7 @@ class FeedViewModel @AssistedInject constructor(
     fun onBlockReplyUser(uid: String) {
         viewModelScope.launch(Dispatchers.IO) {
             blackListRepo.saveUid(uid)
+            toastText = "拉黑成功"
 
             if (replyLoadingState is LoadingState.Success) {
                 val response =

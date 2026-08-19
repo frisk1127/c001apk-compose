@@ -33,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -48,6 +49,7 @@ import com.example.c001apk.compose.ui.component.ItemCard
 import com.example.c001apk.compose.ui.component.cards.LoadingCard
 import com.example.c001apk.compose.util.DateUtils.fromToday
 import com.example.c001apk.compose.util.ReportType
+import com.example.c001apk.compose.util.makeToast
 
 /**
  * Created by bggRGjQaUbCoE on 2024/6/21
@@ -68,6 +70,7 @@ fun CollectionScreen(
         hiltViewModel<CollectionViewModel, CollectionViewModel.ViewModelFactory>(key = id) { factory ->
             factory.create(id = id)
         }
+    val context = LocalContext.current
     val layoutDirection = LocalLayoutDirection.current
     val state = rememberPullToRefreshState()
     val lazyListState = rememberLazyListState()
@@ -243,6 +246,11 @@ fun CollectionScreen(
             }
         }
 
+    }
+
+    viewModel.toastText?.let {
+        context.makeToast(it)
+        viewModel.resetToastText()
     }
 
 }
