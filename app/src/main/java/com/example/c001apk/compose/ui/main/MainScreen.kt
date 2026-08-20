@@ -43,6 +43,7 @@ fun MainScreen(
     badge: Int,
     resetBadge: () -> Unit,
     onParamsClick: () -> Unit,
+    onAccountManageClick: () -> Unit = {},
     onAboutClick: () -> Unit,
     onViewUser: (String) -> Unit,
     onViewFeed: (String, Boolean) -> Unit,
@@ -172,6 +173,7 @@ fun MainScreen(
 
                         2 -> SettingsScreen(
                             onParamsClick = onParamsClick,
+                            onAccountManageClick = onAccountManageClick,
                             onAboutClick = onAboutClick,
                             onViewBlackList = onViewBlackList,
                         )

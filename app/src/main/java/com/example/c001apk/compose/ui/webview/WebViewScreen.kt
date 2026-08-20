@@ -210,7 +210,7 @@ fun WebViewScreen(
 
     }
 
-    if (isLogin && prefs.isLogin) {
+    if (isLogin && viewModel.isLoginSuccess) {
         onBackClick()
     }
 

@@ -2,10 +2,12 @@ package com.example.c001apk.compose.di
 
 import android.content.Context
 import androidx.room.Room
+import com.example.c001apk.compose.logic.dao.AccountDao
 import com.example.c001apk.compose.logic.dao.HistoryFavoriteDao
 import com.example.c001apk.compose.logic.dao.HomeMenuDao
 import com.example.c001apk.compose.logic.dao.RecentAtUserDao
 import com.example.c001apk.compose.logic.dao.StringEntityDao
+import com.example.c001apk.compose.logic.database.AccountDatabase
 import com.example.c001apk.compose.logic.database.HistoryFavoriteDatabase
 import com.example.c001apk.compose.logic.database.HomeMenuDatabase
 import com.example.c001apk.compose.logic.database.RecentAtUserDatabase
@@ -183,6 +185,23 @@ object DatabaseModule {
             context.applicationContext,
             RecentAtUserDatabase::class.java, "recent_at_user"
         )
+            .build()
+    }
+
+    @Singleton
+    @Provides
+    fun provideAccountDao(accountDatabase: AccountDatabase): AccountDao {
+        return accountDatabase.accountDao()
+    }
+
+    @Singleton
+    @Provides
+    fun provideAccountDatabase(@ApplicationContext context: Context): AccountDatabase {
+        return Room.databaseBuilder(
+            context.applicationContext,
+            AccountDatabase::class.java, "account_database"
+        )
+            .fallbackToDestructiveMigration()
             .build()
     }
 

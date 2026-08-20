@@ -4,24 +4,48 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.c001apk.compose.logic.model.AccountEntity
 import com.example.c001apk.compose.logic.model.HomeFeedResponse
 import com.example.c001apk.compose.logic.model.OSSUploadPrepareModel
 import com.example.c001apk.compose.logic.model.OSSUploadPrepareResponse
 import com.example.c001apk.compose.logic.model.StringEntity
+import com.example.c001apk.compose.logic.repository.AccountRepository
 import com.example.c001apk.compose.logic.repository.NetworkRepo
 import com.example.c001apk.compose.logic.repository.RecentEmojiRepo
+import com.example.c001apk.compose.logic.repository.UserPreferencesRepository
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ReplyViewModel @Inject constructor(
     private val recentEmojiRepo: RecentEmojiRepo,
-    private val networkRepo: NetworkRepo
+    private val networkRepo: NetworkRepo,
+    private val accountRepository: AccountRepository,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
+
+    val allAccounts: Flow<List<AccountEntity>> = accountRepository.allAccounts
+    var selectedAccount = MutableStateFlow<AccountEntity?>(null)
+
+    init {
+        viewModelScope.launch {
+            val currentPrefs = userPreferencesRepository.data.firstOrNull()
+            val currentUid = currentPrefs?.uid.orEmpty()
+            val accounts = accountRepository.getAllAccounts()
+            val matched = accounts.find { it.uid == currentUid } ?: accounts.firstOrNull()
+            selectedAccount.value = matched
+        }
+    }
+
+    fun selectAccount(account: AccountEntity) {
+        selectedAccount.value = account
+    }
 
     val recentList = recentEmojiRepo.loadAllListFlow()
 
@@ -40,7 +64,15 @@ class ReplyViewModel @Inject constructor(
     var replyAndFeedData = HashMap<String, String>()
     fun onPostReply() {
         viewModelScope.launch(Dispatchers.IO) {
-            networkRepo.postReply(replyAndFeedData, rid.toString(), type.toString())
+            val account = selectedAccount.value
+            networkRepo.postReply(
+                data = replyAndFeedData,
+                id = rid.toString(),
+                type = type.toString(),
+                overrideUid = account?.uid,
+                overrideUsername = account?.username,
+                overrideToken = account?.token
+            )
                 .collect { result ->
                     val response = result.getOrNull()
                     if (response != null) {
@@ -64,7 +96,13 @@ class ReplyViewModel @Inject constructor(
     lateinit var requestValidateData: HashMap<String, String?>
     fun onPostRequestValidate() {
         viewModelScope.launch(Dispatchers.IO) {
-            networkRepo.postRequestValidate(requestValidateData)
+            val account = selectedAccount.value
+            networkRepo.postRequestValidate(
+                data = requestValidateData,
+                overrideUid = account?.uid,
+                overrideUsername = account?.username,
+                overrideToken = account?.token
+            )
                 .collect { result ->
                     val response = result.getOrNull()
                     if (response != null) {
@@ -118,7 +156,13 @@ class ReplyViewModel @Inject constructor(
     var postFinished = MutableStateFlow(false)
     fun onPostCreateFeed() {
         viewModelScope.launch(Dispatchers.IO) {
-            networkRepo.postCreateFeed(replyAndFeedData)
+            val account = selectedAccount.value
+            networkRepo.postCreateFeed(
+                data = replyAndFeedData,
+                overrideUid = account?.uid,
+                overrideUsername = account?.username,
+                overrideToken = account?.token
+            )
                 .collect { result ->
                     val response = result.getOrNull()
                     if (response != null) {
@@ -177,7 +221,13 @@ class ReplyViewModel @Inject constructor(
             "toUid" to ""
         )
         viewModelScope.launch(Dispatchers.IO) {
-            networkRepo.postOSSUploadPrepare(ossUploadPrepareData)
+            val account = selectedAccount.value
+            networkRepo.postOSSUploadPrepare(
+                data = ossUploadPrepareData,
+                overrideUid = account?.uid,
+                overrideUsername = account?.username,
+                overrideToken = account?.token
+            )
                 .collect { result ->
                     val data = result.getOrNull()
                     if (data != null) {

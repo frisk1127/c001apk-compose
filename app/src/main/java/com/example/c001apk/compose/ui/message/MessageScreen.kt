@@ -30,9 +30,11 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.c001apk.compose.logic.providable.LocalUserPreferences
 import com.example.c001apk.compose.ui.component.FooterCard
 import com.example.c001apk.compose.ui.component.ItemCard
+import com.example.c001apk.compose.ui.component.account.AccountSwitchBottomSheet
 import com.example.c001apk.compose.ui.component.cards.MessageFFFCard
 import com.example.c001apk.compose.ui.component.cards.MessageHeaderCard
 import com.example.c001apk.compose.ui.component.cards.MessageListCard
@@ -68,8 +70,10 @@ fun MessageScreen(
         hiltViewModel<MessageViewModel, MessageViewModel.ViewModelFactory> { factory ->
             factory.create(url = "/v6/notification/list")
         }
+    val accountList by viewModel.allAccounts.collectAsStateWithLifecycle(initialValue = emptyList())
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showAccountSwitchSheet by remember { mutableStateOf(false) }
     val state = rememberPullToRefreshState()
 
     LaunchedEffect(prefs.isLogin) {
@@ -99,6 +103,9 @@ fun MessageScreen(
                 onLogin = onLogin,
                 onLogout = {
                     showLogoutDialog = true
+                },
+                onOpenAccountManage = {
+                    showAccountSwitchSheet = true
                 },
                 onViewUser = onViewUser
             )
@@ -186,6 +193,24 @@ fun MessageScreen(
 
         }
 
+    }
+
+    if (showAccountSwitchSheet) {
+        AccountSwitchBottomSheet(
+            currentUid = prefs.uid,
+            accountList = accountList,
+            onDismissRequest = { showAccountSwitchSheet = false },
+            onSwitchAccount = { uid ->
+                viewModel.switchAccount(uid)
+            },
+            onAddAccount = onLogin,
+            onDeleteAccount = { uid ->
+                viewModel.deleteAccount(uid)
+            },
+            onLogoutCurrent = {
+                showLogoutDialog = true
+            }
+        )
     }
 
     when {

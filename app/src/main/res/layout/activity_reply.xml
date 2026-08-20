@@ -84,6 +84,50 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/textInputLayout" />
 
+        <LinearLayout
+            android:id="@+id/accountSwitchLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/selector_bg_12_trans"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="4dp"
+            app:layout_constraintBottom_toBottomOf="@id/checkBox"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/checkBox">
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/accountAvatar"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:scaleType="centerCrop"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full" />
+
+            <TextView
+                android:id="@+id/accountName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:maxWidth="120dp"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="12sp"
+                tools:text="账号昵称" />
+
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_marginStart="2dp"
+                android:src="@drawable/outline_arrow_drop_down_24"
+                app:tint="?attr/colorOnSurfaceVariant" />
+
+        </LinearLayout>
+
         <HorizontalScrollView
             android:id="@+id/imageScrollLayout"
             android:layout_width="match_parent"

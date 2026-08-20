@@ -5,12 +5,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.example.c001apk.compose.constant.Constants
+import com.example.c001apk.compose.logic.model.AccountEntity
+import com.example.c001apk.compose.logic.repository.AccountRepository
 import com.example.c001apk.compose.logic.repository.BlackListRepo
 import com.example.c001apk.compose.logic.repository.NetworkRepo
 import com.example.c001apk.compose.logic.repository.UserPreferencesRepository
 import com.example.c001apk.compose.logic.state.FooterState
 import com.example.c001apk.compose.logic.state.LoadingState
 import com.example.c001apk.compose.ui.base.BaseViewModel
+import com.example.c001apk.compose.util.CookieUtil
 import com.example.c001apk.compose.util.CookieUtil.atcommentme
 import com.example.c001apk.compose.util.CookieUtil.atme
 import com.example.c001apk.compose.util.CookieUtil.contacts_follow
@@ -25,6 +28,7 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 /**
@@ -36,7 +40,10 @@ class MessageViewModel @AssistedInject constructor(
     networkRepo: NetworkRepo,
     blackListRepo: BlackListRepo,
     private val userPreferencesRepository: UserPreferencesRepository,
+    private val accountRepository: AccountRepository,
 ) : BaseViewModel(networkRepo, blackListRepo) {
+
+    val allAccounts: Flow<List<AccountEntity>> = accountRepository.allAccounts
 
     var fffList by mutableStateOf<List<String>>(emptyList())
         private set
@@ -55,7 +62,7 @@ class MessageViewModel @AssistedInject constructor(
     override suspend fun customFetchData() =
         networkRepo.getMessage(url, page, lastItem)
 
-    private fun fetchProfile() {
+    fun fetchProfile() {
         viewModelScope.launch(Dispatchers.IO) {
             networkRepo.getProfile(uid)
                 .collect { result ->
@@ -73,6 +80,15 @@ class MessageViewModel @AssistedInject constructor(
                             setExperience(data.data.experience ?: "0")
                             setNextLevelExperience(data.data.nextLevelExperience ?: "0")
                         }
+                        accountRepository.saveOrUpdateAccount(
+                            uid = uid,
+                            username = data.data.username.encode,
+                            token = CookieUtil.token,
+                            userAvatar = data.data.userAvatar.orEmpty(),
+                            level = data.data.level ?: "0",
+                            experience = data.data.experience ?: "0",
+                            nextLevelExperience = data.data.nextLevelExperience ?: "0"
+                        )
                     } else {
                         result.exceptionOrNull()?.printStackTrace()
                     }
@@ -80,15 +96,34 @@ class MessageViewModel @AssistedInject constructor(
         }
     }
 
+    fun switchAccount(targetUid: String) {
+        viewModelScope.launch {
+            accountRepository.switchAccount(targetUid)
+            fetchProfile()
+            onCheckCount()
+            refresh()
+        }
+    }
+
+    fun deleteAccount(targetUid: String) {
+        viewModelScope.launch {
+            accountRepository.deleteAccount(targetUid)
+            if (isLogin) {
+                fetchProfile()
+                onCheckCount()
+                refresh()
+            } else {
+                fffList = emptyList()
+                badgeList = listOf(null)
+                loadingState = LoadingState.Success(emptyList())
+                footerState = FooterState.Success
+            }
+        }
+    }
+
     fun onLogout() {
         viewModelScope.launch {
-            userPreferencesRepository.apply {
-                setUid(Constants.EMPTY_STRING)
-                setUserAvatar(Constants.EMPTY_STRING)
-                setUsername(Constants.EMPTY_STRING)
-                setToken(Constants.EMPTY_STRING)
-                setIsLogin(false)
-            }
+            accountRepository.logoutCurrent()
             fffList = emptyList()
             badgeList = listOf(null)
             loadingState = LoadingState.Success(emptyList())

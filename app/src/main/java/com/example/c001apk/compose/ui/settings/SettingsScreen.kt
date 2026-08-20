@@ -102,6 +102,8 @@ import com.example.c001apk.compose.util.Utils.randomMacAddress
 import com.example.c001apk.compose.util.openInBrowser
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.materialkolor.PaletteStyle
+import androidx.compose.material.icons.outlined.ManageAccounts
+import com.example.c001apk.compose.util.decode
 import java.util.Formatter
 
 /**
@@ -112,6 +114,7 @@ import java.util.Formatter
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
     onParamsClick: () -> Unit,
+    onAccountManageClick: () -> Unit = {},
     onAboutClick: () -> Unit,
     onViewBlackList: (String) -> Unit,
 ) {
@@ -187,6 +190,13 @@ fun SettingsScreen(
         ) {
 
             BasicListItem(leadingText = stringResource(id = R.string.app_name))
+            BasicListItem(
+                leadingImageVector = Icons.Outlined.ManageAccounts,
+                headlineText = "账号管理",
+                supportingText = if (prefs.isLogin) "当前账号：${prefs.username.decode}" else "未登录"
+            ) {
+                onAccountManageClick()
+            }
             BasicListItem(
                 leadingImageVector = Icons.Outlined.Smartphone,
                 headlineText = "数字联盟ID",
