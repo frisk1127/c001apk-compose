@@ -25,6 +25,7 @@ import androidx.core.view.WindowInsetsCompat
 import com.example.c001apk.compose.logic.providable.LocalUserPreferences
 import com.example.c001apk.compose.logic.repository.UserPreferencesRepository
 import com.example.c001apk.compose.ui.theme.C001apkComposeTheme
+import com.example.c001apk.compose.ui.search.SearchViewModel
 import com.example.c001apk.compose.util.CookieUtil.apiVersion
 import com.example.c001apk.compose.util.CookieUtil.customHaptics
 import com.example.c001apk.compose.util.CookieUtil.hapticFeedback
@@ -70,6 +71,7 @@ class MainActivity : ComponentActivity() {
     lateinit var userPreferencesRepository: UserPreferencesRepository
     private lateinit var navController: NavHostController
     private val viewModel by viewModels<MainViewModel>()
+    private val searchViewModel by viewModels<SearchViewModel>()
     private var stableStatusBarInset: Int? = null
 
     override fun onNewIntent(intent: Intent) {
@@ -83,7 +85,10 @@ class MainActivity : ComponentActivity() {
                 context = this,
                 url = it.toString(),
                 title = null,
-                needConvert = true
+                needConvert = true,
+                onSearch = { keyword ->
+                    searchViewModel.saveHistory(keyword)
+                }
             )
         }
     }
