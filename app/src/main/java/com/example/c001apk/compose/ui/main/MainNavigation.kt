@@ -47,6 +47,7 @@ import com.example.c001apk.compose.constant.Constants.PREFIX_FEED
 import com.example.c001apk.compose.constant.Constants.PREFIX_GAME
 import com.example.c001apk.compose.constant.Constants.PREFIX_HTTP
 import com.example.c001apk.compose.constant.Constants.PREFIX_PRODUCT
+import com.example.c001apk.compose.constant.Constants.PREFIX_SEARCH
 import com.example.c001apk.compose.constant.Constants.PREFIX_TOPIC
 import com.example.c001apk.compose.constant.Constants.PREFIX_USER
 import com.example.c001apk.compose.constant.Constants.PREFIX_USER_LIST
@@ -748,6 +749,7 @@ fun NavHostController.onOpenLink(
     url: String,
     title: String? = null,
     needConvert: Boolean = false,
+    onSearch: ((String) -> Unit)? = null,
     onViewFeed: ((String, Boolean) -> Unit)? = null,
 ) {
     if (url.isEmpty())
@@ -834,6 +836,16 @@ fun NavHostController.onOpenLink(
                 .substringBefore('?')
                 .substringBefore('/')
             if (id.isNotEmpty()) navigateToEvent(id)
+        }
+
+        path.startsWith(PREFIX_SEARCH) -> {
+            val keyword = Uri.parse(path).getQueryParameter("searchValue").orEmpty()
+            if (keyword.isEmpty()) {
+                navigateToSearch(null, null, null)
+            } else {
+                onSearch?.invoke(keyword)
+                navigateToSearchResult(keyword, null, null, null)
+            }
         }
 
         else -> {

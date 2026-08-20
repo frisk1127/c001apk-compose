@@ -31,6 +31,7 @@ object Constants {
     const val PREFIX_DYH = "/dyh/"
     const val PREFIX_COLLECTION = "/collection/"
     const val PREFIX_EVENT = "/event/"
+    const val PREFIX_SEARCH = "/com.coolapk.market/search"
     const val SUFFIX_THUMBNAIL = ".s.jpg"
     const val SUFFIX_GIF = ".gif"
 
