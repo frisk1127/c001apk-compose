@@ -82,6 +82,7 @@ fun FeedCard(
     onLike: ((String, Int, LikeType) -> Unit)? = null,
     onDelete: ((String, LikeType, String?) -> Unit)? = null,
     onBlockUser: (String) -> Unit,
+    onQuickReply: ((String, String) -> Unit)? = null,
 ) {
     val horizontal = if (isFeedContent) 16.dp else 10.dp
     // val vertical = if (isFeedContent) 12.dp else 10.dp
@@ -146,6 +147,9 @@ fun FeedCard(
             likeNum = data.likenum.orEmpty(),
             onViewFeed = {
                 onViewFeed(data.id.orEmpty(), true)
+            },
+            onQuickReply = onQuickReply?.let {
+                { it(data.id.orEmpty(), data.username.orEmpty()) }
             },
             onLike = {
                 if (isLogin) {
@@ -221,6 +225,7 @@ fun FeedBottomInfo(
     replyNum: String,
     likeNum: String,
     onViewFeed: () -> Unit,
+    onQuickReply: (() -> Unit)? = null,
     onLike: () -> Unit,
     like: Int?,
 ) {
@@ -244,6 +249,7 @@ fun FeedBottomInfo(
             imageVector = Icons.AutoMirrored.Outlined.Message,
             title = replyNum,
             onClick = onViewFeed,
+            onLongClick = onQuickReply,
         )
 
         IconText(

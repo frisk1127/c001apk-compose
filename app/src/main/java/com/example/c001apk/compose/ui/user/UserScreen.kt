@@ -61,6 +61,7 @@ import com.example.c001apk.compose.util.ReportType
 import com.example.c001apk.compose.util.ShareType
 import com.example.c001apk.compose.util.copyText
 import com.example.c001apk.compose.util.getShareText
+import com.example.c001apk.compose.util.launchReply
 import com.example.c001apk.compose.util.makeToast
 import com.example.c001apk.compose.util.shareText
 import com.example.c001apk.compose.ui.component.MoreMenuButton
@@ -265,6 +266,9 @@ fun UserScreen(
                         },
                         onBlockUser = { uid, _ ->
                             viewModel.onBlockUser(uid)
+                        },
+                        onQuickReply = { rid, username ->
+                            context.launchReply("feed", rid, username)
                         },
                     )
 

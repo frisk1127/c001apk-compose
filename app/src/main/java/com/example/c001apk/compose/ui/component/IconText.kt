@@ -8,12 +8,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
 import com.example.c001apk.compose.util.noRippleClickable
+import com.example.c001apk.compose.util.noRippleCombinedClickable
 
 /**
  * Created by bggRGjQaUbCoE on 2024/6/9
@@ -25,11 +27,15 @@ fun IconText(
     title: String,
     textSize: Float = 14f,
     onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
     isLike: Boolean = false,
 ) {
 
     val hapticClick = rememberHapticClick {
         onClick?.invoke()
+    }
+    val hapticLongClick = rememberHapticClick(type = HapticFeedbackType.LongPress) {
+        onLongClick?.invoke()
     }
     val color = if (isLike) MaterialTheme.colorScheme.primary
     else MaterialTheme.colorScheme.outline
@@ -64,12 +70,18 @@ fun IconText(
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         modifier = run {
-            val tmp = if (onClick == null) modifier
-            else modifier
-                .noRippleClickable {
+            if (onClick == null && onLongClick == null) {
+                modifier
+            } else if (onLongClick != null) {
+                modifier.noRippleCombinedClickable(
+                    onClick = { hapticClick() },
+                    onLongClick = { hapticLongClick() }
+                )
+            } else {
+                modifier.noRippleClickable {
                     hapticClick()
                 }
-            tmp
+            }
         }
     )
 

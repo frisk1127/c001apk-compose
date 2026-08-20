@@ -10,11 +10,16 @@ import android.net.Uri
 import android.os.Build.VERSION.SDK_INT
 import android.util.TypedValue
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.selection.toggleable
+import androidx.core.app.ActivityOptionsCompat
+import com.example.c001apk.compose.R
+import com.example.c001apk.compose.ui.feed.reply.ReplyActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -79,6 +84,33 @@ inline fun Modifier.noRippleClickable(
         interactionSource = remember { MutableInteractionSource() }) {
         onClick()
     }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+inline fun Modifier.noRippleCombinedClickable(
+    enabled: Boolean = true,
+    crossinline onLongClick: () -> Unit,
+    crossinline onClick: () -> Unit
+): Modifier = composed {
+    combinedClickable(
+        enabled = enabled,
+        indication = null,
+        interactionSource = remember { MutableInteractionSource() },
+        onLongClick = { onLongClick() },
+        onClick = { onClick() }
+    )
+}
+
+fun Context.launchReply(type: String, rid: String, username: String) {
+    val intent = Intent(this, ReplyActivity::class.java).apply {
+        putExtra("type", type)
+        putExtra("rid", rid)
+        putExtra("username", username)
+    }
+    val options = ActivityOptionsCompat.makeCustomAnimation(
+        this, R.anim.anim_bottom_sheet_slide_up, R.anim.anim_bottom_sheet_slide_down
+    )
+    startActivity(intent, options.toBundle())
 }
 
 fun Context.copyText(text: String?, showToast: Boolean = true) {

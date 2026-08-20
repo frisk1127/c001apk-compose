@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
@@ -23,6 +24,7 @@ import com.example.c001apk.compose.ui.base.BaseViewModel
 import com.example.c001apk.compose.logic.model.HomeFeedResponse
 import com.example.c001apk.compose.util.ReportType
 import com.example.c001apk.compose.util.isScrollingUp
+import com.example.c001apk.compose.util.launchReply
 
 /**
  * Created by bggRGjQaUbCoE on 2024/6/10
@@ -56,6 +58,7 @@ fun CommonScreen(
     onToggleProductEntityComparison: ((HomeFeedResponse.Entities) -> Unit)? = null,
 ) {
 
+    val context = LocalContext.current
     val view = LocalView.current
     val layoutDirection = LocalLayoutDirection.current
     val state = rememberPullToRefreshState()
@@ -127,6 +130,9 @@ fun CommonScreen(
                 onHandleMessage = onHandleMessage,
                 onViewChat = onViewChat,
                 onDeleteNotice = onDeleteNotice,
+                onQuickReply = { rid, username ->
+                    context.launchReply("feed", rid, username)
+                },
                 productConfigRows = productConfigRows,
                 selectedProductConfigIds = selectedProductConfigIds,
                 onViewProductConfig = onViewProductConfig,

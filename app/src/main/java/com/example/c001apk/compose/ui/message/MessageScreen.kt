@@ -42,6 +42,7 @@ import com.example.c001apk.compose.ui.component.cards.iconList
 import com.example.c001apk.compose.ui.component.cards.titleList
 import com.example.c001apk.compose.ui.notification.NoticeType
 import com.example.c001apk.compose.util.ReportType
+import com.example.c001apk.compose.util.launchReply
 import com.example.c001apk.compose.util.makeToast
 
 /**
@@ -171,7 +172,10 @@ fun MessageScreen(
                         onDeleteNotice = { id ->
                             viewModel.deleteId = id
                             showDeleteDialog = true
-                        }
+                        },
+                        onQuickReply = { rid, username ->
+                            context.launchReply("feed", rid, username)
+                        },
                     )
 
                     FooterCard(

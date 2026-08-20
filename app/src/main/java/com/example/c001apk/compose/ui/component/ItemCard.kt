@@ -60,6 +60,7 @@ fun LazyListScope.ItemCard(
     onViewChat: ((String, String, String) -> Unit)? = null,
     onDeleteNotice: ((String) -> Unit)? = null,
     onReply: ((String, String, String, String?) -> Unit)? = null,
+    onQuickReply: ((String, String) -> Unit)? = null,
     productConfigRows: List<HomeFeedResponse.ProductConfig> = emptyList(),
     selectedProductConfigIds: Set<String> = emptySet(),
     onViewProductConfig: ((HomeFeedResponse.ProductConfig) -> Unit)? = null,
@@ -192,6 +193,7 @@ fun LazyListScope.ItemCard(
                         onBlockUser = { uid ->
                             onBlockUser(uid, null)
                         },
+                        onQuickReply = onQuickReply,
                     )
 
                     "feed_reply" -> {

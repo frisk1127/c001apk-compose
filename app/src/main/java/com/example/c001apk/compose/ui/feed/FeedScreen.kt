@@ -180,11 +180,15 @@ fun FeedScreen(
             }
         }
 
-    fun launchReply() {
+    fun launchReply(
+        type: String = viewModel.replyType,
+        rid: String = viewModel.replyId,
+        username: String = viewModel.replyName
+    ) {
         val intent = Intent(context, ReplyActivity::class.java)
-        intent.putExtra("type", viewModel.replyType)
-        intent.putExtra("rid", viewModel.replyId)
-        intent.putExtra("username", viewModel.replyName)
+        intent.putExtra("type", type)
+        intent.putExtra("rid", rid)
+        intent.putExtra("username", username)
         val options = ActivityOptionsCompat.makeCustomAnimation(
             context, R.anim.anim_bottom_sheet_slide_up, R.anim.anim_bottom_sheet_slide_down
         )
@@ -427,6 +431,9 @@ fun FeedScreen(
                                         viewModel.onDelete(id, deleteType)
                                     },
                                     onBlockUser = {},
+                                    onQuickReply = { rid, username ->
+                                        launchReply("feed", rid, username)
+                                    },
                                 )
                             }
                         }
@@ -551,6 +558,9 @@ fun FeedScreen(
                             viewModel.replyType = "reply"
                             launchReply()
                         },
+                        onQuickReply = { rid, username ->
+                            launchReply("feed", rid, username)
+                        },
                     )
 
                     FooterCard(
@@ -646,6 +656,9 @@ fun FeedScreen(
                         viewModel.frid = null
                         viewModel.replyType = "reply"
                         launchReply()
+                    },
+                    onQuickReply = { rid, username ->
+                        launchReply("feed", rid, username)
                     },
                 )
 
