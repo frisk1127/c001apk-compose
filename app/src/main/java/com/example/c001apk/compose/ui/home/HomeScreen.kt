@@ -5,6 +5,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -13,27 +15,30 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.SecondaryScrollableTabRow
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
@@ -42,6 +47,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -49,8 +57,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -93,11 +105,18 @@ private fun tabTitle(type: TabType): String {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HomeTabEditorDialog(
+    orderedTabs: List<TabType>,
     enabledTabs: Set<TabType>,
     onDismiss: () -> Unit,
-    onConfirm: (Set<TabType>) -> Unit,
+    onConfirm: (List<TabType>, Set<TabType>) -> Unit,
 ) {
     var selectedTabs by remember(enabledTabs) { mutableStateOf(enabledTabs) }
+    val tabs = remember(orderedTabs) {
+        mutableStateListOf<TabType>().apply { addAll(orderedTabs) }
+    }
+    val listState = rememberLazyListState()
+    var draggedItemIndex by remember { mutableIntStateOf(-1) }
+    var draggedItemOffset by remember { mutableFloatStateOf(0f) }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -117,38 +136,139 @@ private fun HomeTabEditorDialog(
                             }
                         },
                         actions = {
-                            TextButton(onClick = { onConfirm(selectedTabs) }) {
+                            TextButton(onClick = { onConfirm(tabs.toList(), selectedTabs) }) {
                                 Text("完成")
                             }
                         },
                     )
                 },
             ) { paddingValues ->
-                LazyColumn(
+                Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(paddingValues),
+                        .padding(paddingValues)
                 ) {
-                    items(TabType.entries, key = TabType::name) { type ->
-                        val checked = type in selectedTabs
-                        val canToggle = !checked || selectedTabs.size > 1
-                        ListItem(
-                            modifier = Modifier.clickable(enabled = canToggle) {
-                                selectedTabs = if (checked) {
-                                    selectedTabs - type
-                                } else {
-                                    selectedTabs + type
-                                }
-                            },
-                            headlineContent = { Text(tabTitle(type)) },
-                            trailingContent = {
-                                Checkbox(
-                                    checked = checked,
-                                    enabled = canToggle,
-                                    onCheckedChange = null,
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceContainer,
+                        tonalElevation = 1.dp,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column {
+                                Text(
+                                    text = "首页板块",
+                                    style = MaterialTheme.typography.titleMedium,
                                 )
+                                Text(
+                                    text = "已启用 ${selectedTabs.size} / ${tabs.size}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.outline,
+                                )
+                            }
+                        }
+                    }
+
+                    LazyColumn(
+                        state = listState,
+                        verticalArrangement = Arrangement.spacedBy(1.dp),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(top = 8.dp)
+                            .pointerInput(tabs) {
+                            detectDragGesturesAfterLongPress(
+                                onDragStart = { offset ->
+                                    draggedItemIndex = listState.layoutInfo.visibleItemsInfo
+                                        .firstOrNull { item ->
+                                            offset.y.toInt() in item.offset..(item.offset + item.size)
+                                        }
+                                        ?.index
+                                        ?: -1
+                                    draggedItemOffset = 0f
+                                },
+                                onDragCancel = {
+                                    draggedItemIndex = -1
+                                    draggedItemOffset = 0f
+                                },
+                                onDragEnd = {
+                                    draggedItemIndex = -1
+                                    draggedItemOffset = 0f
+                                },
+                                onDrag = { change, dragAmount ->
+                                    val currentIndex = draggedItemIndex
+                                    if (currentIndex == -1) return@detectDragGesturesAfterLongPress
+
+                                    change.consume()
+                                    draggedItemOffset += dragAmount.y
+                                    val currentItem = listState.layoutInfo.visibleItemsInfo
+                                        .firstOrNull { it.index == currentIndex }
+                                        ?: return@detectDragGesturesAfterLongPress
+                                    val draggedCenter = currentItem.offset + draggedItemOffset + currentItem.size / 2f
+                                    val targetItem = listState.layoutInfo.visibleItemsInfo
+                                        .firstOrNull { item ->
+                                            item.index != currentIndex &&
+                                                draggedCenter.toInt() in item.offset..(item.offset + item.size)
+                                        }
+                                        ?: return@detectDragGesturesAfterLongPress
+
+                                    tabs.add(targetItem.index, tabs.removeAt(currentIndex))
+                                    draggedItemIndex = targetItem.index
+                                    draggedItemOffset += currentItem.offset - targetItem.offset
+                                },
+                            )
                             },
-                        )
+                    ) {
+                        itemsIndexed(tabs, key = { _, type -> type.name }) { index, type ->
+                            val checked = type in selectedTabs
+                            val canToggle = !checked || selectedTabs.size > 1
+                            ListItem(
+                                leadingContent = {
+                                    Icon(
+                                        imageVector = Icons.Default.DragHandle,
+                                        contentDescription = "长按拖动排序",
+                                        tint = MaterialTheme.colorScheme.outline,
+                                    )
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .graphicsLayer {
+                                        translationY = if (index == draggedItemIndex) draggedItemOffset else 0f
+                                    }
+                                    .clickable(enabled = canToggle) {
+                                        selectedTabs = if (checked) {
+                                            selectedTabs - type
+                                        } else {
+                                            selectedTabs + type
+                                        }
+                                    },
+                                headlineContent = { Text(tabTitle(type)) },
+                                supportingContent = {
+                                    Text(
+                                        text = if (checked) "已显示" else "已隐藏",
+                                        color = MaterialTheme.colorScheme.outline,
+                                    )
+                                },
+                                trailingContent = {
+                                    Switch(
+                                        checked = checked,
+                                        enabled = canToggle,
+                                        onCheckedChange = { enabled ->
+                                            selectedTabs = if (enabled) {
+                                                selectedTabs + type
+                                            } else {
+                                                selectedTabs - type
+                                            }
+                                        },
+                                    )
+                                },
+                            )
+                            HorizontalDivider(
+                                modifier = Modifier.padding(start = 56.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant,
+                            )
+                        }
                     }
                 }
             }
@@ -176,20 +296,34 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
 
     val storedMenus by viewModel.homeMenus.collectAsStateWithLifecycle(initialValue = emptyList())
-    val tabList = remember(storedMenus) {
+    val orderedTabs = remember(storedMenus) {
         if (storedMenus.isEmpty()) {
             TabType.entries
         } else {
-            storedMenus
+            val storedOrder = storedMenus
                 .asSequence()
-                .filter(HomeMenu::isEnable)
                 .sortedBy(HomeMenu::position)
                 .mapNotNull { menu ->
                     runCatching { TabType.valueOf(menu.title) }.getOrNull()
                 }
+                .distinct()
                 .toList()
-                .ifEmpty { listOf(TabType.FEED) }
+            storedOrder + TabType.entries.filterNot(storedOrder::contains)
         }
+    }
+    val enabledTabs = remember(storedMenus) {
+        if (storedMenus.isEmpty()) {
+            TabType.entries.toSet()
+        } else {
+            storedMenus
+                .asSequence()
+                .filter(HomeMenu::isEnable)
+                .mapNotNull { menu -> runCatching { TabType.valueOf(menu.title) }.getOrNull() }
+                .toSet()
+        }
+    }
+    val tabList = remember(orderedTabs, enabledTabs) {
+        orderedTabs.filter(enabledTabs::contains).ifEmpty { listOf(TabType.FEED) }
     }
     var selectedTabType by rememberSaveable { mutableStateOf(TabType.FEED) }
     val initialPage = tabList.indexOf(selectedTabType).coerceAtLeast(0)
@@ -259,7 +393,8 @@ fun HomeScreen(
             modifier = Modifier.padding(top = paddingValues.calculateTopPadding()),
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 SecondaryScrollableTabRow(
                     modifier = Modifier.weight(1f),
@@ -287,14 +422,25 @@ fun HomeScreen(
                         )
                     }
                 }
-                IconButton(onClick = { showTabEditor = true }) {
+                IconButton(
+                    modifier = Modifier.size(40.dp),
+                    onClick = { onSearch() },
+                ) {
                     Icon(
-                        imageVector = Icons.Outlined.Edit,
-                        contentDescription = "编辑首页板块",
+                        modifier = Modifier.size(21.dp),
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "搜索",
                     )
                 }
-                IconButton(onClick = { onSearch() }) {
-                    Icon(imageVector = Icons.Default.Search, contentDescription = null)
+                IconButton(
+                    modifier = Modifier.size(40.dp),
+                    onClick = rememberHapticClick { showTabEditor = true },
+                ) {
+                    Icon(
+                        modifier = Modifier.size(21.dp),
+                        painter = painterResource(R.drawable.ic_menu),
+                        contentDescription = "编辑首页板块",
+                    )
                 }
             }
 
@@ -344,10 +490,11 @@ fun HomeScreen(
 
     if (showTabEditor) {
         HomeTabEditorDialog(
-            enabledTabs = tabList.toSet(),
+            orderedTabs = orderedTabs,
+            enabledTabs = enabledTabs,
             onDismiss = { showTabEditor = false },
-            onConfirm = { enabledTabs ->
-                viewModel.setEnabledTabs(enabledTabs)
+            onConfirm = { newOrder, newEnabledTabs ->
+                viewModel.setTabs(newOrder, newEnabledTabs)
                 showTabEditor = false
             },
         )
