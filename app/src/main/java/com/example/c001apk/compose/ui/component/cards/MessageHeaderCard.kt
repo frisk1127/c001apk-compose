@@ -2,12 +2,14 @@ package com.example.c001apk.compose.ui.component.cards
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.outlined.SwitchAccount
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -17,6 +19,7 @@ import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -45,6 +48,7 @@ fun MessageHeaderCard(
     nextLevelExperience: String,
     onLogin: () -> Unit,
     onLogout: () -> Unit,
+    onOpenAccountManage: () -> Unit = {},
     onViewUser: (String) -> Unit
 ) {
 
@@ -154,21 +158,37 @@ fun MessageHeaderCard(
         )
 
         if (isLogin) {
-            IconButton(
-                onClick = {
-                    onLogout()
-                },
+            Row(
                 modifier = Modifier
                     .constrainAs(logout) {
                         top.linkTo(parent.top)
                         end.linkTo(parent.end)
                         bottom.linkTo(parent.bottom)
-                    }
+                    },
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
             ) {
-                Icon(
-                    Icons.AutoMirrored.Default.Logout,
-                    contentDescription = null
-                )
+                IconButton(
+                    onClick = {
+                        onOpenAccountManage()
+                    }
+                ) {
+                    Icon(
+                        Icons.Outlined.SwitchAccount,
+                        contentDescription = "切换账号",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                IconButton(
+                    onClick = {
+                        onLogout()
+                    }
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Default.Logout,
+                        contentDescription = "退出登录"
+                    )
+                }
             }
         }
 

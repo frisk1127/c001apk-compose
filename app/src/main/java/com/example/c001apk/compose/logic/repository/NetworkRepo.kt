@@ -177,8 +177,15 @@ class NetworkRepo @Inject constructor(
         Result.success(apiService.getValidateCaptcha(url).response())
     }
 
-    suspend fun postReply(data: HashMap<String, String>, id: String, type: String) = fire {
-        Result.success(apiService.postReply(data, id, type).await())
+    suspend fun postReply(
+        data: HashMap<String, String>,
+        id: String,
+        type: String,
+        overrideUid: String? = null,
+        overrideUsername: String? = null,
+        overrideToken: String? = null
+    ) = fire {
+        Result.success(apiService.postReply(data, id, type, overrideUid, overrideUsername, overrideToken).await())
     }
 
     suspend fun getDataList(
@@ -221,12 +228,22 @@ class NetworkRepo @Inject constructor(
         Result.success(apiService.postFollowUnFollow(url, uid).await())
     }
 
-    suspend fun postCreateFeed(data: HashMap<String, String>) = fire {
-        Result.success(apiService.postCreateFeed(data).await())
+    suspend fun postCreateFeed(
+        data: HashMap<String, String>,
+        overrideUid: String? = null,
+        overrideUsername: String? = null,
+        overrideToken: String? = null
+    ) = fire {
+        Result.success(apiService.postCreateFeed(data, overrideUid, overrideUsername, overrideToken).await())
     }
 
-    suspend fun postRequestValidate(data: HashMap<String, String?>) = fire {
-        Result.success(apiService.postRequestValidate(data).await())
+    suspend fun postRequestValidate(
+        data: HashMap<String, String?>,
+        overrideUid: String? = null,
+        overrideUsername: String? = null,
+        overrideToken: String? = null
+    ) = fire {
+        Result.success(apiService.postRequestValidate(data, overrideUid, overrideUsername, overrideToken).await())
     }
 
     suspend fun getVoteComment(
@@ -278,8 +295,13 @@ class NetworkRepo @Inject constructor(
         Result.success(apiService.getFollow(url, tag, id).await())
     }
 
-    suspend fun postOSSUploadPrepare(data: HashMap<String, String>) = fire {
-        Result.success(apiService.postOSSUploadPrepare(data).await())
+    suspend fun postOSSUploadPrepare(
+        data: HashMap<String, String>,
+        overrideUid: String? = null,
+        overrideUsername: String? = null,
+        overrideToken: String? = null
+    ) = fire {
+        Result.success(apiService.postOSSUploadPrepare(data, overrideUid, overrideUsername, overrideToken).await())
     }
 
     suspend fun getSearchTag(

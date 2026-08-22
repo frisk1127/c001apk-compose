@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.example.c001apk.compose.constant.Constants.EMPTY_STRING
+import com.example.c001apk.compose.logic.repository.AccountRepository
 import com.example.c001apk.compose.logic.repository.NetworkRepo
 import com.example.c001apk.compose.logic.repository.UserPreferencesRepository
 import com.example.c001apk.compose.ui.base.PrefsViewModel
@@ -23,6 +24,7 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     private val networkRepo: NetworkRepo,
     private val userPreferencesRepository: UserPreferencesRepository,
+    private val accountRepository: AccountRepository,
 ) : PrefsViewModel(userPreferencesRepository) {
 
     init {
@@ -32,7 +34,7 @@ class MainViewModel @Inject constructor(
     var badge by mutableIntStateOf(0)
         private set
 
-    private fun getCheckLoginInfo() {
+    fun getCheckLoginInfo() {
         viewModelScope.launch(Dispatchers.IO) {
             networkRepo.checkLoginInfo()
                 .collect { result ->
@@ -53,6 +55,12 @@ class MainViewModel @Inject constructor(
                                 setToken(login.token)
                                 setIsLogin(true)
                             }
+                            accountRepository.saveOrUpdateAccount(
+                                uid = login.uid,
+                                username = login.username.encode,
+                                token = login.token,
+                                userAvatar = login.userAvatar
+                            )
                         }
 
                         if (response.body()?.message == "登录信息有误") {

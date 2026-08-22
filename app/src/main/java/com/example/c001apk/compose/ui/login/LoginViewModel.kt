@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.c001apk.compose.constant.Constants.EMPTY_STRING
 import com.example.c001apk.compose.logic.model.LoginResponse
+import com.example.c001apk.compose.logic.repository.AccountRepository
 import com.example.c001apk.compose.logic.repository.NetworkRepo
 import com.example.c001apk.compose.logic.repository.UserPreferencesRepository
 import com.example.c001apk.compose.util.CookieUtil.SESSID
@@ -30,13 +31,16 @@ import javax.inject.Inject
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val networkRepo: NetworkRepo,
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val accountRepository: AccountRepository
 ) : ViewModel() {
 
     var requestHash by mutableStateOf(EMPTY_STRING)
     var captchaImg by mutableStateOf<Bitmap?>(null)
         private set
     var toastText by mutableStateOf<String?>(null)
+        private set
+    var isLoginSuccess by mutableStateOf(false)
         private set
 
     private val urlPreGetParam = "/auth/login?type=mobile"
@@ -127,6 +131,12 @@ class LoginViewModel @Inject constructor(
                                     setUsername(username)
                                     setToken(token)
                                 }
+                                accountRepository.saveOrUpdateAccount(
+                                    uid = uid,
+                                    username = username,
+                                    token = token
+                                )
+                                isLoginSuccess = true
                             }
                         } else {
                             login.message?.let {

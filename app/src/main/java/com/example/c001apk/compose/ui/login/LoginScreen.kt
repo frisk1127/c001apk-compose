@@ -246,7 +246,7 @@ fun LoginScreen(
         }
     }
 
-    if (prefs.isLogin) {
+    if (viewModel.isLoginSuccess) {
         onBackClick()
     }
 

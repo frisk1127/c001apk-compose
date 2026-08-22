@@ -89,15 +89,32 @@ fun WebView(
                 CookieManager.getInstance().let {
                     it.setAcceptCookie(true)
                     it.setAcceptThirdPartyCookies(this@apply, true)
-                    if (prefs.isLogin) {
-                        it.removeAllCookies { }
-                        it.setCookie(".coolapk.com", "DID=${prefs.szlmId}")
+                    if (isLogin) {
+                        it.removeAllCookies(null)
+                        it.removeSessionCookies(null)
+                        it.flush()
+                        if (prefs.szlmId.isNotEmpty()) {
+                            it.setCookie(".coolapk.com", "DID=${prefs.szlmId}")
+                        }
+                        it.setCookie(".coolapk.com", "forward=https://www.coolapk.com")
+                        it.setCookie(".coolapk.com", "displayVersion=v14")
+                    } else if (prefs.isLogin) {
+                        it.removeAllCookies(null)
+                        if (prefs.szlmId.isNotEmpty()) {
+                            it.setCookie(".coolapk.com", "DID=${prefs.szlmId}")
+                        }
                         it.setCookie(".coolapk.com", "forward=https://www.coolapk.com")
                         it.setCookie(".coolapk.com", "displayVersion=v14")
                         it.setCookie(".coolapk.com", "uid=${prefs.uid}")
                         it.setCookie(".coolapk.com", "username=${prefs.username}")
                         it.setCookie(".coolapk.com", "token=${prefs.token}")
                     }
+                }
+
+                if (isLogin) {
+                    clearCache(true)
+                    clearFormData()
+                    clearHistory()
                 }
 
                 setDownloadListener { url, userAgent, contentDisposition, mimetype, _ ->
@@ -124,9 +141,9 @@ fun WebView(
                                         Environment.DIRECTORY_DOWNLOADS,
                                         fileName
                                     )
-                                val downloadManager =
-                                    context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-                                downloadManager.enqueue(request)
+                                    val downloadManager =
+                                        context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+                                    downloadManager.enqueue(request)
                             } catch (e: Exception) {
                                 context.makeToast("下载失败")
                                 context.copyText(url)
@@ -145,9 +162,11 @@ fun WebView(
                         request?.let {
                             val requestUrl = request.url.toString()
 
-                            if (isLogin && requestUrl == "https://www.coolapk.com/") {
-                                val cookie = CookieManager.getInstance().getCookie(requestUrl)
-                                onFinishLogin(cookie)
+                            if (isLogin) {
+                                val cookie = CookieManager.getInstance().getCookie(requestUrl).orEmpty()
+                                if (cookie.contains("uid=") && cookie.contains("token=")) {
+                                    onFinishLogin(cookie)
+                                }
                             }
 
                             try {
@@ -183,6 +202,16 @@ fun WebView(
                             }
                         }
                         return super.shouldOverrideUrlLoading(webView, request)
+                    }
+
+                    override fun onPageFinished(view: WebView?, url: String?) {
+                        super.onPageFinished(view, url)
+                        if (isLogin && url != null) {
+                            val cookie = CookieManager.getInstance().getCookie(url).orEmpty()
+                            if (cookie.contains("uid=") && cookie.contains("token=")) {
+                                onFinishLogin(cookie)
+                            }
+                        }
                     }
                 }
 

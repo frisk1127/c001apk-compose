@@ -39,12 +39,27 @@ object AddCookiesInterceptor : Interceptor {
             addHeader("X-App-Mode", MODE)
             addHeader("X-App-Supported", CookieUtil.versionCode)
             addHeader("Content-Type", "application/x-www-form-urlencoded")
-            if (CookieUtil.isLogin)
-                addHeader(
+            val overrideUid = chain.request().header("X-Override-Uid")
+            val overrideUsername = chain.request().header("X-Override-Username")
+            val overrideToken = chain.request().header("X-Override-Token")
+
+            if (!overrideUid.isNullOrEmpty() && !overrideToken.isNullOrEmpty()) {
+                builder.removeHeader("X-Override-Uid")
+                builder.removeHeader("X-Override-Username")
+                builder.removeHeader("X-Override-Token")
+                builder.removeHeader("Cookie")
+                builder.addHeader(
+                    "Cookie",
+                    "uid=$overrideUid; username=${overrideUsername.orEmpty()}; token=$overrideToken"
+                )
+            } else if (CookieUtil.isLogin) {
+                builder.addHeader(
                     "Cookie",
                     "uid=${CookieUtil.uid}; username=${CookieUtil.username}; token=${CookieUtil.token}"
                 )
-            else addHeader("Cookie", SESSID)
+            } else {
+                addHeader("Cookie", SESSID)
+            }
         }
         return chain.proceed(builder.build())
     }

@@ -71,6 +71,7 @@ import com.example.c001apk.compose.util.OSSUtil.getImageDimensionsAndMD5
 import com.example.c001apk.compose.util.OSSUtil.toHex
 import com.example.c001apk.compose.util.OnTextInputListener
 import com.example.c001apk.compose.util.OssUploadUtil.ossUpload
+import com.example.c001apk.compose.util.decode
 import com.example.c001apk.compose.util.dp
 import com.example.c001apk.compose.util.makeToast
 import com.example.c001apk.compose.util.performConfiguredHapticFeedback
@@ -78,6 +79,7 @@ import com.example.c001apk.compose.view.SmoothInputLayout
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import kotlinx.coroutines.flow.firstOrNull
 import com.google.android.material.elevation.SurfaceColors
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -464,6 +466,7 @@ class ReplyActivity : AppCompatActivity(),
         binding.atBtn.setOnClickListener(this)
         binding.tagBtn.setOnClickListener(this)
         binding.checkBox.setOnClickListener(this)
+        binding.accountSwitchLayout?.setOnClickListener(this)
         binding.publish.setOnClickListener(this)
         binding.editText.setOnTouchListener(this)
         binding.out.setOnTouchListener(this)
@@ -488,6 +491,25 @@ class ReplyActivity : AppCompatActivity(),
     }
 
     private fun initObserve() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.CREATED) {
+                viewModel.selectedAccount.collect { account ->
+                    if (account != null) {
+                        binding.accountAvatar?.load(account.userAvatar) {
+                            crossfade(true)
+                            error(R.mipmap.ic_launcher)
+                            placeholder(R.mipmap.ic_launcher)
+                        }
+                        binding.accountName?.text = account.username.decode
+                        binding.accountSwitchLayout?.visibility = View.VISIBLE
+                    } else {
+                        binding.accountAvatar?.setImageResource(R.mipmap.ic_launcher)
+                        binding.accountName?.text = "未登录"
+                    }
+                }
+            }
+        }
+
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.CREATED) {
                 viewModel.uploadImage.collect { responseData ->
@@ -939,6 +961,11 @@ class ReplyActivity : AppCompatActivity(),
             R.id.checkBox ->
                 ViewCompat.performHapticFeedback(view, HapticFeedbackConstantsCompat.CONFIRM)
 
+            R.id.accountSwitchLayout -> {
+                ViewCompat.performHapticFeedback(view, HapticFeedbackConstantsCompat.CONFIRM)
+                showAccountSelectDialog()
+            }
+
             R.id.publish -> {
                 performConfiguredHapticFeedback(
                     fallback = {
@@ -1028,6 +1055,60 @@ class ReplyActivity : AppCompatActivity(),
         } catch (e: ActivityNotFoundException) {
             makeToast("Activity Not Found")
             e.printStackTrace()
+        }
+    }
+
+    private fun showAccountSelectDialog() {
+        lifecycleScope.launch {
+            val accounts = viewModel.allAccounts.firstOrNull().orEmpty()
+            if (accounts.isEmpty()) {
+                makeToast("未检测到已保存的账号")
+                return@launch
+            }
+            val currentSelectedUid = viewModel.selectedAccount.value?.uid.orEmpty()
+            val layoutInflater = LayoutInflater.from(this@ReplyActivity)
+            val container = LinearLayout(this@ReplyActivity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(0, 8.dp, 0, 8.dp)
+            }
+
+            var dialogRef: AlertDialog? = null
+
+            accounts.forEach { account ->
+                val itemView = layoutInflater.inflate(R.layout.item_dialog_account_select, container, false)
+                val avatarView = itemView.findViewById<com.google.android.material.imageview.ShapeableImageView>(R.id.dialogAccountAvatar)
+                val nameView = itemView.findViewById<TextView>(R.id.dialogAccountName)
+                val levelView = itemView.findViewById<TextView>(R.id.dialogAccountLevel)
+                val uidView = itemView.findViewById<TextView>(R.id.dialogAccountUid)
+                val checkView = itemView.findViewById<ImageView>(R.id.dialogAccountCheck)
+
+                avatarView.load(account.userAvatar) {
+                    crossfade(true)
+                    error(R.mipmap.ic_launcher)
+                    placeholder(R.mipmap.ic_launcher)
+                }
+                nameView.text = account.username.decode
+                if (account.level.isNotEmpty() && account.level != "0") {
+                    levelView.text = "Lv.${account.level}"
+                    levelView.visibility = View.VISIBLE
+                } else {
+                    levelView.visibility = View.GONE
+                }
+                uidView.text = "UID: ${account.uid}"
+                checkView.visibility = if (account.uid == currentSelectedUid) View.VISIBLE else View.GONE
+
+                itemView.setOnClickListener {
+                    viewModel.selectAccount(account)
+                    dialogRef?.dismiss()
+                }
+                container.addView(itemView)
+            }
+
+            dialogRef = MaterialAlertDialogBuilder(this@ReplyActivity)
+                .setTitle("选择发帖账号")
+                .setView(container)
+                .setNegativeButton("取消", null)
+                .show()
         }
     }
 

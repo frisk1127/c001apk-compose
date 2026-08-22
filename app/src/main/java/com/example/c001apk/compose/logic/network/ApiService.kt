@@ -18,6 +18,7 @@ import retrofit2.Call
 import retrofit2.http.FieldMap
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
@@ -170,7 +171,10 @@ interface ApiService {
     fun postReply(
         @FieldMap data: HashMap<String, String>,
         @Query("id") id: String,
-        @Query("type") type: String
+        @Query("type") type: String,
+        @Header("X-Override-Uid") overrideUid: String? = null,
+        @Header("X-Override-Username") overrideUsername: String? = null,
+        @Header("X-Override-Token") overrideToken: String? = null
     ): Call<FeedContentResponse>
 
     @GET("/v6/page/dataList")
@@ -230,13 +234,19 @@ interface ApiService {
     @POST("/v6/feed/createFeed")
     @FormUrlEncoded
     fun postCreateFeed(
-        @FieldMap data: HashMap<String, String>
+        @FieldMap data: HashMap<String, String>,
+        @Header("X-Override-Uid") overrideUid: String? = null,
+        @Header("X-Override-Username") overrideUsername: String? = null,
+        @Header("X-Override-Token") overrideToken: String? = null
     ): Call<CreateFeedResponse>
 
     @POST("/v6/account/requestValidate")
     @FormUrlEncoded
     fun postRequestValidate(
-        @FieldMap data: HashMap<String, String?>
+        @FieldMap data: HashMap<String, String?>,
+        @Header("X-Override-Uid") overrideUid: String? = null,
+        @Header("X-Override-Username") overrideUsername: String? = null,
+        @Header("X-Override-Token") overrideToken: String? = null
     ): Call<LikeResponse>
 
     @GET("/v6/vote/commentList")
@@ -294,7 +304,10 @@ interface ApiService {
     @POST("/v6/upload/ossUploadPrepare")
     @FormUrlEncoded
     fun postOSSUploadPrepare(
-        @FieldMap data: HashMap<String, String>
+        @FieldMap data: HashMap<String, String>,
+        @Header("X-Override-Uid") overrideUid: String? = null,
+        @Header("X-Override-Username") overrideUsername: String? = null,
+        @Header("X-Override-Token") overrideToken: String? = null
     ): Call<OSSUploadPrepareResponse>
 
     @GET("/v6/feed/searchTag")

@@ -68,6 +68,7 @@ import com.example.c001apk.compose.ui.ffflist.FFFListScreen
 import com.example.c001apk.compose.ui.ffflist.FFFListType
 import com.example.c001apk.compose.ui.history.HistoryScreen
 import com.example.c001apk.compose.ui.login.LoginScreen
+import com.example.c001apk.compose.ui.account.AccountManageScreen
 import com.example.c001apk.compose.ui.notification.NoticeScreen
 import com.example.c001apk.compose.ui.others.CopyTextScreen
 import com.example.c001apk.compose.ui.search.SearchResultScreen
@@ -162,6 +163,9 @@ fun MainNavigation(
                     onParamsClick = {
                         navController.navigate(Router.PARAMS.name)
                     },
+                    onAccountManageClick = {
+                        navController.navigate(Router.ACCOUNT_MANAGE.name)
+                    },
                     onAboutClick = {
                         navController.navigate(Router.ABOUT.name)
                     },
@@ -195,6 +199,15 @@ fun MainNavigation(
             composable(route = Router.PARAMS.name) {
                 ParamsScreen(
                     onBackClick = navController::popBackStack
+                )
+            }
+
+            composable(route = Router.ACCOUNT_MANAGE.name) {
+                AccountManageScreen(
+                    onBackClick = navController::popBackStack,
+                    onAddAccountClick = {
+                        navController.navigate(Router.LOGIN.name)
+                    }
                 )
             }
 
