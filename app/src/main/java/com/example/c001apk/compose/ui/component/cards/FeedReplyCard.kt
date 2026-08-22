@@ -6,10 +6,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -74,7 +76,8 @@ fun FeedReplyCard(
     onLike: ((String, Int, LikeType) -> Unit)? = null,
     onDelete: ((String, LikeType, String?) -> Unit)? = null,
     onBlockUser: (String, String?) -> Unit,
-    onReply: ((String, String, String, String?) -> Unit)? = null, // rid, uid/fuid, uname, frid?
+    onReply: ((String, String, String, String?, String?) -> Unit)? = null, // rid, uid/fuid, uname, frid?, avatar
+    replyUserAvatars: Map<String, String> = emptyMap(),
 ) {
 
     var dropdownMenuExpanded by remember { mutableStateOf(false) }
@@ -108,7 +111,8 @@ fun FeedReplyCard(
                                     data.id.orEmpty(),
                                     data.uid.orEmpty(),
                                     data.userInfo?.username.orEmpty(),
-                                    null
+                                    null,
+                                    data.userInfo?.userAvatar ?: data.userAvatar,
                                 )
                             }
                         }
@@ -140,47 +144,62 @@ fun FeedReplyCard(
                 }
         )
 
-        LinkText(
-            text = data.likeUserInfo?.username ?: data.username.orEmpty(),
-            modifier = Modifier
-                .padding(start = 10.dp, top = vertical)
-                .constrainAs(username) {
-                    start.linkTo(avatar.end)
-                    top.linkTo(avatar.top)
-                    end.linkTo(if (!isLikeReply) expand.start else dateLine.start)
-                    width = Dimension.fillToConstraints
-                    if (isLikeReply || data.feed != null)
-                        bottom.linkTo(avatar.bottom)
-                },
-            maxLines = if (!isFeedReply) 1 else if (data.replyRows == null) null else 1,
-            onOpenLink = onOpenLink,
-        )
+        val generatedRelation = if (!isLikeReply && isTotalReply && data.ruid != "0") {
+            parseGeneratedRelation(data.username)
+        } else null
+        if (generatedRelation != null) {
+            ReplyRelationRow(
+                author = generatedRelation.first,
+                target = generatedRelation.second,
+                targetAvatar = replyUserAvatars[data.ruid],
+                onOpenLink = onOpenLink,
+                modifier = Modifier
+                    .padding(start = 10.dp, top = vertical)
+                    .constrainAs(username) {
+                        start.linkTo(avatar.end)
+                        top.linkTo(avatar.top)
+                        end.linkTo(expand.start)
+                        width = Dimension.fillToConstraints
+                    },
+            )
+        } else {
+            LinkText(
+                text = data.likeUserInfo?.username ?: data.username.orEmpty(),
+                modifier = Modifier
+                    .padding(start = 10.dp, top = vertical)
+                    .constrainAs(username) {
+                        start.linkTo(avatar.end)
+                        top.linkTo(avatar.top)
+                        end.linkTo(if (!isLikeReply) expand.start else dateLine.start)
+                        width = Dimension.fillToConstraints
+                        if (isLikeReply || data.feed != null)
+                            bottom.linkTo(avatar.bottom)
+                    },
+                maxLines = if (!isFeedReply) 1 else if (data.replyRows == null) null else 1,
+                onOpenLink = onOpenLink,
+            )
+        }
 
+        val messageModifier = Modifier
+            .padding(
+                start = if (!isLikeReply && data.feed == null) 10.dp else 0.dp,
+                top = if (!isLikeReply && data.feed == null) 5.dp else 10.dp,
+                end = horizontal
+            )
+            .constrainAs(message) {
+                start.linkTo(if (!isLikeReply && data.feed == null) avatar.end else parent.start)
+                top.linkTo(if (!isLikeReply && data.feed == null) username.bottom else avatar.bottom)
+                end.linkTo(parent.end)
+                width = Dimension.fillToConstraints
+            }
         LinkText(
-            text = if (isReply2Reply)
-                data.message?.substring(data.message.indexOfFirst { it == ':' } + 1)
+            text = if (isReply2Reply) replyBody(data.message)
             else if (isLikeReply) "赞了你的${data.infoHtml}"
             else if (!isFeedReply) {
                 if (data.ruid == "0") data.message.orEmpty()
-                else "回复<a class=\"feed-link-uname\" href=\"/u/" +
-                        data.ruid +
-                        "\">" +
-                        data.rusername +
-                        "</a>: " +
-                        data.message
+                else "回复<a class=\"feed-link-uname\" href=\"/u/${data.ruid}\">${data.rusername}</a>: ${data.message}"
             } else data.message.orEmpty(),
-            modifier = Modifier
-                .padding(
-                    start = if (!isLikeReply && data.feed == null) 10.dp else 0.dp,
-                    top = if (!isLikeReply && data.feed == null) 5.dp else 10.dp,
-                    end = horizontal
-                )
-                .constrainAs(message) {
-                    start.linkTo(if (!isLikeReply && data.feed == null) avatar.end else parent.start)
-                    top.linkTo(if (!isLikeReply && data.feed == null) username.bottom else avatar.bottom)
-                    end.linkTo(parent.end)
-                    width = Dimension.fillToConstraints
-                },
+            modifier = messageModifier,
             lineSpacingMultiplier = 1.2f,
             onOpenLink = onOpenLink,
         )
@@ -505,6 +524,8 @@ fun FeedReplyCard(
                             width = Dimension.fillToConstraints
                         },
                     data = data.replyRows,
+                    replyUserAvatars = replyUserAvatars,
+                    showReplyTargetAvatar = isTotalReply,
                     replyRowsMore = data.replyRowsMore ?: 0,
                     replyNum = data.replynum ?: EMPTY_STRING,
                     onShowTotalReply = { id ->
@@ -527,9 +548,9 @@ fun FeedReplyCard(
                             it(id, likeType, data.id.orEmpty())
                         }
                     },
-                    onReply = { rid, runame ->
+                    onReply = { rid, runame, ravatar ->
                         onReply?.let {
-                            it(rid, data.uid.orEmpty(), runame, data.id.orEmpty())
+                            it(rid, data.uid.orEmpty(), runame, data.id.orEmpty(), ravatar)
                         }
                     }
                 )
@@ -537,6 +558,140 @@ fun FeedReplyCard(
         }
 
     }
+}
+
+@Composable
+private fun ReplyRelationRow(
+    author: String,
+    target: String,
+    targetAvatar: String?,
+    onOpenLink: (String, String?) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        LinkText(
+            text = author,
+            textSize = 14f,
+            maxLines = 1,
+            onOpenLink = onOpenLink,
+        )
+        Text(
+            text = "回复",
+            modifier = Modifier.padding(horizontal = 4.dp),
+            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        if (!targetAvatar.isNullOrEmpty()) {
+            CoilLoader(
+                url = targetAvatar,
+                modifier = Modifier
+                    .padding(end = 3.dp)
+                    .size(16.dp)
+                    .clip(CircleShape),
+            )
+        }
+        LinkText(
+            text = target,
+            textSize = 14f,
+            maxLines = 1,
+            onOpenLink = onOpenLink,
+        )
+    }
+}
+
+@Composable
+private fun ReplyRelationWithBodyRow(
+    author: String,
+    target: String,
+    targetAvatar: String?,
+    body: String,
+    onOpenLink: (String, String?) -> Unit,
+    onShowTotalReply: () -> Unit,
+    imgList: List<String>?,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        LinkText(
+            text = author,
+            textSize = 14f,
+            maxLines = 1,
+            onOpenLink = onOpenLink,
+        )
+        Text(
+            text = "回复",
+            modifier = Modifier.padding(horizontal = 4.dp),
+            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        if (!targetAvatar.isNullOrEmpty()) {
+            CoilLoader(
+                url = targetAvatar,
+                modifier = Modifier
+                    .padding(end = 3.dp)
+                    .size(16.dp)
+                    .clip(CircleShape),
+            )
+        }
+        LinkText(
+            text = target,
+            textSize = 14f,
+            maxLines = 1,
+            onOpenLink = onOpenLink,
+        )
+        Text(
+            text = ": ",
+            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        LinkText(
+            text = body,
+            textSize = 14f,
+            lineSpacingMultiplier = 1.2f,
+            onOpenLink = onOpenLink,
+            isReply = true,
+            onShowTotalReply = onShowTotalReply,
+            imgList = imgList,
+        )
+    }
+}
+
+private fun replyBody(message: String?): String {
+    val value = message.orEmpty()
+    val relationEnd = Regex(
+        "^<a[^>]*>.*?</a>回复<a[^>]*>.*?</a>:\\s*",
+        setOf(RegexOption.DOT_MATCHES_ALL),
+    ).find(value)?.range?.last?.plus(1)
+    return if (relationEnd != null) value.substring(relationEnd) else value
+}
+
+private fun parseGeneratedRelation(username: String?): Pair<String, String>? {
+    val value = username ?: return null
+    val match = Regex(
+        "(<a[^>]*>.*?</a>)回复(<a[^>]*>.*?</a>)",
+        setOf(RegexOption.DOT_MATCHES_ALL),
+    ).find(value) ?: return null
+    return match.groupValues[1] to match.groupValues[2]
+}
+
+fun buildReplyAvatarMap(items: Iterable<HomeFeedResponse.Data>): Map<String, String> {
+    val result = LinkedHashMap<String, String>()
+    fun collect(rows: Iterable<HomeFeedResponse.Data>) {
+        rows.forEach { row ->
+            val avatar = row.userInfo?.userAvatar ?: row.userAvatar
+            if (!row.uid.isNullOrEmpty() && !avatar.isNullOrEmpty()) {
+                result[row.uid] = avatar
+            }
+            row.replyRows?.let(::collect)
+        }
+    }
+    collect(items)
+    return result
 }
 
 
@@ -553,7 +708,9 @@ fun ReplyRows(
     onReport: ((String, ReportType) -> Unit)? = null,
     onBlockUser: (String) -> Unit,
     onDelete: ((String, LikeType) -> Unit)? = null,
-    onReply: (String, String) -> Unit
+    onReply: (String, String, String?) -> Unit,
+    replyUserAvatars: Map<String, String> = emptyMap(),
+    showReplyTargetAvatar: Boolean = false,
 ) {
 
     var dropdownMenuExpanded by remember { mutableIntStateOf(-1) }
@@ -564,16 +721,13 @@ fun ReplyRows(
     ) {
         data?.forEachIndexed { index, reply ->
             Box {
-                LinkText(
-                    text = reply.message.orEmpty(),
-                    lineSpacingMultiplier = 1.2f,
-                    textSize = 14f,
-                    onOpenLink = onOpenLink,
-                    isReply = true,
-                    onShowTotalReply = {
-                        onShowTotalReply(null)
-                    },
-                    imgList = reply.picArr,
+                val relation = if (reply.ruid != "0" && !reply.rusername.isNullOrEmpty()) {
+                    Pair(
+                        "<a class=\"feed-link-uname\" href=\"/u/${reply.uid}\">${reply.username.orEmpty()}</a>",
+                        "<a class=\"feed-link-uname\" href=\"/u/${reply.ruid}\">${reply.rusername}</a>",
+                    )
+                } else null
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .combinedClickable(
@@ -582,7 +736,8 @@ fun ReplyRows(
                                     performHapticClick()
                                     onReply(
                                         reply.id.orEmpty(),
-                                        reply.username.orEmpty()
+                                        reply.username.orEmpty(),
+                                        reply.userInfo?.userAvatar ?: reply.userAvatar,
                                     )
                                 }
                             },
@@ -591,7 +746,30 @@ fun ReplyRows(
                             }
                         )
                         .padding(horizontal = 10.dp, vertical = 4.dp)
-                )
+                ) {
+                    if (showReplyTargetAvatar && relation != null) {
+                        ReplyRelationWithBodyRow(
+                            author = relation.first,
+                            target = relation.second,
+                            targetAvatar = replyUserAvatars[reply.ruid],
+                            body = replyBody(reply.message),
+                            onOpenLink = onOpenLink,
+                            modifier = Modifier.fillMaxWidth(),
+                            onShowTotalReply = { onShowTotalReply(null) },
+                            imgList = reply.picArr,
+                        )
+                    } else {
+                        LinkText(
+                            text = reply.message.orEmpty(),
+                            lineSpacingMultiplier = 1.2f,
+                            textSize = 14f,
+                            onOpenLink = onOpenLink,
+                            isReply = true,
+                            onShowTotalReply = { onShowTotalReply(null) },
+                            imgList = reply.picArr,
+                        )
+                    }
+                }
                 DropdownMenu(
                     expanded = dropdownMenuExpanded == index,
                     onDismissRequest = { dropdownMenuExpanded = -1 }
@@ -637,9 +815,13 @@ fun ReplyRows(
             }
 
         }
-        if (replyRowsMore != 0) {
+        if (!data.isNullOrEmpty() || replyRowsMore != 0) {
             LinkText(
-                text = "查看更多回复(" + replyNum + ")",
+                text = if (replyRowsMore != 0) {
+                    "查看更多回复($replyNum)"
+                } else {
+                    "查看全部评论"
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {

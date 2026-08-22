@@ -98,6 +98,7 @@ class FeedViewModel @AssistedInject constructor(
 
                         feedUid = response.uid.orEmpty()
                         feedUsername = response.username.orEmpty()
+                        feedAvatar = response.userInfo?.userAvatar ?: response.userAvatar.orEmpty()
                         replyCount = response.replynum.orEmpty()
                         feedTypeName = response.feedTypeName.orEmpty()
                         feedType = response.feedType.orEmpty()
@@ -180,6 +181,7 @@ class FeedViewModel @AssistedInject constructor(
 
     lateinit var feedUid: String
     lateinit var feedUsername: String
+    var feedAvatar: String = EMPTY_STRING
     var feedTypeName by mutableStateOf(EMPTY_STRING)
 
     override suspend fun customFetchData() =
@@ -275,6 +277,7 @@ class FeedViewModel @AssistedInject constructor(
     lateinit var replyId: String
     lateinit var replyUid: String
     lateinit var replyName: String
+    var replyAvatar: String? = null
     private var replyPage = 1
     private var replyLastItem: String? = null
     var isEndReply = false

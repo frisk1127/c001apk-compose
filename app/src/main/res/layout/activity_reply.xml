@@ -33,6 +33,33 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:text="回复" />
 
+        <ImageView
+            android:id="@+id/replyAvatar"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="10dp"
+            android:visibility="gone"
+            app:layout_constraintStart_toEndOf="@id/title"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:src="@tools:sample/avatars" />
+
+        <TextView
+            android:id="@+id/replyTargetName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="8dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textSize="14sp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toStartOf="@id/publish"
+            app:layout_constraintStart_toEndOf="@id/replyAvatar"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="用户名" />
+
         <TextView
             android:id="@+id/publish"
             android:layout_width="wrap_content"

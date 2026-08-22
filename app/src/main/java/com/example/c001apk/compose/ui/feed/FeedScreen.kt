@@ -74,6 +74,7 @@ import com.example.c001apk.compose.ui.component.ItemCard
 import com.example.c001apk.compose.ui.component.cards.FeedCard
 import com.example.c001apk.compose.ui.component.cards.FeedHeader
 import com.example.c001apk.compose.ui.component.cards.FeedReplyCard
+import com.example.c001apk.compose.ui.component.cards.buildReplyAvatarMap
 import com.example.c001apk.compose.ui.component.cards.FeedReplySortCard
 import com.example.c001apk.compose.ui.component.cards.LoadingCard
 import com.example.c001apk.compose.ui.component.rememberHapticClick
@@ -185,6 +186,7 @@ fun FeedScreen(
         intent.putExtra("type", viewModel.replyType)
         intent.putExtra("rid", viewModel.replyId)
         intent.putExtra("username", viewModel.replyName)
+        intent.putExtra("avatar", viewModel.replyAvatar)
         val options = ActivityOptionsCompat.makeCustomAnimation(
             context, R.anim.anim_bottom_sheet_slide_up, R.anim.anim_bottom_sheet_slide_down
         )
@@ -328,6 +330,7 @@ fun FeedScreen(
                             viewModel.replyId = viewModel.id
                             viewModel.replyUid = viewModel.feedUid
                             viewModel.replyName = viewModel.feedUsername
+                            viewModel.replyAvatar = viewModel.feedAvatar
                             viewModel.replyType = "feed"
                             launchReply()
                         }
@@ -385,6 +388,7 @@ fun FeedScreen(
 
                     is LoadingState.Success -> {
                         val response = (viewModel.feedState as LoadingState.Success).response
+                        val replyUserAvatars = buildReplyAvatarMap(listOf(response))
                         if (!articleList.isNullOrEmpty()) {
                             ArticleItem(
                                 response = response,
@@ -465,10 +469,12 @@ fun FeedScreen(
                                                 viewModel.frid = frid
                                                 viewModel.onBlockUser(uid)
                                             },
-                                            onReply = { rid, uid, username, frid ->
+                                            replyUserAvatars = replyUserAvatars,
+                                            onReply = { rid, uid, username, frid, avatar ->
                                                 viewModel.replyId = rid
                                                 viewModel.replyUid = uid
                                                 viewModel.replyName = username
+                                                viewModel.replyAvatar = avatar
                                                 viewModel.frid = frid
                                                 viewModel.replyType = "reply"
                                                 launchReply()
@@ -498,10 +504,12 @@ fun FeedScreen(
                                                 viewModel.frid = frid
                                                 viewModel.onBlockUser(uid)
                                             },
-                                            onReply = { rid, uid, username, frid ->
+                                            replyUserAvatars = replyUserAvatars,
+                                            onReply = { rid, uid, username, frid, avatar ->
                                                 viewModel.replyId = rid
                                                 viewModel.replyUid = uid
                                                 viewModel.replyName = username
+                                                viewModel.replyAvatar = avatar
                                                 viewModel.frid = frid
                                                 viewModel.replyType = "reply"
                                                 launchReply()
@@ -543,10 +551,11 @@ fun FeedScreen(
                             viewModel.onBlockUser(uid)
                         },
                         onFollowUser = viewModel::onFollowUser,
-                        onReply = { rid, uid, username, frid ->
+                        onReply = { rid, uid, username, frid, avatar ->
                             viewModel.replyId = rid
                             viewModel.replyUid = uid
                             viewModel.replyName = username
+                            viewModel.replyAvatar = avatar
                             viewModel.frid = frid
                             viewModel.replyType = "reply"
                             launchReply()
@@ -638,11 +647,12 @@ fun FeedScreen(
                         viewModel.resetReplyState()
                         viewModel.fetchTotalReply()
                     },
-                    onReply = { rid, uid, username, _ ->
+                    onReply = { rid, uid, username, _, avatar ->
                         viewModel.isSheet = true
                         viewModel.replyId = rid
                         viewModel.replyUid = uid
                         viewModel.replyName = username
+                        viewModel.replyAvatar = avatar
                         viewModel.frid = null
                         viewModel.replyType = "reply"
                         launchReply()

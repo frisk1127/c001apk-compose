@@ -17,6 +17,7 @@ import com.example.c001apk.compose.ui.component.cards.CarouselCard
 import com.example.c001apk.compose.ui.component.cards.CollectionCard
 import com.example.c001apk.compose.ui.component.cards.FeedCard
 import com.example.c001apk.compose.ui.component.cards.FeedReplyCard
+import com.example.c001apk.compose.ui.component.cards.buildReplyAvatarMap
 import com.example.c001apk.compose.ui.component.cards.HeadCard
 import com.example.c001apk.compose.ui.component.cards.IconLinkGridCard
 import com.example.c001apk.compose.ui.component.cards.IconMiniGridCard
@@ -59,7 +60,7 @@ fun LazyListScope.ItemCard(
     onHandleMessage: ((String, Int) -> Unit)? = null,
     onViewChat: ((String, String, String) -> Unit)? = null,
     onDeleteNotice: ((String) -> Unit)? = null,
-    onReply: ((String, String, String, String?) -> Unit)? = null,
+    onReply: ((String, String, String, String?, String?) -> Unit)? = null,
     productConfigRows: List<HomeFeedResponse.ProductConfig> = emptyList(),
     selectedProductConfigIds: Set<String> = emptySet(),
     onViewProductConfig: ((HomeFeedResponse.ProductConfig) -> Unit)? = null,
@@ -86,6 +87,7 @@ fun LazyListScope.ItemCard(
         }
 
         is LoadingState.Success -> {
+            val replyUserAvatars = buildReplyAvatarMap(loadingState.response)
             itemsIndexed(
                 items = loadingState.response,
                 key = { _, item -> item.entityId + item.dateline + item.fuid + item.likeUid },
@@ -207,6 +209,7 @@ fun LazyListScope.ItemCard(
                             onLike = onLike,
                             onDelete = onDelete,
                             onBlockUser = onBlockUser,
+                            replyUserAvatars = replyUserAvatars,
                             isReply2Reply = if (index == 0) isReply2Reply else false,
                             onReply = onReply,
                         )

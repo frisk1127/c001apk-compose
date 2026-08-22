@@ -51,6 +51,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.viewpager2.widget.ViewPager2
 import coil.load
+import coil.transform.CircleCropTransformation
 import com.example.c001apk.compose.BuildConfig
 import com.example.c001apk.compose.R
 import com.example.c001apk.compose.ThemeType
@@ -115,6 +116,7 @@ class ReplyActivity : AppCompatActivity(),
     private val type: String? by lazy { intent.getStringExtra("type") }
     private val rid: String? by lazy { intent.getStringExtra("rid") }
     private val username: String? by lazy { intent.getStringExtra("username") }
+    private val avatar: String? by lazy { intent.getStringExtra("avatar") }
 
     private val targetType: String? by lazy { intent.getStringExtra("targetType") }
     private val targetId: String? by lazy { intent.getStringExtra("targetId") }
@@ -636,8 +638,20 @@ class ReplyActivity : AppCompatActivity(),
         else "回复并转发"
         binding.title.text = if (type == "createFeed") "发布动态"
         else "回复"
-        if (type != "createFeed" && !username.isNullOrEmpty())
+        if (type != "createFeed" && !username.isNullOrEmpty()) {
             binding.editText.hint = "回复: " + username
+            binding.replyTargetName?.isVisible = true
+            binding.replyTargetName?.text = username
+            binding.replyAvatar?.apply {
+                isVisible = !avatar.isNullOrEmpty()
+                setImageDrawable(null)
+                if (!avatar.isNullOrEmpty()) {
+                    load(avatar) {
+                        transformations(CircleCropTransformation())
+                    }
+                }
+            }
+        }
         binding.publish.isClickable = false
         title?.let {
             binding.editText.editableText.append("#${title}# ")
