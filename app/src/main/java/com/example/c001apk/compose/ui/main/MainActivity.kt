@@ -86,9 +86,7 @@ class MainActivity : ComponentActivity() {
                 url = it.toString(),
                 title = null,
                 needConvert = true,
-                onSearch = { keyword ->
-                    searchViewModel.saveHistory(keyword)
-                }
+                onSearch = searchViewModel::saveHistory
             )
         }
     }

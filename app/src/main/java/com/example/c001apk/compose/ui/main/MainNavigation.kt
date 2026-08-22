@@ -839,7 +839,10 @@ fun NavHostController.onOpenLink(
         }
 
         path.startsWith(PREFIX_SEARCH) -> {
-            val keyword = Uri.parse(path).getQueryParameter("searchValue").orEmpty()
+            val sourceUri = Uri.parse(url)
+                .takeIf { it.scheme.equals(PREFIX_COOLMARKET.removeSuffix("://"), ignoreCase = true) }
+                ?: Uri.parse(path)
+            val keyword = sourceUri.getQueryParameter("searchValue").orEmpty()
             if (keyword.isEmpty()) {
                 navigateToSearch(null, null, null)
             } else {
