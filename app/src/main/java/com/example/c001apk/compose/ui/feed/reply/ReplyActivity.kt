@@ -1,5 +1,8 @@
 package com.example.c001apk.compose.ui.feed.reply
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ActivityNotFoundException
@@ -36,6 +39,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.HapticFeedbackConstantsCompat
@@ -127,6 +131,7 @@ class ReplyActivity : AppCompatActivity(),
     }
     private val color by lazy { resolveSurfaceContainerColor() }
     private val imeScrimDrawable by lazy { ColorDrawable(color) }
+    private val externalLaunchScrimDrawable by lazy { ColorDrawable(color) }
     private val recentList = ArrayList<List<Pair<String, Int>>>()
     private val list = listOf(recentList, emojiList, coolBList)
     private lateinit var pickContent: ActivityResultLauncher<String>
@@ -148,6 +153,14 @@ class ReplyActivity : AppCompatActivity(),
     private var isEmojiPanelRequested = false
     private var animateEmojiInputDescent = false
     private var emojiInputDescentStart = 0f
+    private var isEmojiPanelEntranceAnimating = false
+    private var pendingExternalLaunch: (() -> Unit)? = null
+    private var isWaitingForImeHide = false
+    private var imeHideSuppressed = false
+    private var isExternalInputDescentAnimating = false
+    private var externalInputDescentAnimator: ValueAnimator? = null
+    private val externalLaunchHandler = Handler(Looper.getMainLooper())
+    private val externalLaunchTimeout = Runnable { runPendingExternalLaunch(force = true) }
     private var baseRootPaddingBottom = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -187,17 +200,21 @@ class ReplyActivity : AppCompatActivity(),
                 val imeAnimation = runningAnimations.lastOrNull {
                     (it.typeMask and WindowInsetsCompat.Type.ime()) != 0
                 }
-                val translation = if (animateEmojiInputDescent && imeAnimation != null) {
-                    val fraction = imeAnimation.fraction.coerceIn(0f, 1f)
-                    emojiInputDescentStart * (1f - smoothStep(fraction))
-                } else {
-                    calculateInputTranslation(
-                        imeInset = if (useImeInset) imeInset else 0,
-                        navInset = navInset
-                    )
+                if (!isExternalInputDescentAnimating && !imeHideSuppressed) {
+                    val translation = if (animateEmojiInputDescent && imeAnimation != null) {
+                        val fraction = imeAnimation.fraction.coerceIn(0f, 1f)
+                        emojiInputDescentStart * (1f - smoothStep(fraction))
+                    } else {
+                        calculateInputTranslation(
+                            imeInset = if (useImeInset) imeInset else 0,
+                            navInset = navInset
+                        )
+                    }
+                    updateReplyPanelTranslation(translation)
                 }
-                updateReplyPanelTranslation(translation)
-                if (useImeInset && imeInset > 0 && binding.bottomLayout == null && !isEmojiPanelVisible) {
+                if (useImeInset && imeInset > 0 && binding.bottomLayout == null &&
+                    !isEmojiPanelVisible && !imeHideSuppressed
+                ) {
                     imeScrimDrawable.setBounds(
                         0,
                         binding.main.height - (imeInset - navInset),
@@ -218,10 +235,17 @@ class ReplyActivity : AppCompatActivity(),
                         updateReplyPanelTranslation(0f)
                     }
                     animateEmojiInputDescent = false
+                    imeHideSuppressed = false
+                    if (pendingExternalLaunch != null && isWaitingForImeHide) {
+                        isWaitingForImeHide = false
+                        runPendingExternalLaunch()
+                    }
                 }
                 val isImeVisible = ViewCompat.getRootWindowInsets(binding.editText)
                     ?.isVisible(WindowInsetsCompat.Type.ime()) == true
-                if (isImeVisible && isEmojiPanelVisible && !isEmojiPanelRequested) {
+                if (isImeVisible && isEmojiPanelVisible && !isEmojiPanelRequested &&
+                    pendingExternalLaunch == null && !imeHideSuppressed
+                ) {
                     closeEmojiPanelForIme()
                 }
                 ViewCompat.requestApplyInsets(binding.main)
@@ -236,17 +260,25 @@ class ReplyActivity : AppCompatActivity(),
             val isImeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
             val useImeInset = isImeVisible || imeInset > 0
             if (isImeVisible) {
-                if (!imeAnimating && !isEmojiPanelRequested && binding.bottomLayout == null) {
+                if (!imeAnimating && !isEmojiPanelRequested && !imeHideSuppressed &&
+                    binding.bottomLayout == null
+                ) {
                     closeEmojiPanelForIme(imeInset, navInset)
                 }
             }
-            if (!imeAnimating) {
-                val translation = calculateInputTranslation(
-                    imeInset = if (useImeInset) imeInset else 0,
-                    navInset = navInset
-                )
-                updateReplyPanelTranslation(translation)
-                if (useImeInset && imeInset > 0 && binding.bottomLayout == null && !isEmojiPanelVisible) {
+            if (!imeAnimating && !isEmojiPanelEntranceAnimating &&
+                !isExternalInputDescentAnimating
+            ) {
+                if (!imeHideSuppressed) {
+                    val translation = calculateInputTranslation(
+                        imeInset = if (useImeInset) imeInset else 0,
+                        navInset = navInset
+                    )
+                    updateReplyPanelTranslation(translation)
+                }
+                if (useImeInset && imeInset > 0 && binding.bottomLayout == null &&
+                    !isEmojiPanelVisible && !imeHideSuppressed
+                ) {
                     imeScrimDrawable.setBounds(
                         0,
                         binding.main.height - (imeInset - navInset),
@@ -263,6 +295,10 @@ class ReplyActivity : AppCompatActivity(),
                 bottom = baseRootPaddingBottom + navInset,
                 top = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
             )
+            if (!isImeVisible && !imeAnimating && pendingExternalLaunch != null) {
+                isWaitingForImeHide = false
+                runPendingExternalLaunch()
+            }
             insets
         }
         ViewCompat.requestApplyInsets(binding.main)
@@ -371,6 +407,11 @@ class ReplyActivity : AppCompatActivity(),
             binding.editText.postDelayed({ showInput() }, 200)
             startImeRetry()
         }
+        if (hasFocus && imeHideSuppressed) {
+            // 窗口失焦期间 IME 动画回调可能丢失，恢复时重置状态避免输入框位置冻结
+            imeHideSuppressed = false
+            ViewCompat.requestApplyInsets(binding.main)
+        }
     }
 
 
@@ -447,6 +488,7 @@ class ReplyActivity : AppCompatActivity(),
 
         pickContent =
             registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+                suppressExternalActivityReturnAnimation()
                 uri?.let {
                     handlePickedUris(listOf(it))
                 }
@@ -454,6 +496,7 @@ class ReplyActivity : AppCompatActivity(),
 
         pickDocument =
             registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+                suppressExternalActivityReturnAnimation()
                 handlePickedUris(uris)
             }
     }
@@ -820,9 +863,21 @@ class ReplyActivity : AppCompatActivity(),
 
     override fun onDestroy() {
         super.onDestroy()
+        cancelEmojiPanelEntranceAnimation()
         closeDialog()
         countDownTimer.cancel()
         imeRetryHandler.removeCallbacks(imeRetryRunnable)
+        externalLaunchHandler.removeCallbacks(externalLaunchTimeout)
+        externalInputDescentAnimator?.apply {
+            removeAllListeners()
+            cancel()
+        }
+        externalInputDescentAnimator = null
+        binding.main.overlay.remove(externalLaunchScrimDrawable)
+        isWaitingForImeHide = false
+        imeHideSuppressed = false
+        isExternalInputDescentAnimating = false
+        pendingExternalLaunch = null
     }
 
     override fun onAttachedToWindow() {
@@ -834,6 +889,7 @@ class ReplyActivity : AppCompatActivity(),
     }
 
     private fun showInput() {
+        cancelEmojiPanelEntranceAnimation()
         isEmojiPanelRequested = false
         animateEmojiInputDescent = false
         if (binding.main is SmoothInputLayout)
@@ -872,12 +928,18 @@ class ReplyActivity : AppCompatActivity(),
     }
 
     private fun showEmoji() {
+        val insets = ViewCompat.getRootWindowInsets(binding.editText)
+        val animatePanelEntrance = binding.main is SmoothInputLayout &&
+            !isEmojiPanelVisible &&
+            insets?.isVisible(WindowInsetsCompat.Type.ime()) != true
+        isEmojiPanelEntranceAnimating = animatePanelEntrance
         isEmojiPanelRequested = true
         (binding.main as? SmoothInputLayout)?.showEmojiPanelBehindKeyboard(true)
         binding.main.doOnPreDraw {
             if (isEmojiPanelRequested) {
-                val insets = ViewCompat.getRootWindowInsets(binding.editText)
-                if (insets != null) {
+                if (animatePanelEntrance) {
+                    animateEmojiPanelEntrance()
+                } else if (insets != null) {
                     updateReplyPanelTranslation(
                         calculateInputTranslation(
                             imeInset = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom,
@@ -885,9 +947,54 @@ class ReplyActivity : AppCompatActivity(),
                         )
                     )
                 }
-                hideImeForEmoji()
+                if (insets?.isVisible(WindowInsetsCompat.Type.ime()) == true) {
+                    hideImeForEmoji()
+                    ViewCompat.requestApplyInsets(binding.main)
+                }
+            }
+        }
+    }
+
+    private fun animateEmojiPanelEntrance() {
+        val panelHeight = max(
+            binding.emojiLayout.measuredHeight,
+            binding.emojiLayout.layoutParams.height
+        ).toFloat()
+        if (panelHeight <= 0f) {
+            isEmojiPanelEntranceAnimating = false
+            updateReplyPanelTranslation(0f)
+            return
+        }
+
+        binding.inputLayout.animate().cancel()
+        binding.emojiLayout.animate().cancel()
+        binding.inputLayout.translationY = panelHeight
+        binding.emojiLayout.translationY = panelHeight - 1f
+        binding.inputLayout.animate()
+            .translationY(0f)
+            .setDuration(260L)
+            .setInterpolator(android.view.animation.PathInterpolator(0.2f, 0f, 0f, 1f))
+            .start()
+        binding.emojiLayout.animate()
+            .translationY(-1f)
+            .setDuration(260L)
+            .setInterpolator(android.view.animation.PathInterpolator(0.2f, 0f, 0f, 1f))
+            .withEndAction {
+                isEmojiPanelEntranceAnimating = false
+                updateReplyPanelTranslation(0f)
                 ViewCompat.requestApplyInsets(binding.main)
             }
+            .start()
+    }
+
+    private fun cancelEmojiPanelEntranceAnimation() {
+        binding.inputLayout.animate().cancel()
+        binding.emojiLayout.animate().cancel()
+        isEmojiPanelEntranceAnimating = false
+        binding.emojiLayout.alpha = 1f
+        if (binding.bottomLayout == null) {
+            binding.inputLayout.translationY = 0f
+            binding.emojiLayout.translationY = 0f
         }
     }
 
@@ -927,22 +1034,22 @@ class ReplyActivity : AppCompatActivity(),
         when (view.id) {
             R.id.atBtn -> {
                 ViewCompat.performHapticFeedback(view, HapticFeedbackConstantsCompat.CONFIRM)
-                launchAtTopic("user")
+                launchAtTopic("user", view)
             }
 
             R.id.tagBtn -> {
                 ViewCompat.performHapticFeedback(view, HapticFeedbackConstantsCompat.CONFIRM)
-                launchAtTopic("topic")
+                launchAtTopic("topic", view)
             }
 
             R.id.imageBtn -> {
                 ViewCompat.performHapticFeedback(view, HapticFeedbackConstantsCompat.CONFIRM)
-                launchPick()
+                launchPick(view)
             }
 
             R.id.otherImageBtn -> {
                 ViewCompat.performHapticFeedback(view, HapticFeedbackConstantsCompat.CONFIRM)
-                launchDocumentPick()
+                launchDocumentPick(view)
             }
 
             R.id.emojiBtn -> {
@@ -1019,30 +1126,151 @@ class ReplyActivity : AppCompatActivity(),
         dialog?.window?.setLayout(width, height)
     }
 
-    private fun launchAtTopic(type: String) {
+    private fun launchAtTopic(type: String, view: View) {
         val intent = Intent(this, AtTopicActivity::class.java)
         intent.putExtra("type", type)
-        atTopicResultLauncher.launch(intent)
-    }
-
-    private fun launchPick() {
-        (binding.main as? SmoothInputLayout)?.closeKeyboard(false)
-        try {
-            pickContent.launch("image/*")
-        } catch (e: ActivityNotFoundException) {
-            makeToast("Activity Not Found")
-            e.printStackTrace()
+        launchAfterImeHidden(view) {
+            atTopicResultLauncher.launch(intent, createStationaryBackgroundOptions())
         }
     }
 
-    private fun launchDocumentPick() {
-        (binding.main as? SmoothInputLayout)?.closeKeyboard(false)
-        try {
-            pickDocument.launch(arrayOf("image/*"))
-        } catch (e: ActivityNotFoundException) {
-            makeToast("Activity Not Found")
-            e.printStackTrace()
+    private fun launchPick(view: View) {
+        launchAfterImeHidden(view) {
+            try {
+                pickContent.launch("image/*", createStationaryBackgroundOptions())
+            } catch (e: ActivityNotFoundException) {
+                makeToast("Activity Not Found")
+                e.printStackTrace()
+            }
         }
+    }
+
+    private fun launchDocumentPick(view: View) {
+        launchAfterImeHidden(view) {
+            try {
+                pickDocument.launch(
+                    arrayOf("image/*"),
+                    createStationaryBackgroundOptions()
+                )
+            } catch (e: ActivityNotFoundException) {
+                makeToast("Activity Not Found")
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun launchAfterImeHidden(view: View, launch: () -> Unit) {
+        // 立即结束按钮的 ripple 动画，避免其持续到二级界面打开
+        view.isPressed = false
+        view.jumpDrawablesToCurrentState()
+        pendingExternalLaunch = launch
+        externalLaunchHandler.removeCallbacks(externalLaunchTimeout)
+        val insets = ViewCompat.getRootWindowInsets(binding.editText)
+        val imeVisible = insets?.isVisible(WindowInsetsCompat.Type.ime()) == true
+
+        if (imeVisible) {
+            isEmojiPanelRequested = false
+            animateEmojiInputDescent = false
+            isWaitingForImeHide = true
+            imeHideSuppressed = true
+            startExternalInputDescent()
+            (binding.main as? SmoothInputLayout)?.closeKeyboard(false)
+            WindowCompat.getInsetsController(window, binding.editText)
+                .hide(WindowInsetsCompat.Type.ime())
+            externalLaunchHandler.postDelayed(externalLaunchTimeout, 450L)
+        } else {
+            isWaitingForImeHide = false
+            imeHideSuppressed = false
+            isExternalInputDescentAnimating = false
+            if (isEmojiPanelVisible) {
+                (binding.main as? SmoothInputLayout)?.closeEmojiPanel()
+                updateReplyPanelTranslation(0f)
+            }
+            binding.main.postOnAnimation { runPendingExternalLaunch() }
+        }
+    }
+
+    private fun startExternalInputDescent() {
+        externalInputDescentAnimator?.apply {
+            removeAllListeners()
+            cancel()
+        }
+        if (binding.bottomLayout != null || binding.inputLayout.translationY == 0f) {
+            isExternalInputDescentAnimating = false
+            return
+        }
+
+        val startTranslation = binding.inputLayout.translationY
+        isExternalInputDescentAnimating = true
+        binding.main.overlay.remove(externalLaunchScrimDrawable)
+        updateExternalLaunchScrim(startTranslation)
+        binding.main.overlay.add(externalLaunchScrimDrawable)
+        externalInputDescentAnimator = ValueAnimator.ofFloat(startTranslation, 0f).apply {
+            duration = 240L
+            interpolator = android.view.animation.PathInterpolator(0.4f, 0f, 0.2f, 1f)
+            addUpdateListener { animator ->
+                val translation = animator.animatedValue as Float
+                updateReplyPanelTranslation(translation)
+                updateExternalLaunchScrim(translation)
+            }
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    externalInputDescentAnimator = null
+                    binding.main.overlay.remove(externalLaunchScrimDrawable)
+                    updateReplyPanelTranslation(0f)
+                    isExternalInputDescentAnimating = false
+                    // 下降动画结束即启动二级界面，不必等 IME 收起动画完成
+                    runPendingExternalLaunch(force = true)
+                }
+            })
+            start()
+        }
+    }
+
+    private fun updateExternalLaunchScrim(translation: Float) {
+        val top = (binding.inputLayout.bottom + translation).roundToInt()
+            .coerceIn(0, binding.main.height)
+        externalLaunchScrimDrawable.setBounds(
+            0,
+            top,
+            binding.main.width,
+            binding.main.height
+        )
+    }
+
+    private fun runPendingExternalLaunch(force: Boolean = false) {
+        val launch = pendingExternalLaunch ?: return
+        if (!force && (isWaitingForImeHide || isExternalInputDescentAnimating)) return
+        pendingExternalLaunch = null
+        externalLaunchHandler.removeCallbacks(externalLaunchTimeout)
+        if (force) {
+            externalInputDescentAnimator?.apply {
+                removeAllListeners()
+                cancel()
+            }
+            externalInputDescentAnimator = null
+            binding.main.overlay.remove(externalLaunchScrimDrawable)
+            isWaitingForImeHide = false
+            isExternalInputDescentAnimating = false
+        }
+        updateReplyPanelTranslation(0f)
+        launch()
+    }
+
+    private fun createStationaryBackgroundOptions(): ActivityOptionsCompat {
+        return ActivityOptionsCompat.makeCustomAnimation(
+            this,
+            R.anim.activity_slide_in_right,
+            R.anim.activity_stay
+        )
+    }
+
+    @Suppress("DEPRECATION")
+    private fun suppressExternalActivityReturnAnimation() {
+        overridePendingTransition(
+            R.anim.activity_stay,
+            R.anim.activity_stay
+        )
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -1078,6 +1306,9 @@ class ReplyActivity : AppCompatActivity(),
 
     override fun onVisibilityChange(visibility: Int) { // 0->visible, 8->gone
         isEmojiPanelVisible = visibility == VISIBLE
+        if (!isEmojiPanelVisible && isEmojiPanelEntranceAnimating) {
+            cancelEmojiPanelEntranceAnimation()
+        }
         ViewCompat.requestApplyInsets(binding.main)
     }
 

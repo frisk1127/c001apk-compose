@@ -1,6 +1,8 @@
 package com.example.c001apk.compose.ui.feed.reply
 
+import android.app.Activity
 import android.content.Intent
+import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -47,12 +49,25 @@ import dagger.hilt.android.AndroidEntryPoint
 import androidx.hilt.navigation.compose.hiltViewModel
 import android.util.Log
 import com.example.c001apk.compose.BuildConfig
+import com.example.c001apk.compose.R
 
 @AndroidEntryPoint
 class AtTopicActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (SDK_INT >= 34) {
+            overrideActivityTransition(
+                Activity.OVERRIDE_TRANSITION_OPEN,
+                R.anim.activity_slide_in_right,
+                R.anim.activity_stay
+            )
+            overrideActivityTransition(
+                Activity.OVERRIDE_TRANSITION_CLOSE,
+                R.anim.activity_stay,
+                R.anim.activity_slide_out_right
+            )
+        }
         val type = intent.getStringExtra("type") ?: "user"
         setContent {
             C001apkComposeTheme(
@@ -74,6 +89,17 @@ class AtTopicActivity : ComponentActivity() {
                     }
                 )
             }
+        }
+    }
+
+    override fun finish() {
+        super.finish()
+        if (SDK_INT < 34) {
+            @Suppress("DEPRECATION")
+            overridePendingTransition(
+                R.anim.activity_stay,
+                R.anim.activity_slide_out_right
+            )
         }
     }
 }
