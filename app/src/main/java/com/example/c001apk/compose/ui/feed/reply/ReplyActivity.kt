@@ -163,7 +163,6 @@ class ReplyActivity : AppCompatActivity(),
     private val externalLaunchTimeout = Runnable { runPendingExternalLaunch(force = true) }
     private var baseRootPaddingBottom = 0
     private var isExiting = false
-    private var pendingExternalReturn = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         if (materialYou)
@@ -397,10 +396,6 @@ class ReplyActivity : AppCompatActivity(),
 
     override fun onResume() {
         super.onResume()
-        if (pendingExternalReturn) {
-            pendingExternalReturn = false
-            animateExternalActivityReturn()
-        }
         if (pendingShowKeyboard) {
             lifecycleScope.launch(Dispatchers.Main) {
                 delay(120)
@@ -506,8 +501,7 @@ class ReplyActivity : AppCompatActivity(),
 
         pickContent =
             registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-                pendingExternalReturn = true
-                animateExternalActivityReturn()
+                animatePhotoPickerReturn()
                 uri?.let {
                     handlePickedUris(listOf(it))
                 }
@@ -515,8 +509,7 @@ class ReplyActivity : AppCompatActivity(),
 
         pickDocument =
             registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
-                pendingExternalReturn = true
-                animateExternalActivityReturn()
+                suppressExternalActivityReturnAnimation()
                 handlePickedUris(uris)
             }
     }
@@ -1218,17 +1211,22 @@ class ReplyActivity : AppCompatActivity(),
         }
 
         val startTranslation = binding.inputLayout.translationY
+        val showGapScrim = !isEmojiPanelVisible
         isExternalInputDescentAnimating = true
         binding.main.overlay.remove(externalLaunchScrimDrawable)
-        updateExternalLaunchScrim(startTranslation)
-        binding.main.overlay.add(externalLaunchScrimDrawable)
+        if (showGapScrim) {
+            updateExternalLaunchScrim(startTranslation)
+            binding.main.overlay.add(externalLaunchScrimDrawable)
+        }
         externalInputDescentAnimator = ValueAnimator.ofFloat(startTranslation, 0f).apply {
             duration = 240L
             interpolator = android.view.animation.PathInterpolator(0.4f, 0f, 0.2f, 1f)
             addUpdateListener { animator ->
                 val translation = animator.animatedValue as Float
                 updateReplyPanelTranslation(translation)
-                updateExternalLaunchScrim(translation)
+                if (showGapScrim) {
+                    updateExternalLaunchScrim(translation)
+                }
             }
             addListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
@@ -1287,10 +1285,18 @@ class ReplyActivity : AppCompatActivity(),
     }
 
     @Suppress("DEPRECATION")
-    private fun animateExternalActivityReturn() {
+    private fun animatePhotoPickerReturn() {
         overridePendingTransition(
             R.anim.activity_stay,
             R.anim.activity_slide_out_right
+        )
+    }
+
+    @Suppress("DEPRECATION")
+    private fun suppressExternalActivityReturnAnimation() {
+        overridePendingTransition(
+            R.anim.activity_stay,
+            R.anim.activity_stay
         )
     }
 
@@ -1338,6 +1344,13 @@ class ReplyActivity : AppCompatActivity(),
         if (isExiting) return
         isExiting = true
         imeHideSuppressed = true
+        if (isEmojiPanelVisible) {
+            cancelEmojiPanelEntranceAnimation()
+            binding.main.overlay.remove(imeScrimDrawable)
+            binding.main.overlay.remove(externalLaunchScrimDrawable)
+            animateExitSlideOut(includeEmojiPanel = true)
+            return
+        }
         val imeVisible = ViewCompat.getRootWindowInsets(binding.editText)
             ?.isVisible(WindowInsetsCompat.Type.ime()) == true
         if (imeVisible && binding.inputLayout.translationY != 0f) {
@@ -1346,13 +1359,20 @@ class ReplyActivity : AppCompatActivity(),
             WindowCompat.getInsetsController(window, binding.editText)
                 .hide(WindowInsetsCompat.Type.ime())
         } else {
-            animateExitSlideOut()
+            animateExitSlideOut(includeEmojiPanel = false)
         }
     }
 
-    private fun animateExitSlideOut() {
-        val height = binding.inputLayout.height.toFloat()
-        binding.inputLayout.animate()
+    private fun animateExitSlideOut(includeEmojiPanel: Boolean = false) {
+        binding.main.overlay.remove(imeScrimDrawable)
+        binding.main.overlay.remove(externalLaunchScrimDrawable)
+        val animatedView = if (includeEmojiPanel) binding.main else binding.inputLayout
+        val height = if (includeEmojiPanel) {
+            binding.main.height.toFloat()
+        } else {
+            binding.inputLayout.height.toFloat()
+        }
+        animatedView.animate()
             .translationY(height)
             .setDuration(200L)
             .setInterpolator(android.view.animation.PathInterpolator(0.4f, 0f, 0.2f, 1f))
