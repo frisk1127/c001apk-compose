@@ -162,14 +162,26 @@ class ReplyActivity : AppCompatActivity(),
     private val externalLaunchHandler = Handler(Looper.getMainLooper())
     private val externalLaunchTimeout = Runnable { runPendingExternalLaunch(force = true) }
     private var baseRootPaddingBottom = 0
+    private var isExiting = false
+    private var pendingExternalReturn = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         if (materialYou)
             DynamicColors.applyToActivityIfAvailable(this)
         super.onCreate(savedInstanceState)
+        @Suppress("DEPRECATION")
+        overridePendingTransition(0, 0)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityReplyBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.main.post {
+            binding.main.translationY = binding.main.height.toFloat()
+            binding.main.animate()
+                .translationY(0f)
+                .setDuration(350L)
+                .setInterpolator(android.view.animation.PathInterpolator(0.2f, 0f, 0f, 1f))
+                .start()
+        }
         window.clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
         window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
         window.setSoftInputMode(
@@ -235,7 +247,9 @@ class ReplyActivity : AppCompatActivity(),
                         updateReplyPanelTranslation(0f)
                     }
                     animateEmojiInputDescent = false
-                    imeHideSuppressed = false
+                    if (!isExiting) {
+                        imeHideSuppressed = false
+                    }
                     if (pendingExternalLaunch != null && isWaitingForImeHide) {
                         isWaitingForImeHide = false
                         runPendingExternalLaunch()
@@ -383,6 +397,10 @@ class ReplyActivity : AppCompatActivity(),
 
     override fun onResume() {
         super.onResume()
+        if (pendingExternalReturn) {
+            pendingExternalReturn = false
+            animateExternalActivityReturn()
+        }
         if (pendingShowKeyboard) {
             lifecycleScope.launch(Dispatchers.Main) {
                 delay(120)
@@ -488,7 +506,8 @@ class ReplyActivity : AppCompatActivity(),
 
         pickContent =
             registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-                suppressExternalActivityReturnAnimation()
+                pendingExternalReturn = true
+                animateExternalActivityReturn()
                 uri?.let {
                     handlePickedUris(listOf(it))
                 }
@@ -496,7 +515,8 @@ class ReplyActivity : AppCompatActivity(),
 
         pickDocument =
             registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
-                suppressExternalActivityReturnAnimation()
+                pendingExternalReturn = true
+                animateExternalActivityReturn()
                 handlePickedUris(uris)
             }
     }
@@ -1034,22 +1054,22 @@ class ReplyActivity : AppCompatActivity(),
         when (view.id) {
             R.id.atBtn -> {
                 ViewCompat.performHapticFeedback(view, HapticFeedbackConstantsCompat.CONFIRM)
-                launchAtTopic("user", view)
+                launchAtTopic("user")
             }
 
             R.id.tagBtn -> {
                 ViewCompat.performHapticFeedback(view, HapticFeedbackConstantsCompat.CONFIRM)
-                launchAtTopic("topic", view)
+                launchAtTopic("topic")
             }
 
             R.id.imageBtn -> {
                 ViewCompat.performHapticFeedback(view, HapticFeedbackConstantsCompat.CONFIRM)
-                launchPick(view)
+                launchPick()
             }
 
             R.id.otherImageBtn -> {
                 ViewCompat.performHapticFeedback(view, HapticFeedbackConstantsCompat.CONFIRM)
-                launchDocumentPick(view)
+                launchDocumentPick()
             }
 
             R.id.emojiBtn -> {
@@ -1126,16 +1146,16 @@ class ReplyActivity : AppCompatActivity(),
         dialog?.window?.setLayout(width, height)
     }
 
-    private fun launchAtTopic(type: String, view: View) {
+    private fun launchAtTopic(type: String) {
         val intent = Intent(this, AtTopicActivity::class.java)
         intent.putExtra("type", type)
-        launchAfterImeHidden(view) {
+        launchAfterImeHidden {
             atTopicResultLauncher.launch(intent, createStationaryBackgroundOptions())
         }
     }
 
-    private fun launchPick(view: View) {
-        launchAfterImeHidden(view) {
+    private fun launchPick() {
+        launchAfterImeHidden {
             try {
                 pickContent.launch("image/*", createStationaryBackgroundOptions())
             } catch (e: ActivityNotFoundException) {
@@ -1145,8 +1165,8 @@ class ReplyActivity : AppCompatActivity(),
         }
     }
 
-    private fun launchDocumentPick(view: View) {
-        launchAfterImeHidden(view) {
+    private fun launchDocumentPick() {
+        launchAfterImeHidden {
             try {
                 pickDocument.launch(
                     arrayOf("image/*"),
@@ -1159,10 +1179,7 @@ class ReplyActivity : AppCompatActivity(),
         }
     }
 
-    private fun launchAfterImeHidden(view: View, launch: () -> Unit) {
-        // 立即结束按钮的 ripple 动画，避免其持续到二级界面打开
-        view.isPressed = false
-        view.jumpDrawablesToCurrentState()
+    private fun launchAfterImeHidden(launch: () -> Unit) {
         pendingExternalLaunch = launch
         externalLaunchHandler.removeCallbacks(externalLaunchTimeout)
         val insets = ViewCompat.getRootWindowInsets(binding.editText)
@@ -1219,8 +1236,12 @@ class ReplyActivity : AppCompatActivity(),
                     binding.main.overlay.remove(externalLaunchScrimDrawable)
                     updateReplyPanelTranslation(0f)
                     isExternalInputDescentAnimating = false
-                    // 下降动画结束即启动二级界面，不必等 IME 收起动画完成
-                    runPendingExternalLaunch(force = true)
+                    if (isExiting) {
+                        animateExitSlideOut()
+                    } else {
+                        // 下降动画结束即启动二级界面，不必等 IME 收起动画完成
+                        runPendingExternalLaunch(force = true)
+                    }
                 }
             })
             start()
@@ -1266,10 +1287,10 @@ class ReplyActivity : AppCompatActivity(),
     }
 
     @Suppress("DEPRECATION")
-    private fun suppressExternalActivityReturnAnimation() {
+    private fun animateExternalActivityReturn() {
         overridePendingTransition(
             R.anim.activity_stay,
-            R.anim.activity_stay
+            R.anim.activity_slide_out_right
         )
     }
 
@@ -1314,20 +1335,33 @@ class ReplyActivity : AppCompatActivity(),
 
 
     override fun finish() {
-        super.finish()
-        if (SDK_INT >= 34) {
-            overrideActivityTransition(
-                Activity.OVERRIDE_TRANSITION_CLOSE,
-                R.anim.anim_bottom_sheet_slide_up,
-                R.anim.anim_bottom_sheet_slide_down
-            )
+        if (isExiting) return
+        isExiting = true
+        imeHideSuppressed = true
+        val imeVisible = ViewCompat.getRootWindowInsets(binding.editText)
+            ?.isVisible(WindowInsetsCompat.Type.ime()) == true
+        if (imeVisible && binding.inputLayout.translationY != 0f) {
+            startExternalInputDescent()
+            (binding.main as? SmoothInputLayout)?.closeKeyboard(false)
+            WindowCompat.getInsetsController(window, binding.editText)
+                .hide(WindowInsetsCompat.Type.ime())
         } else {
-            @Suppress("DEPRECATION")
-            overridePendingTransition(
-                R.anim.anim_bottom_sheet_slide_up,
-                R.anim.anim_bottom_sheet_slide_down
-            )
+            animateExitSlideOut()
         }
+    }
+
+    private fun animateExitSlideOut() {
+        val height = binding.inputLayout.height.toFloat()
+        binding.inputLayout.animate()
+            .translationY(height)
+            .setDuration(200L)
+            .setInterpolator(android.view.animation.PathInterpolator(0.4f, 0f, 0.2f, 1f))
+            .withEndAction {
+                super.finish()
+                @Suppress("DEPRECATION")
+                overridePendingTransition(0, 0)
+            }
+            .start()
     }
 
 }
