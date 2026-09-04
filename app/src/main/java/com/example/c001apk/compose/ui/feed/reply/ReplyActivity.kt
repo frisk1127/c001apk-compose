@@ -34,6 +34,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
@@ -134,7 +135,7 @@ class ReplyActivity : AppCompatActivity(),
     private val externalLaunchScrimDrawable by lazy { ColorDrawable(color) }
     private val recentList = ArrayList<List<Pair<String, Int>>>()
     private val list = listOf(recentList, emojiList, coolBList)
-    private lateinit var pickContent: ActivityResultLauncher<String>
+    private lateinit var pickContent: ActivityResultLauncher<PickVisualMediaRequest>
     private lateinit var pickDocument: ActivityResultLauncher<Array<String>>
     private var uriList: MutableList<Uri> = ArrayList()
     private var imageList = ArrayList<OSSUploadPrepareModel>()
@@ -163,6 +164,7 @@ class ReplyActivity : AppCompatActivity(),
     private val externalLaunchTimeout = Runnable { runPendingExternalLaunch(force = true) }
     private var baseRootPaddingBottom = 0
     private var isExiting = false
+    private var pendingExternalReturn = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         if (materialYou)
@@ -396,6 +398,10 @@ class ReplyActivity : AppCompatActivity(),
 
     override fun onResume() {
         super.onResume()
+        if (pendingExternalReturn) {
+            pendingExternalReturn = false
+            animateExternalActivityReturn()
+        }
         if (pendingShowKeyboard) {
             lifecycleScope.launch(Dispatchers.Main) {
                 delay(120)
@@ -500,8 +506,7 @@ class ReplyActivity : AppCompatActivity(),
         }
 
         pickContent =
-            registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-                animatePhotoPickerReturn()
+            registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
                 uri?.let {
                     handlePickedUris(listOf(it))
                 }
@@ -509,7 +514,6 @@ class ReplyActivity : AppCompatActivity(),
 
         pickDocument =
             registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
-                suppressExternalActivityReturnAnimation()
                 handlePickedUris(uris)
             }
     }
@@ -1150,8 +1154,13 @@ class ReplyActivity : AppCompatActivity(),
     private fun launchPick() {
         launchAfterImeHidden {
             try {
-                pickContent.launch("image/*", createStationaryBackgroundOptions())
+                pendingExternalReturn = true
+                pickContent.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                    createStationaryBackgroundOptions()
+                )
             } catch (e: ActivityNotFoundException) {
+                pendingExternalReturn = false
                 makeToast("Activity Not Found")
                 e.printStackTrace()
             }
@@ -1161,11 +1170,13 @@ class ReplyActivity : AppCompatActivity(),
     private fun launchDocumentPick() {
         launchAfterImeHidden {
             try {
+                pendingExternalReturn = true
                 pickDocument.launch(
                     arrayOf("image/*"),
                     createStationaryBackgroundOptions()
                 )
             } catch (e: ActivityNotFoundException) {
+                pendingExternalReturn = false
                 makeToast("Activity Not Found")
                 e.printStackTrace()
             }
@@ -1285,18 +1296,10 @@ class ReplyActivity : AppCompatActivity(),
     }
 
     @Suppress("DEPRECATION")
-    private fun animatePhotoPickerReturn() {
+    private fun animateExternalActivityReturn() {
         overridePendingTransition(
             R.anim.activity_stay,
             R.anim.activity_slide_out_right
-        )
-    }
-
-    @Suppress("DEPRECATION")
-    private fun suppressExternalActivityReturnAnimation() {
-        overridePendingTransition(
-            R.anim.activity_stay,
-            R.anim.activity_stay
         )
     }
 
