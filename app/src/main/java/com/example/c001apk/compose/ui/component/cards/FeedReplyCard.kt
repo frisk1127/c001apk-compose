@@ -815,12 +815,14 @@ fun ReplyRows(
             }
 
         }
-        if (!data.isNullOrEmpty() || replyRowsMore != 0) {
+        // 全部评论都已展示且只有一条时，不显示"查看全部评论"入口
+        if (replyRowsMore != 0 || (data?.size ?: 0) > 1) {
+            val replyCountSuffix = replyNum.takeIf { it.isNotBlank() }?.let { "($it)" }.orEmpty()
             LinkText(
                 text = if (replyRowsMore != 0) {
                     "查看更多回复($replyNum)"
                 } else {
-                    "查看全部评论"
+                    "查看全部评论$replyCountSuffix"
                 },
                 modifier = Modifier
                     .fillMaxWidth()
