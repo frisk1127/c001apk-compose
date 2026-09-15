@@ -3,6 +3,7 @@ package com.example.c001apk.compose
 import android.app.Application
 import coil.Coil
 import coil.ImageLoader
+import com.example.c001apk.compose.dev.DevLog
 import com.example.c001apk.compose.util.CookieUtil.materialYou
 import com.example.c001apk.compose.util.AddCookiesInterceptor
 import com.example.c001apk.compose.util.dp
@@ -27,6 +28,7 @@ class C001Application : Application() {
         super.onCreate()
 
         c001Application = this
+        DevLog.init(this)
         if (materialYou) {
             DynamicColors.applyToActivitiesIfAvailable(this)
         }
