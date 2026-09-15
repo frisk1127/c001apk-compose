@@ -44,6 +44,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -66,6 +67,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.c001apk.compose.R
 import com.example.c001apk.compose.constant.Constants.EMPTY_STRING
 import com.example.c001apk.compose.logic.model.HomeFeedResponse
+import com.example.c001apk.compose.logic.providable.LocalDragHandoffToParent
 import com.example.c001apk.compose.logic.state.LoadingState
 import com.example.c001apk.compose.ui.base.LikeType
 import com.example.c001apk.compose.ui.component.ArticleItem
@@ -607,67 +609,70 @@ fun FeedScreen(
             modifier = Modifier.padding(top = topInset),
             sheetState = bottomSheetState,
         ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                ItemCard(
-                    loadingState = viewModel.replyLoadingState,
-                    loadMore = viewModel::loadMoreReply,
-                    isEnd = viewModel.isEndReply,
-                    onViewUser = { uid ->
-                        resetBottomSheet()
-                        onViewUser(uid)
-                    },
-                    onViewFeed = { id, isViewReply ->
-                        resetBottomSheet()
-                        onViewFeed(id, isViewReply)
-                    },
-                    onOpenLink = { url, title ->
-                        resetBottomSheet()
-                        onOpenLink(url, title)
-                    },
-                    onCopyText = {
-                        context.copyText(it?.getAllLinkAndText?.richToString())
-                    },
-                    onReport = { id, type ->
-                        resetBottomSheet()
-                        onReport(id, type)
-                    },
-                    isTotalReply = true,
-                    onLike = { id, like, likeType ->
-                        viewModel.onLikeReply(id, like, likeType)
-                    },
-                    onDelete = { id, deleteType, _ ->
-                        viewModel.onDeleteRely(id, deleteType)
-                    },
-                    onBlockUser = { uid, _ ->
-                        viewModel.onBlockReplyUser(uid)
-                    },
-                    isReply2Reply = !viewModel.frid.isNullOrEmpty(),
-                    onShowTotalReply = { id, uid, frid ->
-                        viewModel.replyId = id
-                        viewModel.replyUid = uid
-                        viewModel.frid = frid
-                        viewModel.resetReplyState()
-                        viewModel.fetchTotalReply()
-                    },
-                    onReply = { rid, uid, username, _, avatar ->
-                        viewModel.isSheet = true
-                        viewModel.replyId = rid
-                        viewModel.replyUid = uid
-                        viewModel.replyName = username
-                        viewModel.replyAvatar = avatar
-                        viewModel.frid = null
-                        viewModel.replyType = "reply"
-                        launchReply()
-                    },
-                )
+            // 该界面没有横向手势语义，正文把拖拽交还给父级，斜向滑动同样能滚动
+            CompositionLocalProvider(LocalDragHandoffToParent provides true) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    ItemCard(
+                        loadingState = viewModel.replyLoadingState,
+                        loadMore = viewModel::loadMoreReply,
+                        isEnd = viewModel.isEndReply,
+                        onViewUser = { uid ->
+                            resetBottomSheet()
+                            onViewUser(uid)
+                        },
+                        onViewFeed = { id, isViewReply ->
+                            resetBottomSheet()
+                            onViewFeed(id, isViewReply)
+                        },
+                        onOpenLink = { url, title ->
+                            resetBottomSheet()
+                            onOpenLink(url, title)
+                        },
+                        onCopyText = {
+                            context.copyText(it?.getAllLinkAndText?.richToString())
+                        },
+                        onReport = { id, type ->
+                            resetBottomSheet()
+                            onReport(id, type)
+                        },
+                        isTotalReply = true,
+                        onLike = { id, like, likeType ->
+                            viewModel.onLikeReply(id, like, likeType)
+                        },
+                        onDelete = { id, deleteType, _ ->
+                            viewModel.onDeleteRely(id, deleteType)
+                        },
+                        onBlockUser = { uid, _ ->
+                            viewModel.onBlockReplyUser(uid)
+                        },
+                        isReply2Reply = !viewModel.frid.isNullOrEmpty(),
+                        onShowTotalReply = { id, uid, frid ->
+                            viewModel.replyId = id
+                            viewModel.replyUid = uid
+                            viewModel.frid = frid
+                            viewModel.resetReplyState()
+                            viewModel.fetchTotalReply()
+                        },
+                        onReply = { rid, uid, username, _, avatar ->
+                            viewModel.isSheet = true
+                            viewModel.replyId = rid
+                            viewModel.replyUid = uid
+                            viewModel.replyName = username
+                            viewModel.replyAvatar = avatar
+                            viewModel.frid = null
+                            viewModel.replyType = "reply"
+                            launchReply()
+                        },
+                    )
 
-                FooterCard(
-                    footerState = viewModel.replyFooterState,
-                    loadMore = viewModel::loadMoreReply,
-                    isFeed = true
-                )
+                    FooterCard(
+                        footerState = viewModel.replyFooterState,
+                        loadMore = viewModel::loadMoreReply,
+                        isFeed = true
+                    )
+                }
             }
         }
     }

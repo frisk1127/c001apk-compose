@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.text.HtmlCompat
 import androidx.core.text.method.LinkMovementMethodCompat
+import com.example.c001apk.compose.logic.providable.LocalDragHandoffToParent
 import com.example.c001apk.compose.logic.providable.LocalUserPreferences
 import com.example.c001apk.compose.util.ImageShowUtil
 import com.example.c001apk.compose.view.LinkTextView
@@ -35,6 +36,7 @@ fun LinkText(
 ) {
     val contentColor = LocalContentColor.current
     val userPreference = LocalUserPreferences.current
+    val dragHandoffToParent = LocalDragHandoffToParent.current
 
     val primary = MaterialTheme.colorScheme.primary.toArgb()
     AndroidView(
@@ -60,6 +62,7 @@ fun LinkText(
             }
         },
         update = { textView ->
+            textView.dragHandoffToParent = dragHandoffToParent
             textView.setSpText(
                 text = text.orEmpty(),
                 color = primary,

@@ -11,8 +11,13 @@ import android.text.style.ClickableSpan
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.MotionEvent
+import android.view.ViewConfiguration
 import android.widget.TextView
+import kotlin.math.abs
+import com.example.c001apk.compose.dev.DevLog
 import com.example.c001apk.compose.util.SpannableStringBuilderUtil
+
+private const val TAG = "LinkDrag"
 
 //https://stackoverflow.com/questions/8558732
 class LinkTextView : androidx.appcompat.widget.AppCompatTextView {
@@ -23,6 +28,24 @@ class LinkTextView : androidx.appcompat.widget.AppCompatTextView {
 
     private var dontConsumeNonUrlClicks = true
     var linkHit = false
+    private var downX = 0f
+    private var downY = 0f
+    private var dragHandedOff = false
+
+    private val touchSlop by lazy { ViewConfiguration.get(context).scaledTouchSlop }
+
+    /**
+     * 置为 true 后本控件不再消费任何触摸事件，手势完整交给父级，斜向滑动也能
+     * 驱动父级滚动。链接点击不受影响——它由 movementMethod 在 ACTION_UP 触发，
+     * 与 onTouchEvent 的返回值无关。
+     */
+    var dragHandoffToParent = false
+        set(value) {
+            if (field != value) {
+                DevLog.d(TAG) { "dragHandoffToParent: $field -> $value" }
+                field = value
+            }
+        }
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
@@ -31,9 +54,45 @@ class LinkTextView : androidx.appcompat.widget.AppCompatTextView {
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                downX = event.x
+                downY = event.y
+                dragHandedOff = false
+            }
+
+            MotionEvent.ACTION_MOVE -> {
+                if (dragHandoffToParent && !dragHandedOff &&
+                    (abs(event.x - downX) > touchSlop || abs(event.y - downY) > touchSlop)
+                ) {
+                    dragHandedOff = true
+                }
+            }
+
+            MotionEvent.ACTION_UP -> {
+                // 已经当作拖拽出手势了，抬起时不要再触发链接点击
+                if (dragHandedOff) {
+                    dragHandedOff = false
+                    linkHit = false
+                    return false
+                }
+            }
+        }
         linkHit = false
         val res = super.onTouchEvent(event)
-        return if (dontConsumeNonUrlClicks) linkHit else res
+        val consumed = if (dragHandoffToParent) {
+            // DOWN / MOVE 一律不消费：Compose 的 interop 一旦见本控件返回过 true，
+            // 就会把之后每个事件都标记成已消费，外层列表 / 弹层再也拿不到手势。
+            // UP 例外 —— 命中链接时照旧消费，保留「点链接不冒泡到所在容器」的原设计。
+            event.actionMasked == MotionEvent.ACTION_UP && linkHit
+        } else {
+            if (dontConsumeNonUrlClicks) linkHit else res
+        }
+        DevLog.d(TAG) {
+            "action=${event.actionMasked} handoff=$dragHandoffToParent linkHit=$linkHit " +
+                    "draggedOff=$dragHandedOff consumed=$consumed"
+        }
+        return consumed
     }
 
     class LocalLinkMovementMethod(private val isReply: Boolean) : LinkMovementMethod() {
