@@ -398,10 +398,6 @@ class ReplyActivity : AppCompatActivity(),
 
     override fun onResume() {
         super.onResume()
-        if (pendingExternalReturn) {
-            pendingExternalReturn = false
-            animateExternalActivityReturn()
-        }
         if (pendingShowKeyboard) {
             lifecycleScope.launch(Dispatchers.Main) {
                 delay(120)
@@ -417,6 +413,15 @@ class ReplyActivity : AppCompatActivity(),
             binding.editText.postDelayed({ showInput() }, 200)
             startImeRetry()
         }
+    }
+
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (pendingExternalReturn) {
+            pendingExternalReturn = false
+            animateExternalActivityReturn()
+        }
+        super.onActivityResult(requestCode, resultCode, data)
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -514,6 +519,7 @@ class ReplyActivity : AppCompatActivity(),
 
         pickDocument =
             registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+                animateExternalActivityReturnIfPending()
                 handlePickedUris(uris)
             }
     }
@@ -1154,13 +1160,11 @@ class ReplyActivity : AppCompatActivity(),
     private fun launchPick() {
         launchAfterImeHidden {
             try {
-                pendingExternalReturn = true
                 pickContent.launch(
                     PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
                     createStationaryBackgroundOptions()
                 )
             } catch (e: ActivityNotFoundException) {
-                pendingExternalReturn = false
                 makeToast("Activity Not Found")
                 e.printStackTrace()
             }
@@ -1301,6 +1305,13 @@ class ReplyActivity : AppCompatActivity(),
             R.anim.activity_stay,
             R.anim.activity_slide_out_right
         )
+    }
+
+    private fun animateExternalActivityReturnIfPending() {
+        if (pendingExternalReturn) {
+            pendingExternalReturn = false
+            animateExternalActivityReturn()
+        }
     }
 
     @SuppressLint("ClickableViewAccessibility")
