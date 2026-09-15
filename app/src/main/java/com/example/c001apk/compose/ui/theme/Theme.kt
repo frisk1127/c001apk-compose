@@ -25,6 +25,7 @@ import androidx.core.graphics.ColorUtils
 import androidx.core.view.WindowCompat
 import com.example.c001apk.compose.ThemeType
 import com.example.c001apk.compose.constant.Constants.seedColors
+import com.example.c001apk.compose.ui.component.SuppressFocusStateLayer
 import com.materialkolor.PaletteStyle
 import com.materialkolor.rememberDynamicColorScheme
 
@@ -131,13 +132,18 @@ fun C001apkComposeTheme(
         colorScheme = colorScheme,
         typography = Typography,
         content = {
-            CompositionLocalProvider(
-                LocalDensity provides Density(
-                    LocalDensity.current.density * contentScale,
-                    LocalDensity.current.fontScale * fontScale,
-                )
-            ) {
-                content()
+            // 挡掉 ripple 的 focus 状态层（左上角元素会莫名其妙保持 Focus，看起来像
+            //「一直按着」）。配置必须是恒定值 —— material3 1.3.0 下 LocalRippleConfiguration
+            // 一旦在运行中变化就会崩，详见 FocusHighlightGuard.kt 里的说明。
+            SuppressFocusStateLayer {
+                CompositionLocalProvider(
+                    LocalDensity provides Density(
+                        LocalDensity.current.density * contentScale,
+                        LocalDensity.current.fontScale * fontScale,
+                    )
+                ) {
+                    content()
+                }
             }
         }
     )

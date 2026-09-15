@@ -25,6 +25,7 @@ import androidx.core.view.WindowInsetsCompat
 import com.example.c001apk.compose.logic.providable.LocalUserPreferences
 import com.example.c001apk.compose.logic.repository.UserPreferencesRepository
 import com.example.c001apk.compose.ui.theme.C001apkComposeTheme
+import com.example.c001apk.compose.ui.component.SuppressWindowFocusHighlight
 import com.example.c001apk.compose.ui.search.SearchViewModel
 import com.example.c001apk.compose.util.CookieUtil.apiVersion
 import com.example.c001apk.compose.util.CookieUtil.customHaptics
@@ -103,6 +104,10 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             navController = rememberNavController()
+
+            // 窗口重新获得焦点时，Compose 会把焦点补到第一个可聚焦节点上，
+            // 导致左上角按钮/Tab 长时间显示 Focus 高亮（看起来像被按住）。
+            SuppressWindowFocusHighlight()
 
             val widthSizeClass = calculateWindowSizeClass(this).widthSizeClass
 

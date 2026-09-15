@@ -5,6 +5,7 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.example.c001apk.compose.util.composeClick
 
 /**
@@ -13,10 +14,22 @@ import com.example.c001apk.compose.util.composeClick
 @Composable
 fun BackButton(
     onBackClick: () -> Unit
+) = BackButton(
+    modifier = Modifier,
+    onBackClick = onBackClick,
+)
+
+@Composable
+fun BackButton(
+    modifier: Modifier,
+    onBackClick: () -> Unit,
 ) {
-    IconButton(onClick = composeClick {
-        onBackClick()
-    }) {
+    IconButton(
+        modifier = modifier,
+        onClick = composeClick {
+            onBackClick()
+        }
+    ) {
         Icon(
             imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
             contentDescription = null
